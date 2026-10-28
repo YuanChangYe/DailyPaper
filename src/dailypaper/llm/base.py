@@ -40,3 +40,11 @@ class LLMProvider(ABC):
     @abstractmethod
     def complete(self, system: str, user: str, *, tag: str = "", json_mode: bool = False) -> LLMResponse:
         """一次单轮调用。tag 用于日志和 fake provider 区分任务（screen / read / ...）。"""
+
+    def is_transient(self, exc: Exception) -> bool:
+        """是否值得重试：网络抖动、超时、限流、服务端错误。其他异常（配置、认证、参数）立即失败。"""
+        import httpx
+
+        if isinstance(exc, httpx.HTTPStatusError):
+            return exc.response.status_code == 429 or exc.response.status_code >= 500
+        return isinstance(exc, (httpx.TransportError, ConnectionError, TimeoutError))

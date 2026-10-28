@@ -104,6 +104,47 @@ def cmd_read(cfg: AppConfig, args) -> int:
     return 0
 
 
+def cmd_check(cfg: AppConfig, args) -> int:
+    """运行前自检：配置能否加载、各 LLM 角色的 key 是否存在、插件和模板是否齐全。缺 key 时返回 1。"""
+    from .prompting.selector import LensCatalog
+
+    problems: list[str] = []
+    print(f"项目目录: {cfg.root}")
+    pipelines = ", ".join(cfg.pipeline.pipelines) or "（无）"
+    print(f"✓ 配置已加载：{len(cfg.topics)} 个研究方向，流水线 {pipelines}")
+
+    provider_override = getattr(args, "provider", None)
+    for role_name, role in cfg.llm.roles.items():
+        pname = provider_override or role.provider
+        spec = cfg.llm.providers.get(pname)
+        if spec is None and pname != "fake":
+            problems.append(f"llm.yaml：角色 {role_name} 使用的 provider {pname} 不存在")
+            continue
+        env = spec.api_key_env if spec else None
+        if env and not os.environ.get(env) and not (spec.type == "anthropic" and os.environ.get("ANTHROPIC_AUTH_TOKEN")):
+            problems.append(
+                f"角色 {role_name}（{pname} / {role.model}）需要环境变量 {env}，但它为空。"
+                f"本地请写入 .env；GitHub Actions 请在 Settings → Secrets and variables → Actions 添加同名 Secret"
+            )
+        else:
+            print(f"✓ 角色 {role_name}: {pname} / {role.model or '（fake）'}")
+
+    for name in ("deep_read", "screen"):
+        for part in ("system", "user"):
+            if not (cfg.path("prompts") / "base" / f"{name}.{part}.md.j2").exists():
+                problems.append(f"缺少模板 prompts/base/{name}.{part}.md.j2")
+    cat = LensCatalog(cfg)
+    ids = cat.available_ids()
+    missing = [i for i in cat.adapters if i not in ids]
+    print(f"✓ lens 可用 {len(ids)} 个" + (f"，不可用 {len(missing)} 个（{', '.join(missing)}）将被跳过" if missing else ""))
+
+    for p in problems:
+        print(f"✗ {p}")
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            print(f"::error::{p}")
+    return 1 if problems else 0
+
+
 def cmd_list_plugins(cfg: AppConfig, args) -> int:
     for kind, names in registry.available().items():
         print(f"{kind:16s} {', '.join(names)}")
@@ -241,6 +282,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--only", nargs="*", help="skill 名称；默认同步 lenses.yaml 中引用的全部 skill")
     sp.set_defaults(func=cmd_sync_skills)
 
+    sp = sub.add_parser("check", help="运行前自检：配置、API key、模板、lens")
+    sp.add_argument("--provider", help="按该 provider 检查（例如 fake）")
+    sp.set_defaults(func=cmd_check)
+
     sub.add_parser("list-plugins", help="列出已注册的插件").set_defaults(func=cmd_list_plugins)
     sub.add_parser("list-lenses", help="列出精读 lens 及可用状态").set_defaults(func=cmd_list_lenses)
     return p
@@ -256,6 +301,8 @@ def main(argv: list[str] | None = None) -> int:
         return args.func(cfg, args)
     except PipelineError as e:
         log.error("%s", e)
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            print(f"::error::{e}")  # 让错误出现在 Actions 页面的 Annotations 中
         return 2
     except KeyboardInterrupt:
         return 130

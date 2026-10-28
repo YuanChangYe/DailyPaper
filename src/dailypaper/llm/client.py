@@ -72,7 +72,9 @@ class LLMClient:
                 break
             except LLMError:
                 raise  # 配置类错误（缺 key 等）不重试
-            except Exception as e:  # noqa: BLE001 - 网络/限流等瞬时错误
+            except Exception as e:  # noqa: BLE001
+                if not self.provider.is_transient(e):
+                    raise LLMError(f"LLM 调用失败（{self.model}）: {type(e).__name__}: {e}") from e
                 last = e
                 wait = min(2**attempt, 30)
                 log.warning("LLM 调用失败（%s，第 %d 次），%ds 后重试: %s", tag, attempt, wait, e)

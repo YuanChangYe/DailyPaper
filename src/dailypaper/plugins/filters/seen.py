@@ -35,8 +35,13 @@ class MarkSeen(Publisher):
     def run(self, items: list[Candidate]) -> list[Candidate]:
         store = seen_store(self.config, self.p.keep_days)
         ids = read_json(self.ctx.run_dir / NEW_IDS_FILE, None)
+        # 筛选失败的论文不算处理过，留到下次重新筛选
+        failed = {c.id for c in items if any(e.startswith("screen:") for e in c.errors)}
         for pid in ids if ids is not None else [c.id for c in items]:
-            store.add(pid, self.ctx.run_date)
+            if pid not in failed:
+                store.add(pid, self.ctx.run_date)
+        if failed:
+            self.log.warning("%d 篇论文筛选失败，未记入 seen.json", len(failed))
         store.save(self.ctx.run_date)
         self.log.info("seen.json 共 %d 条", len(store))
         return items

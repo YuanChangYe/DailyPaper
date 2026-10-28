@@ -9,6 +9,8 @@
 
 from __future__ import annotations
 
+import os
+
 import anthropic
 
 from ..core.registry import register
@@ -21,7 +23,9 @@ FALLBACK_BETA = "server-side-fallback-2026-07-01"
 class AnthropicProvider(LLMProvider):
     def __init__(self, spec, role) -> None:
         super().__init__(spec, role)
-        key = self.api_key(required=False)  # 没设 key 时 SDK 还会尝试 ant auth login 的凭据
+        # 没有 key 时 SDK 不会立刻报错，而是在第一次请求时失败；这里提前检查，给出明确提示。
+        # 只有设置了 ANTHROPIC_AUTH_TOKEN（例如 ant auth login 的凭据）时才允许不填 key。
+        key = self.api_key(required=not os.environ.get("ANTHROPIC_AUTH_TOKEN"))
         kwargs: dict = {"max_retries": 2}
         if key:
             kwargs["api_key"] = key
@@ -56,7 +60,7 @@ class AnthropicProvider(LLMProvider):
             raise LLMError(f"Claude API 认证失败，请检查 {self.spec.api_key_env}: {e}") from e
         except (anthropic.BadRequestError, anthropic.NotFoundError) as e:
             raise LLMError(f"Claude API 请求无效（模型名或参数）: {e}") from e
-        # RateLimitError / 5xx / 连接错误交给 LLMClient 重试
+        # RateLimitError / 5xx / 连接错误交给 LLMClient 重试（见 is_transient）
 
         if msg.stop_reason == "refusal":
             raise LLMError(f"Claude 拒绝了这个请求（{tag}）")
@@ -68,3 +72,10 @@ class AnthropicProvider(LLMProvider):
             output_tokens=msg.usage.output_tokens,
             stop_reason=msg.stop_reason or "",
         )
+
+    def is_transient(self, exc: Exception) -> bool:
+        if isinstance(exc, (anthropic.RateLimitError, anthropic.APIConnectionError, anthropic.APITimeoutError)):
+            return True
+        if isinstance(exc, anthropic.APIStatusError):
+            return exc.status_code >= 500
+        return super().is_transient(exc)

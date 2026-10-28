@@ -94,6 +94,25 @@ def test_library_index_and_profile(cfg):
     assert prof.score("conformal risk control for agents") > prof.score("gpu sorting kernels")
 
 
+def test_connector_resolves_nested_collections():
+    from dailypaper.integrations.zotero.connector import ConnectorWriter
+
+    targets = [
+        {"id": "L1", "name": "我的文库", "level": 0, "path": ""},
+        {"id": "C1", "name": "Thesis", "level": 1, "path": "Thesis"},
+        {"id": "C2", "name": "DailyPaper", "level": 2, "path": "Thesis/DailyPaper"},
+        {"id": "C3", "name": "Conformal", "level": 3, "path": "Thesis/DailyPaper/Conformal"},
+        {"id": "C4", "name": "Agent", "level": 1, "path": "Agent"},
+    ]
+    r = ConnectorWriter.resolve_target
+    assert r(targets, "DailyPaper/Conformal") == ("C3", "Thesis/DailyPaper/Conformal")  # 子分类建在别的上级下
+    assert r(targets, "DailyPaper/Nope") == ("C2", "Thesis/DailyPaper")  # 子分类不存在，退回上一级
+    assert r(targets, "dailypaper") == ("C2", "Thesis/DailyPaper")  # 不区分大小写
+    assert r(targets, "Agent") == ("C4", "Agent")
+    assert r(targets, "Missing/Deep") == ("L1", "")  # 都没有 → 文库根目录
+    assert r(targets, "") == ("L1", "")
+
+
 def test_make_citekey():
     assert make_citekey(["Ayush Mittal"], "2026", "Calibrated for Which Policy?") == "mittal2026calibrated"
     assert make_citekey([], "", "On the Theory") == "anontheory"

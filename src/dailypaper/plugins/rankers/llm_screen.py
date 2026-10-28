@@ -57,16 +57,19 @@ class LLMScreenRanker(Ranker):
         catalog = LensCatalog(self.config).describe()
         topic_ids = {t.id for t in self.config.topics}
 
-        for i in range(0, len(items), self.p.batch_size):
-            batch = items[i : i + self.p.batch_size]
+        batches = [items[i : i + self.p.batch_size] for i in range(0, len(items), self.p.batch_size)]
+        failures: list[str] = []
+        for n, batch in enumerate(batches, start=1):
             try:
                 results = self._screen_batch(llm, composer, catalog, batch)
             except Exception as e:  # noqa: BLE001 - 一批失败不影响其他批
-                self.log.error("筛选第 %d 批失败: %s", i // self.p.batch_size + 1, e)
+                self.log.error("筛选第 %d 批失败: %s", n, e)
+                failures.append(str(e))
                 results = {}
             for c in batch:
                 r = results.get(c.id)
                 if r is None:
+                    # 标记为筛选失败：不会被记入 seen.json，下次运行会重新处理
                     c.errors.append("screen: 模型没有返回该论文的结果")
                     c.screen = ScreenResult(reason="（筛选失败）")
                     continue
@@ -80,6 +83,10 @@ class LLMScreenRanker(Ranker):
                     reason=str(r.get("reason") or ""),
                     suggested_lenses=[str(x) for x in r.get("suggested_lenses") or []],
                 )
+
+        if batches and len(failures) == len(batches):
+            # 全部失败说明是 key、模型名或网络这类整体问题，不要带着空结果继续发布
+            raise RuntimeError(f"摘要筛选全部失败（{len(batches)} 批）。最后一个错误: {failures[-1]}")
 
         mult = topic_multipliers(self.config) if self.p.use_feedback else {}
         profile = load_profile(self.config)

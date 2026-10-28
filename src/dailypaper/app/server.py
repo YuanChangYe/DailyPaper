@@ -64,6 +64,19 @@ def create_app(cfg: AppConfig) -> FastAPI:
     def index():
         return FileResponse(STATIC / "index.html")
 
+    @app.get("/api/meta")
+    def meta():
+        """给前端的筛选项：研究方向名称、各状态数量。"""
+        counts: dict[str, int] = {}
+        for it in store.items():
+            counts[it.decision.status] = counts.get(it.decision.status, 0) + 1
+        return {
+            "topics": [{"id": t.id, "name": t.name} for t in cfg.topics],
+            "paper_types": ["method", "theory", "benchmark", "empirical", "survey", "position"],
+            "counts": counts,
+            "site_title": cfg.settings.site.title,
+        }
+
     @app.get("/api/items")
     def items(status: str = ""):
         return [{"entry": i.entry.model_dump(), "decision": i.decision.model_dump()} for i in store.items(status or None)]

@@ -68,21 +68,27 @@ class ConnectorWriter(ZoteroWriter):
         except Exception:  # noqa: BLE001
             return []
 
-    def _resolve_target(self, path: str) -> tuple[str, str]:
-        """返回 (target id, 实际使用的路径)。"""
-        targets = self.targets()
+    @staticmethod
+    def resolve_target(targets: list[dict], path: str) -> tuple[str, str]:
+        """把配置里的分类路径对应到 Zotero 中已有的分类，返回 (target id, 实际路径)。
+
+        依次尝试：完整路径 → 去掉最后一级 → …；每一级既接受完整路径，也接受"以该路径结尾"
+        （分类可以建在任意上级分类之下，例如 ``毕业论文/DailyPaper`` 也能匹配 ``DailyPaper``）。
+        都找不到时放入文库根目录。connector 不能新建分类。
+        """
         root = next((t for t in targets if t["id"].startswith("L")), {"id": "L1"})
-        if not path:
-            return root["id"], ""
         parts = [p for p in path.split("/") if p]
         for n in range(len(parts), 0, -1):
-            want = "/".join(parts[:n])
-            hit = next((t for t in targets if t["path"].lower() == want.lower()), None)
+            want = "/".join(parts[:n]).lower()
+            exact = [t for t in targets if t["path"].lower() == want]
+            suffix = [t for t in targets if t["path"].lower().endswith("/" + want)]
+            hit = (exact or sorted(suffix, key=lambda t: t["level"]))[:1]
             if hit:
-                return hit["id"], hit["path"]
-        # 也允许只写分类名（不含上级路径）
-        hit = next((t for t in targets if t["name"].lower() == parts[-1].lower()), None)
-        return (hit["id"], hit["path"]) if hit else (root["id"], "")
+                return hit[0]["id"], hit[0]["path"]
+        return root["id"], ""
+
+    def _resolve_target(self, path: str) -> tuple[str, str]:
+        return self.resolve_target(self.targets(), path)
 
     def add(self, req: AddRequest) -> AddResult:
         session = uuid.uuid4().hex[:12]
@@ -112,9 +118,12 @@ class ConnectorWriter(ZoteroWriter):
 
         target_id, used = self._resolve_target(req.collection)
         u = self._post("updateSession", {"sessionID": session, "target": target_id, "tags": req.tags})
-        note = "" if used or not req.collection else f"（找不到分类「{req.collection}」，已放入文库根目录）"
+        note = ""
+        if req.collection and used.split("/")[-1].lower() != req.collection.split("/")[-1].lower():
+            note = f"（没有「{req.collection}」，已放入「{used or '文库根目录'}」；connector 不能新建分类，可在 Zotero 中手动创建）"
         if u.status_code not in (200, 201):
-            note += f"（移动到分类失败: HTTP {u.status_code}）"
+            note += f"（移动到分类失败: HTTP {u.status_code} {u.text[:120]}）"
+            used = ""
 
         pdf_ok = self._ensure_pdf(session, item_id, req) if req.pdf_url and self.zcfg.attach_pdf else None
         return AddResult(True, f"已加入 Zotero{(' → ' + used) if used else ''}{note}", collection_used=used, pdf_attached=pdf_ok)

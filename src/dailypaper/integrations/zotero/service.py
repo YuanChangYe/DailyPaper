@@ -140,7 +140,7 @@ class ZoteroService:
         if ref is None and hasattr(self.writer, "find_after_save"):
             ref = self.writer.find_after_save(req)
         msg = res.message + ("" if res.pdf_attached in (None, True) else "（PDF 未能附加）")
-        return self._finish(item, ref, msg, res.collection_used or coll)
+        return self._finish(item, ref, msg, res.collection_used)  # 记录实际放入的分类
 
     def _finish(self, item: ReviewItem, ref: ZoteroRef | None, msg: str, coll: str) -> dict:
         e = item.entry
