@@ -38,6 +38,7 @@ class IndexEntry(BaseModel):
     score: float = 0.0
     tldr: str = ""
     core_insight: str = ""
+    abstract: str = ""  # 截断的原文摘要，供网页搜索
     note_path: str = ""  # 相对内容目录，正斜杠
     url_abs: str = ""
     url_pdf: str = ""
@@ -57,6 +58,7 @@ def entry_from_candidate(c: Candidate, date: str) -> IndexEntry:
         score=c.score,
         tldr=n.tldr if n else "",
         core_insight=n.core_insight if n else "",
+        abstract=c.paper.abstract[:800],
         note_path=c.note_path,
         url_abs=c.paper.url_abs,
         url_pdf=c.paper.url_pdf,
@@ -78,6 +80,10 @@ class SiteContract:
         by_id = {e.id: e for e in self.load_index()}
         for e in entries:
             by_id[e.id] = e
+        for e in by_id.values():  # 旧索引没有摘要字段时，从单篇 JSON 补上
+            if not e.abstract:
+                data = read_json(self.api / "papers" / f"{e.id.replace('/', '_')}.json", {}) or {}
+                e.abstract = str(data.get("abstract", ""))[:800]
         merged = sorted(by_id.values(), key=lambda e: (e.date, e.score), reverse=True)
         write_json(
             self.api / "index.json",

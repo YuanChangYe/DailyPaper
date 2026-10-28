@@ -96,22 +96,22 @@ main{min-height:60vh}
   animation:fog 46s linear infinite alternate}
 .fog.f2{opacity:.5;animation-duration:70s;animation-direction:alternate-reverse;background:radial-gradient(26% 15% at 40% 72%,rgba(240,248,250,.32),transparent 70%),radial-gradient(24% 12% at 80% 90%,rgba(240,248,250,.26),transparent 70%)}
 @keyframes fog{from{transform:translate3d(-9%,0,0)}to{transform:translate3d(9%,-2%,0)}}
-.hero-inner{display:grid;grid-template-columns:1.25fr .75fr;gap:32px;align-items:center;padding:124px 48px 214px}
+.hero-inner{display:grid;grid-template-columns:1.2fr .8fr;gap:32px;align-items:center;padding:116px 48px 236px}
 .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.08em;color:var(--mist);padding:5px 13px;border-radius:999px;background:rgba(238,245,246,.12);border:1px solid rgba(238,245,246,.25);backdrop-filter:blur(8px)}
 .hero h1{font-size:clamp(36px,5.4vw,68px);line-height:1.08;letter-spacing:-.03em;font-weight:700;margin:20px 0 14px;color:#fff;text-shadow:0 2px 30px rgba(0,0,0,.18)}
 .hero .sub{color:rgba(238,245,246,.86);font-size:17px;margin:0 0 26px;max-width:40ch}
 .hero-actions{display:flex;gap:10px;flex-wrap:wrap}
-.float-card{justify-self:end;width:min(300px,100%);padding:12px;border-radius:22px;background:rgba(238,245,246,.14);border:1px solid rgba(238,245,246,.28);backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);color:var(--mist);box-shadow:0 20px 50px rgba(0,0,0,.25);animation:bob 9s ease-in-out infinite;transition:transform .3s}
+.float-card{justify-self:end;width:min(380px,100%);padding:14px;border-radius:22px;background:rgba(238,245,246,.14);border:1px solid rgba(238,245,246,.28);backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);color:var(--mist);box-shadow:0 20px 50px rgba(0,0,0,.25);animation:bob 9s ease-in-out infinite;transition:transform .3s}
 @keyframes bob{50%{transform:translateY(-8px)}}
-.float-card .thumb{height:110px;border-radius:14px;background:linear-gradient(160deg,rgba(9,30,38,.15),rgba(9,30,38,.6)),url(assets/hero-mist-wide-1200.jpg) center 70%/cover;display:flex;align-items:flex-end;padding:10px;font-size:11px;letter-spacing:.06em}
-.float-card h3{font-size:15px;line-height:1.35;margin:10px 4px 6px;color:#fff}
-.float-card p{margin:0 4px 8px;font-size:12px;color:rgba(238,245,246,.75);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.float-card a{display:inline-flex;gap:6px;margin:0 4px 4px;font-size:12px;border-bottom:1px solid rgba(238,245,246,.4)}
-.searchbox{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);width:min(640px,calc(100% - 32px));padding:12px;border-radius:22px;background:rgba(238,245,246,.14);border:1px solid rgba(238,245,246,.3);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);box-shadow:0 18px 50px rgba(0,0,0,.25)}
-.search-row{display:flex;align-items:center;gap:10px;padding:6px 6px 6px 16px;border-radius:999px;background:rgba(9,30,38,.38);border:1px solid rgba(238,245,246,.2)}
-.search-row input{flex:1;min-width:0;background:none;border:0;outline:0;color:#fff;font-size:15px}
+.float-card .thumb{height:132px;border-radius:14px;background:linear-gradient(160deg,rgba(9,30,38,.15),rgba(9,30,38,.6)),url(assets/hero-mist-wide-1200.jpg) center 70%/cover;display:flex;align-items:flex-end;padding:10px;font-size:11px;letter-spacing:.06em}
+.float-card h3{font-size:17.5px;line-height:1.35;margin:12px 4px 8px;color:#fff}
+.float-card p{margin:0 4px 10px;font-size:13.5px;line-height:1.6;color:rgba(238,245,246,.8);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.float-card a{display:inline-flex;gap:6px;margin:0 4px 4px;font-size:13px;border-bottom:1px solid rgba(238,245,246,.4)}
+.searchbox{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);width:min(860px,calc(100% - 48px));padding:14px;border-radius:22px;background:rgba(238,245,246,.14);border:1px solid rgba(238,245,246,.3);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);box-shadow:0 18px 50px rgba(0,0,0,.25)}
+.search-row{display:flex;align-items:center;gap:12px;padding:8px 8px 8px 20px;border-radius:999px;background:rgba(9,30,38,.38);border:1px solid rgba(238,245,246,.2)}
+.search-row input{flex:1;min-width:0;background:none;border:0;outline:0;color:#fff;font-size:16px;line-height:1.5}
 .search-row input::placeholder{color:rgba(238,245,246,.6)}
-.go{width:36px;height:36px;border-radius:50%;border:0;background:var(--mist);color:#0C232B;display:grid;place-items:center;flex:none}
+.go{width:42px;height:42px;border-radius:50%;border:0;background:var(--mist);color:#0C232B;display:grid;place-items:center;flex:none}
 .search-chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
 .search-chips .chip{background:rgba(9,30,38,.3);border-color:rgba(238,245,246,.25);color:var(--mist);cursor:pointer}
 .search-chips .chip:hover{background:rgba(238,245,246,.2)}
@@ -228,9 +228,9 @@ select.input{padding-right:30px}
 .md-inline .katex{font-size:1em}.md-inline code{font-family:var(--mono);font-size:.88em;padding:0 4px;border-radius:4px;background:rgba(9,30,38,.45)}.md-inline strong{color:var(--ink)}
 
 /* ---------- hero quote, GitHub link ---------- */
-.hero .quote{margin:0 0 26px;max-width:46ch;color:rgba(238,245,246,.9);font-size:17px;line-height:1.65;padding:0}
+.hero .quote{margin:26px 0 34px;max-width:46ch;color:rgba(238,245,246,.92);font-size:18px;line-height:1.7;padding:0 0 0 18px;border-left:2px solid rgba(238,245,246,.45)}
 .hero .quote p{margin:0}
-.hero .quote footer{margin-top:6px;font-size:13px;color:rgba(238,245,246,.62);letter-spacing:.02em}
+.hero .quote cite{display:block;margin-top:8px;font-size:13px;font-style:normal;color:rgba(238,245,246,.62);letter-spacing:.02em}
 .gh{gap:6px}.gh svg{width:16px;height:16px;fill:currentColor}
 
 /* ---------- paper rows (list with first-page thumbnail) ---------- */
@@ -606,7 +606,9 @@ function mdInline(text) {
   const s = String(text ?? ""); if (!s) return "";
   if (!(window.marked && window.DOMPurify)) return esc(s);
   const math = []; const keep = (tex, display) => { math.push({ tex, display }); return `@@M${math.length - 1}@@`; };
-  const src = s.replace(/\$\$([\s\S]+?)\$\$/g, (_, t) => keep(t, true)).replace(/\$(?!\s)([^$\n]+?)\$/g, (_, t) => keep(t, false));
+  const src = s.replace(/\$\$([\s\S]+?)\$\$/g, (_, t) => keep(t, true)).replace(/\$(?!\s)([^$\n]+?)\$/g, (_, t) => keep(t, false))
+    // 旧笔记里裸写的下标变量（n_eff、d_t、x_i）自动排成公式；多字母名（topic_name）不受影响
+    .replace(/\b([A-Za-z])_([A-Za-z0-9]{1,8})\b/g, (_, a, b) => keep(`${a}_{\\text{${b}}}`, false));
   const html = DOMPurify.sanitize(marked.parseInline(src, { gfm: true }));
   return `<span class="md-inline">${html.replace(/@@M(\d+)@@/g, (_, i) => { const m = math[+i]; try { return window.katex ? katex.renderToString(m.tex, { displayMode: false, throwOnError: false }) : esc(m.tex); } catch { return esc(m.tex); } })}</span>`;
 }
@@ -822,7 +824,7 @@ VIEWS.home = async () => {
       <div>
         <span class="eyebrow">arXiv 每日论文雷达 · LLM / Agent 可信性</span>
         <h1>少一点筛选，<br>多一点洞见。</h1>
-        <blockquote class="quote"><p>${esc(quote[0])}</p><footer>—— ${esc(quote[1])}</footer></blockquote>
+        <blockquote class="quote"><p>${esc(quote[0])}</p><cite>—— ${esc(quote[1])}</cite></blockquote>
         <div class="hero-actions"><a class="btn primary" href="#/daily">查看今日精选 →</a><a class="btn" href="#/review">去审核入库</a></div>
       </div>
       ${top ? `<aside class="float-card" aria-label="今日首选">
@@ -910,7 +912,8 @@ VIEWS.library = async (_, params) => {
   return `
   <div class="page-head"><h1>文库</h1><p>所有精读过的论文。按方向、价值筛选，或搜索标题、TL;DR、作者、ID。</p></div>
   <div class="toolbar">
-    <label class="sr" for="lib-q">搜索</label><input class="input" id="lib-q" placeholder="搜索标题、TL;DR、作者或 arXiv ID" value="${esc(q)}">
+    <label class="sr" for="lib-q">搜索</label><input class="input" id="lib-q" placeholder="搜索标题、摘要、insight、作者、方向或 arXiv ID" value="${esc(q)}">
+    <span id="lib-count" style="font-size:13px;color:var(--muted);white-space:nowrap"></span>
     <label class="sr" for="lib-sort">排序</label>
     <select class="input" id="lib-sort"><option value="date" ${sort === "date" ? "selected" : ""}>按日期</option><option value="value" ${sort === "value" ? "selected" : ""}>按价值</option><option value="score" ${sort === "score" ? "selected" : ""}>按筛选分</option></select>
   </div>
@@ -925,8 +928,11 @@ VIEWS.library.after = (_, params) => {
   const state = { q: params.get("q") || "", topic: params.get("topic") || "", v: Number(params.get("v") || 0), sort: params.get("sort") || "date" };
   const paint = () => {
     const words = state.q.toLowerCase().split(/\s+/).filter(Boolean);
+    const hay = (p) => [p.title, p.tldr, p.core_insight, p.abstract, p.id, p.paper_type, (p.authors || []).join(" "),
+      (p.topics || []).map((t) => tname(t) + " " + tshort(t)).join(" ")].join(" ").toLowerCase();
     let list = S.index.filter((p) => (!state.topic || (p.topics || []).includes(state.topic)) && (p.value_score || 0) >= state.v &&
-      words.every((w) => [p.title, p.tldr, p.id, (p.authors || []).join(" "), (p.topics || []).map(tname).join(" ")].join(" ").toLowerCase().includes(w)));
+      words.every((w) => hay(p).includes(w)));
+    const countEl = $("#lib-count"); if (countEl) countEl.textContent = state.q || state.topic || state.v ? `匹配 ${list.length} / ${S.index.length} 篇` : `共 ${S.index.length} 篇`;
     list.sort(state.sort === "value" ? (a, b) => (b.value_score - a.value_score) || b.date.localeCompare(a.date) : state.sort === "score" ? (a, b) => b.score - a.score : (a, b) => b.date.localeCompare(a.date) || b.score - a.score);
     $("#lib-rows").innerHTML = list.map((p) => paperRow(p)).join("") || `<div class="empty">没有符合条件的论文。${state.q.match(ARXIV_ID) ? `<p><button class="btn primary sm" type="button" id="lib-read">精读 ${esc(state.q)}</button></p>` : ""}</div>`;
     revealAll($("#lib-rows"));
