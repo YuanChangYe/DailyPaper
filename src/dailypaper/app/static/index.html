@@ -205,7 +205,7 @@ select.input{padding-right:30px}
 .paper-head h1{font-size:clamp(24px,3vw,34px);line-height:1.3;letter-spacing:-.015em;margin:10px 0 12px}
 .meta-line{display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--body)}
 .paper-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
-.prose{max-width:76ch;color:var(--body);font-size:16px;line-height:1.85;padding-top:10px}
+.prose{max-width:none;color:var(--body);font-size:16px;line-height:1.85;padding-top:10px}
 .prose h1{display:none}
 .prose h2{font-size:22px;margin:38px 0 12px;padding-top:6px;letter-spacing:-.01em}
 .prose h3{font-size:17px;margin:24px 0 8px}
@@ -225,6 +225,48 @@ select.input{padding-right:30px}
 .src{font-size:.78em;font-family:var(--mono);color:var(--accent);background:rgba(169,220,225,.08);border:1px solid rgba(169,220,225,.2);padding:0 6px;border-radius:6px;white-space:nowrap}
 .tag-analysis{font-size:.75em;color:#0C232B;background:var(--warn);padding:1px 7px;border-radius:6px;font-weight:700;margin-right:4px}
 .katex{font-size:1.04em}.katex-display{overflow-x:auto;overflow-y:hidden;padding:6px 0}
+.md-inline .katex{font-size:1em}.md-inline code{font-family:var(--mono);font-size:.88em;padding:0 4px;border-radius:4px;background:rgba(9,30,38,.45)}.md-inline strong{color:var(--ink)}
+
+/* ---------- hero quote, GitHub link ---------- */
+.hero .quote{margin:0 0 26px;max-width:46ch;color:rgba(238,245,246,.9);font-size:17px;line-height:1.65;padding:0}
+.hero .quote p{margin:0}
+.hero .quote footer{margin-top:6px;font-size:13px;color:rgba(238,245,246,.62);letter-spacing:.02em}
+.gh{gap:6px}.gh svg{width:16px;height:16px;fill:currentColor}
+
+/* ---------- paper rows (list with first-page thumbnail) ---------- */
+.prows{display:flex;flex-direction:column;gap:14px}
+.prow{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:22px;padding:20px 22px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--glass);transition:border-color .2s,background .2s,transform .25s}
+.prow:hover{border-color:var(--line-2);background:var(--glass-2)}
+.prow.is-picked{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.prow .pick{top:22px;left:20px;right:auto}
+.prow-main{min-width:0;display:flex;flex-direction:column;gap:8px;padding-left:36px}
+.prow h3{font-size:19px;line-height:1.35;font-weight:700}.prow h3 a:hover{color:var(--accent)}
+.prow h3 .rank{font-size:13px;margin-right:10px;color:var(--accent);font-variant-numeric:tabular-nums}
+.prow-authors{font-size:13px;color:var(--muted)}
+.prow-tldr{margin:0;font-size:14.5px;color:var(--body);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.prow .insight{font-size:13px}
+.prow-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:auto;padding-top:8px}
+.prow-foot .grow{flex:1}.prow-foot a{color:var(--accent)}
+.prow-thumb{position:relative;display:block;align-self:start;aspect-ratio:4/3;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#f4f1ea}
+.prow-thumb img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.prow-thumb .ph{display:none;position:absolute;inset:0;place-items:center;font-family:var(--mono);font-size:12px;color:#355;background:linear-gradient(160deg,#eae6dc,#cfd8dc)}
+.prow-thumb.nothumb img{display:none}.prow-thumb.nothumb .ph{display:grid}
+@media (max-width:700px){.prow{grid-template-columns:1fr}.prow-thumb{aspect-ratio:16/7}}
+
+/* ---------- split PDF reader ---------- */
+body.split-mode main.wrap{max-width:none}
+.paper-split.on{display:grid;grid-template-columns:minmax(340px,var(--split,50%)) 10px minmax(340px,1fr);gap:0 12px;align-items:start}
+.paper-split.on .paper-layout{grid-template-columns:1fr;gap:0}
+.paper-split.on .toc{display:none}
+.paper-split.dragging{user-select:none}.paper-split.dragging iframe{pointer-events:none}
+.split-handle{align-self:stretch;position:sticky;top:96px;height:calc(100vh - 120px);border-radius:6px;background:var(--line);cursor:col-resize;transition:background .2s}
+.split-handle:hover,.split-handle.drag{background:var(--accent)}
+.pdf-pane{position:sticky;top:96px;height:calc(100vh - 120px);display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;background:#2b2b2b}
+.pdf-bar{display:flex;align-items:center;gap:12px;padding:8px 14px;font-size:13px;color:var(--muted);background:var(--panel);border-bottom:1px solid var(--line);white-space:nowrap}
+.pdf-bar .title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;color:var(--body)}
+.pdf-bar a{color:var(--accent)}
+.pdf-pane iframe{flex:1;width:100%;border:0;background:#fff}
+@media (max-width:1000px){.paper-split.on{grid-template-columns:1fr}.split-handle{display:none}.pdf-pane{position:static;height:70vh;margin-top:16px}}
 
 /* ---------- review ---------- */
 .review-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start}
@@ -326,6 +368,7 @@ footer a{border-bottom:1px solid var(--line-2)}
       <a href="#/settings" data-nav="settings">搜索设置</a>
     </nav>
     <div class="nav-end">
+      <a class="btn sm ghost gh" id="gh-link" href="https://github.com/YuanChangYe/DailyPaper" target="_blank" rel="noopener noreferrer" title="GitHub 仓库"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
       <span class="mode" id="mode" title=""><i></i><span>连接中</span></span>
       <button class="btn primary sm" id="run-now" type="button">立即运行</button>
     </div>
@@ -347,7 +390,7 @@ footer a{border-bottom:1px solid var(--line-2)}
 <footer>
   <div class="wrap">
     <span>DailyPaper · 每天一点 insight。数据：<span id="foot-source">—</span></span>
-    <span>首页照片：Zhang liven / <a href="https://unsplash.com/photos/misty-blue-mountains-rise-above-calm-water-BiLh-YznD0I" target="_blank" rel="noopener noreferrer">Unsplash</a> · <a href="feed.xml">RSS</a></span>
+    <span><a id="gh-foot" href="https://github.com/YuanChangYe/DailyPaper" target="_blank" rel="noopener noreferrer">GitHub</a> · <a href="feed.xml">RSS</a> · 首页照片：Zhang liven / <a href="https://unsplash.com/photos/misty-blue-mountains-rise-above-calm-water-BiLh-YznD0I" target="_blank" rel="noopener noreferrer">Unsplash</a></span>
   </div>
 </footer>
 
@@ -529,6 +572,44 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "
 const tname = (id) => (S.topics.find((t) => t.id === id)?.name) || TOPIC_LABELS[id] || id;
 const tshort = (id) => TOPIC_LABELS[id] || tname(id);
 const ARXIV_ID = /^(?:arxiv:)?(\d{4}\.\d{4,5})(v\d+)?$/i;
+const DEFAULT_REPO = "https://github.com/YuanChangYe/DailyPaper";
+
+/* ---------- 首页引言：按日期轮换 ---------- */
+const QUOTES = [
+  ["重要的是不要停止提问。", "阿尔伯特·爱因斯坦"],
+  ["如果说我看得更远，那是因为我站在巨人的肩膀上。", "艾萨克·牛顿"],
+  ["研究，就是看见人人都看见的东西，想到无人想到的东西。", "阿尔伯特·圣捷尔吉"],
+  ["第一条原则是不要欺骗自己，而你自己恰恰是最容易被骗的人。", "理查德·费曼"],
+  ["能够接纳一个想法而不必接受它，是受过教育的头脑的标志。", "亚里士多德"],
+  ["专家，就是在一个很窄的领域里犯过所有可能犯的错误的人。", "尼尔斯·玻尔"],
+  ["我们所知的是一滴水，我们未知的是一片海。", "艾萨克·牛顿"],
+  ["怀疑并不令人愉快，但确信是荒谬的。", "伏尔泰"],
+  ["智慧的艺术，在于知道什么可以忽略。", "威廉·詹姆斯"],
+  ["在某个地方，总有不可思议的事情等待被认识。", "卡尔·萨根"],
+  ["学而不思则罔，思而不学则殆。", "孔子"],
+  ["博学之，审问之，慎思之，明辨之，笃行之。", "《礼记·中庸》"],
+  ["尽信书，则不如无书。", "孟子"],
+  ["纸上得来终觉浅，绝知此事要躬行。", "陆游"],
+  ["读书之法，在循序而渐进，熟读而精思。", "朱熹"],
+  ["吾生也有涯，而知也无涯。", "庄子"],
+  ["科学不过是对日常思维的提炼。", "阿尔伯特·爱因斯坦"],
+  ["知识若不付诸实践，便毫无价值。", "安东·契诃夫"],
+];
+function quoteOfDay() {
+  const d = new Date(); const day = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 864e5);
+  return QUOTES[day % QUOTES.length];
+}
+const collectionLabel = (t) => (t || "DailyPaper/{topic_name}").replace("{topic_name}", "〈方向名〉").replace("{topic_id}", "〈方向 id〉");
+
+/* ---------- 行内 Markdown（卡片里的 TL;DR、insight 等） ---------- */
+function mdInline(text) {
+  const s = String(text ?? ""); if (!s) return "";
+  if (!(window.marked && window.DOMPurify)) return esc(s);
+  const math = []; const keep = (tex, display) => { math.push({ tex, display }); return `@@M${math.length - 1}@@`; };
+  const src = s.replace(/\$\$([\s\S]+?)\$\$/g, (_, t) => keep(t, true)).replace(/\$(?!\s)([^$\n]+?)\$/g, (_, t) => keep(t, false));
+  const html = DOMPurify.sanitize(marked.parseInline(src, { gfm: true }));
+  return `<span class="md-inline">${html.replace(/@@M(\d+)@@/g, (_, i) => { const m = math[+i]; try { return window.katex ? katex.renderToString(m.tex, { displayMode: false, throwOnError: false }) : esc(m.tex); } catch { return esc(m.tex); } })}</span>`;
+}
 
 /* ---------- 网络 ---------- */
 async function getJSON(url) {
@@ -550,6 +631,7 @@ async function boot() {
   try {
     const idx = await getJSON(S.site + "api/index.json");
     S.index = idx.papers || [];
+    S.siteInfo = idx.site || null;
     if (!isLocal()) S.mode = "static";
   } catch {
     if (isLocal()) {
@@ -575,6 +657,8 @@ function paintMode() {
   m.className = "mode " + S.mode; m.title = tip; m.lastElementChild.textContent = label;
   $("#foot-source").textContent = { local: "本地助手（127.0.0.1）", static: "api/index.json", demo: "内置示例" }[S.mode];
   $("#run-now").hidden = !isLocal() && S.mode !== "demo";
+  const repo = S.meta?.repo_url || S.siteInfo?.repo_url || DEFAULT_REPO;
+  $("#gh-link").href = repo; $("#gh-foot").href = repo;
 }
 
 /* ---------- 通用组件 ---------- */
@@ -601,9 +685,27 @@ function paperCard(p, { rank, insight = true } = {}) {
     <div class="pcard-top">${rank ? `<span class="rank">${rank}</span>` : ""}<span>${esc(p.paper_type || "paper")}</span><span>·</span><span class="mono">${esc(p.id)}</span>${statusPill(p.id)}</div>
     <h3><a href="#/paper/${encodeURIComponent(p.id)}">${esc(p.title)}</a></h3>
     <div class="chips">${(p.topics || []).map(chip).join("")}</div>
-    <p class="tldr">${esc(p.tldr)}</p>
-    ${insight && p.core_insight ? `<p class="insight"><b>CORE INSIGHT</b>${esc(p.core_insight)}</p>` : ""}
+    <p class="tldr">${mdInline(p.tldr)}</p>
+    ${insight && p.core_insight ? `<p class="insight"><b>CORE INSIGHT</b>${mdInline(p.core_insight)}</p>` : ""}
     <div class="pcard-foot">${stars(p.value_score)}<span class="mono">${p.score ? Number(p.score).toFixed(1) : ""}</span><span class="grow"></span><a href="#/paper/${encodeURIComponent(p.id)}">阅读笔记 →</a></div>
+  </article>`;
+}
+
+/* 列表式卡片：标题、作者、摘要、底部元信息，右侧为论文首页缩略图（api/thumbs/<id>.jpg，没有时显示占位） */
+function paperRow(p, { rank } = {}) {
+  const href = `#/paper/${encodeURIComponent(p.id)}`;
+  const thumb = `${S.site}api/thumbs/${encodeURIComponent(String(p.id).replace(/\//g, "_"))}.jpg`;
+  const authors = p.authors || [];
+  return `<article class="prow reveal${S.selected.has(p.id) ? " is-picked" : ""}" data-card="${esc(p.id)}">
+    ${pickBox(p.id)}
+    <div class="prow-main">
+      <h3><a href="${href}">${rank ? `<span class="rank">${rank}</span>` : ""}${esc(p.title)}</a></h3>
+      ${authors.length ? `<div class="prow-authors">${esc(authors.slice(0, 4).join(", "))}${authors.length > 4 ? ` 等 ${authors.length} 人` : ""}</div>` : ""}
+      <p class="prow-tldr">${mdInline(p.tldr)}</p>
+      ${p.core_insight ? `<p class="insight"><b>CORE INSIGHT</b>${mdInline(p.core_insight)}</p>` : ""}
+      <div class="prow-foot">${stars(p.value_score)}<span class="mono">${esc(p.id)}</span><span>${esc(fmtDate(p.date))}</span>${p.paper_type ? `<span>${esc(p.paper_type)}</span>` : ""}${(p.topics || []).map(chip).join("")}${statusPill(p.id)}<span class="grow"></span><a href="${href}">阅读笔记 →</a></div>
+    </div>
+    <a class="prow-thumb" href="${href}" tabindex="-1" aria-hidden="true"><img src="${thumb}" alt="" loading="lazy" onerror="this.parentElement.classList.add('nothumb')"><span class="ph">${esc(p.id)}</span></a>
   </article>`;
 }
 
@@ -633,8 +735,7 @@ function syncSelection() {
 function fillCollections() {
   const sel = $("#sel-collection");
   const cols = S.zotero?.collections || [];
-  const def = S.zotero?.default_collection || "DailyPaper/{topic_name}";
-  sel.innerHTML = `<option value="">默认：${esc(def)}</option>` + cols.map((c) => `<option>${esc(c)}</option>`).join("");
+  sel.innerHTML = `<option value="">默认：${esc(collectionLabel(S.zotero?.default_collection))}</option>` + cols.map((c) => `<option>${esc(c)}</option>`).join("");
 }
 async function decide(ids, action, collection = "") {
   if (!ids.length) return;
@@ -711,6 +812,7 @@ VIEWS.home = async () => {
   const top = [...today].sort((a, b) => (b.value_score - a.value_score) || (b.score - a.score))[0] || S.index[0];
   const counts = Object.fromEntries(S.topics.map((t) => [t.id, S.index.filter((p) => (p.topics || []).includes(t.id)).length]));
   const imported = S.items ? S.items.filter((i) => i.decision.status === "imported").length : Object.values(S.demoDecisions).filter((d) => d.status === "imported").length;
+  const quote = quoteOfDay();
   return `
   <section class="hero" aria-label="DailyPaper">
    <div class="hero-stage">
@@ -720,12 +822,12 @@ VIEWS.home = async () => {
       <div>
         <span class="eyebrow">arXiv 每日论文雷达 · LLM / Agent 可信性</span>
         <h1>少一点筛选，<br>多一点洞见。</h1>
-        <p class="sub">每天从 arXiv 挑出最值得读的 ${esc(DEMO_CONFIG.daily.top_k)} 篇，围绕 insight 与 novelty 精读；你点头的，直接进 Zotero。</p>
+        <blockquote class="quote"><p>${esc(quote[0])}</p><footer>—— ${esc(quote[1])}</footer></blockquote>
         <div class="hero-actions"><a class="btn primary" href="#/daily">查看今日精选 →</a><a class="btn" href="#/review">去审核入库</a></div>
       </div>
       ${top ? `<aside class="float-card" aria-label="今日首选">
         <div class="thumb">今日首选 · ${esc(fmtDate(top.date))}</div>
-        <h3>${esc(top.title)}</h3><p>${esc(top.tldr)}</p>
+        <h3>${esc(top.title)}</h3><p>${mdInline(top.tldr)}</p>
         <a href="#/paper/${encodeURIComponent(top.id)}">阅读精读笔记 →</a>
       </aside>` : ""}
     </div>
@@ -740,11 +842,6 @@ VIEWS.home = async () => {
       <div class="search-chips">${S.topics.slice(0, 5).map((t) => `<a class="chip" href="#/library?topic=${encodeURIComponent(t.id)}">${esc(tshort(t.id))}</a>`).join("")}</div>
     </form>
    </div>
-    <div class="band">
-      <h2>每天 5 篇，<br>读懂最值得读的论文。</h2>
-      <p>抓取 ${esc(DEMO_CONFIG.daily.categories.join(" / "))} 的新论文，按你的研究方向打分，精读 Top K，再由你决定哪些进入 Zotero 和 Obsidian。</p>
-      <a class="btn" href="#how">工作方式</a>
-    </div>
   </section>
 
   <div class="stats">
@@ -757,15 +854,6 @@ VIEWS.home = async () => {
   <section class="section">
     <div class="section-head"><div><h2>今日精选</h2><p>勾选右上角的方框可以多选，底部会出现"加入 Zotero"。</p></div><a class="btn sm" href="#/daily">全部 →</a></div>
     <div class="rail">${today.map((p, i) => paperCard(p, { rank: i + 1, insight: false })).join("") || `<div class="empty">今天还没有精读结果。</div>`}</div>
-  </section>
-
-  <section class="section" id="how">
-    <div class="section-head"><div><h2>工作方式</h2><p>每个工作日自动运行；你只需要在最后一步做决定。</p></div></div>
-    <div class="steps">
-      <div class="step reveal"><span class="n">1</span><h3>抓取与筛选</h3><p>arXiv 新论文先过关键词预筛，再由 LLM 只读标题和摘要，按 ${S.topics.length} 个方向打分。</p></div>
-      <div class="step reveal"><span class="n">2</span><h3>insight 精读</h3><p>Top K 全文精读：core insight、novelty delta、coverage 假设、claim ↔ evidence、research hooks。</p></div>
-      <div class="step reveal"><span class="n">3</span><h3>审核入库</h3><p>在这里勾选，审核通过的论文连同标签、PDF、精读笔记一起进 Zotero，citekey 写回 Obsidian。</p></div>
-    </div>
   </section>
 
   <section class="section">
@@ -804,14 +892,14 @@ VIEWS.daily = async (date) => {
   <nav class="datebar" aria-label="选择日期">${ds.slice(0, 30).map((d) => `<a href="#/daily/${d}" ${d === date ? 'aria-current="date"' : ""}><b>${esc(fmtDate(d))}</b><small>${esc(weekday(d))} · ${S.index.filter((p) => p.date === d).length} 篇</small></a>`).join("")}</nav>
   ${st ? `<div class="funnel"><div><b>${st.fetched}</b><span>抓取</span></div><div><b>${st.prefiltered}</b><span>关键词预筛</span></div><div><b>${st.screened}</b><span>LLM 筛选</span></div><div><b>${st.read}</b><span>精读</span></div></div>` : ""}
   <section class="section" style="padding-top:20px">
-    <div class="grid-cards">${papers.map((p, i) => paperCard(p, { rank: i + 1 })).join("") || `<div class="empty">这一天没有精读结果。</div>`}</div>
+    <div class="prows">${papers.map((p, i) => paperRow(p, { rank: i + 1 })).join("") || `<div class="empty">这一天没有精读结果。</div>`}</div>
   </section>
   ${day.also.length ? `<section class="section">
     <div class="section-head"><div><h2>其余筛选结果</h2><p>相关但没进入精读的论文，附 LLM 的一句话理由。需要时可以单独精读。</p></div></div>
     <div class="table-wrap"><table><thead><tr><th style="width:110px">分数</th><th>论文</th><th>理由</th><th style="width:110px"></th></tr></thead><tbody>
     ${day.also.map((a) => `<tr><td><span class="mono">${Number(a.score || 0).toFixed(1)}</span><div class="bar"><i style="width:${Math.round(((a.score || 0) / maxScore) * 100)}%"></i></div></td>
       <td><a href="${esc(a.url_abs)}" target="_blank" rel="noopener noreferrer" style="color:var(--ink)">${esc(a.title)}</a><div class="mono" style="font-size:12px;color:var(--muted)">${esc(a.id)}</div></td>
-      <td>${esc(a.reason)}</td><td><button class="btn sm" type="button" data-readone="${esc(a.id)}">精读</button></td></tr>`).join("")}
+      <td>${mdInline(a.reason)}</td><td><button class="btn sm" type="button" data-readone="${esc(a.id)}">精读</button></td></tr>`).join("")}
     </tbody></table></div></section>` : ""}`;
 };
 VIEWS.daily.after = () => $$("[data-readone]").forEach((b) => b.addEventListener("click", () => startRun("read", [b.dataset.readone])));
@@ -831,7 +919,7 @@ VIEWS.library = async (_, params) => {
     ${S.topics.map((t) => `<button class="chip filter" type="button" data-topic="${esc(t.id)}" aria-pressed="${topic === t.id}">${esc(tshort(t.id))}</button>`).join("")}
     <button class="chip filter" type="button" data-v="4" aria-pressed="${minv === "4"}">★4 以上</button>
   </div>
-  <div class="rows" id="lib-rows"></div>`;
+  <div class="prows" id="lib-rows"></div>`;
 };
 VIEWS.library.after = (_, params) => {
   const state = { q: params.get("q") || "", topic: params.get("topic") || "", v: Number(params.get("v") || 0), sort: params.get("sort") || "date" };
@@ -840,11 +928,8 @@ VIEWS.library.after = (_, params) => {
     let list = S.index.filter((p) => (!state.topic || (p.topics || []).includes(state.topic)) && (p.value_score || 0) >= state.v &&
       words.every((w) => [p.title, p.tldr, p.id, (p.authors || []).join(" "), (p.topics || []).map(tname).join(" ")].join(" ").toLowerCase().includes(w)));
     list.sort(state.sort === "value" ? (a, b) => (b.value_score - a.value_score) || b.date.localeCompare(a.date) : state.sort === "score" ? (a, b) => b.score - a.score : (a, b) => b.date.localeCompare(a.date) || b.score - a.score);
-    $("#lib-rows").innerHTML = list.map((p) => `<article class="row${S.selected.has(p.id) ? " is-picked" : ""}" data-card="${esc(p.id)}">
-      <div class="when"><b>${esc(fmtDate(p.date))}</b>${esc(p.paper_type || "")}</div>
-      <div style="min-width:0"><h3><a href="#/paper/${encodeURIComponent(p.id)}">${esc(p.title)}</a></h3><p>${esc(p.tldr)}</p><div class="chips" style="display:flex;gap:6px;flex-wrap:wrap">${(p.topics || []).map(chip).join("")}</div></div>
-      <div class="side">${stars(p.value_score)}<span class="mono">${esc(p.id)}</span>${statusPill(p.id)}</div>
-      ${pickBox(p.id)}</article>`).join("") || `<div class="empty">没有符合条件的论文。${state.q.match(ARXIV_ID) ? `<p><button class="btn primary sm" type="button" id="lib-read">精读 ${esc(state.q)}</button></p>` : ""}</div>`;
+    $("#lib-rows").innerHTML = list.map((p) => paperRow(p)).join("") || `<div class="empty">没有符合条件的论文。${state.q.match(ARXIV_ID) ? `<p><button class="btn primary sm" type="button" id="lib-read">精读 ${esc(state.q)}</button></p>` : ""}</div>`;
+    revealAll($("#lib-rows"));
     $("#lib-read")?.addEventListener("click", () => startRun("read", [state.q.match(ARXIV_ID)[1]]));
   };
   $("#lib-q").addEventListener("input", (e) => { state.q = e.target.value; paint(); });
@@ -863,8 +948,9 @@ async function loadPaper(id) {
   throw new Error("找不到这篇论文的笔记");
 }
 function waitLibs() {
-  return new Promise((res) => { const ok = () => window.marked && window.DOMPurify && window.katex; if (ok()) return res(true); let n = 0; const t = setInterval(() => { if (ok() || ++n > 60) { clearInterval(t); res(ok()); } }, 100); });
+  return new Promise((res) => { const ok = () => window.marked && window.DOMPurify && window.katex; if (ok()) return res(true); let n = 0; const t = setInterval(() => { if (ok() || ++n > 30) { clearInterval(t); res(ok()); } }, 100); });
 }
+const pdfUrl = (p) => (isLocal() && ARXIV_ID.test(String(p.id)) ? `/api/pdf/${encodeURIComponent(p.id)}` : p.url_pdf || "");
 function renderMarkdown(md) {
   const math = [];
   const keep = (tex, display) => { math.push({ tex, display }); return `@@M${math.length - 1}@@`; };
@@ -880,7 +966,9 @@ function renderMarkdown(md) {
 VIEWS.paper = async (id) => {
   const p = await loadPaper(id);
   const d = decisionOf(id);
+  const pdf = pdfUrl(p);
   return `
+  <div class="paper-split" id="paper-split">
   <div class="paper-layout">
     <nav class="toc" id="toc" aria-label="目录"></nav>
     <div style="min-width:0">
@@ -893,14 +981,49 @@ VIEWS.paper = async (id) => {
           ${d?.status === "imported" ? `<span class="btn ok" aria-disabled="true">已在 Zotero${d.citekey ? ` · <span class="mono">${esc(d.citekey)}</span>` : ""}</span>` : `<button class="btn primary" type="button" data-one="approve">加入 Zotero</button>`}
           <button class="btn" type="button" data-one="later">稍后</button>
           ${p.url_abs ? `<a class="btn" href="${esc(p.url_abs)}" target="_blank" rel="noopener noreferrer">arXiv ↗</a>` : ""}
-          ${p.url_pdf ? `<a class="btn" href="${esc(p.url_pdf)}" target="_blank" rel="noopener noreferrer">PDF ↗</a>` : ""}
+          ${pdf ? `<button class="btn" type="button" id="pdf-toggle">阅读 PDF</button>` : ""}
+          ${p.url_pdf ? `<a class="btn ghost" href="${esc(p.url_pdf)}" target="_blank" rel="noopener noreferrer">PDF ↗</a>` : ""}
           <button class="btn ghost" type="button" id="copy-id">复制 ${d?.citekey ? "citekey" : "ID"}</button>
         </div>
       </header>
       <article class="prose" id="prose"><p style="color:var(--muted)">正在渲染笔记…</p></article>
     </div>
+  </div>
+  <div class="split-handle" id="split-handle" hidden role="separator" aria-orientation="vertical" title="拖动调整宽度"></div>
+  <aside class="pdf-pane" id="pdf-pane" hidden aria-label="论文 PDF">
+    <div class="pdf-bar"><span class="mono">${esc(p.id)}</span><span class="title" title="${esc(p.title)}">${esc(p.title)}</span>${p.url_pdf ? `<a href="${esc(p.url_pdf)}" target="_blank" rel="noopener noreferrer">新窗口打开 ↗</a>` : ""}<button class="btn sm ghost" type="button" id="pdf-close">关闭</button></div>
+    <iframe id="pdf-frame" title="论文 PDF"></iframe>
+  </aside>
   </div>`;
 };
+function setupSplit(p) {
+  const split = $("#paper-split"), handle = $("#split-handle"), pane = $("#pdf-pane"), frame = $("#pdf-frame"), tog = $("#pdf-toggle");
+  if (!split || !tog) return;
+  const setSplit = (on) => {
+    split.classList.toggle("on", on); document.body.classList.toggle("split-mode", on);
+    handle.hidden = pane.hidden = !on;
+    if (on && !frame.getAttribute("src")) frame.src = pdfUrl(p);
+    tog.textContent = on ? "关闭 PDF" : "阅读 PDF";
+    try { localStorage.setItem("dp.pdf", on ? "1" : "0"); } catch { /* 无痕模式 */ }
+  };
+  tog.addEventListener("click", () => setSplit(!split.classList.contains("on")));
+  $("#pdf-close").addEventListener("click", () => setSplit(false));
+  let saved = 0; try { saved = Number(localStorage.getItem("dp.split")) || 0; } catch { /* 忽略 */ }
+  if (saved) split.style.setProperty("--split", saved + "px");
+  handle.addEventListener("pointerdown", (e) => {
+    e.preventDefault(); handle.setPointerCapture(e.pointerId); handle.classList.add("drag"); split.classList.add("dragging");
+    const rect = split.getBoundingClientRect();
+    const move = (ev) => split.style.setProperty("--split", Math.min(Math.max(ev.clientX - rect.left, 340), rect.width - 360) + "px");
+    const up = () => {
+      handle.classList.remove("drag"); split.classList.remove("dragging");
+      handle.removeEventListener("pointermove", move); handle.removeEventListener("pointerup", up); handle.removeEventListener("pointercancel", up);
+      try { localStorage.setItem("dp.split", String(parseInt(split.style.getPropertyValue("--split")) || "")); } catch { /* 忽略 */ }
+    };
+    handle.addEventListener("pointermove", move); handle.addEventListener("pointerup", up); handle.addEventListener("pointercancel", up);
+  });
+  let remembered = false; try { remembered = localStorage.getItem("dp.pdf") === "1"; } catch { /* 忽略 */ }
+  if (remembered && matchMedia("(min-width:1000px)").matches) setSplit(true);
+}
 VIEWS.paper.after = async (id) => {
   const p = await loadPaper(id).catch(() => null);
   $$("[data-one]").forEach((b) => b.addEventListener("click", () => decide([id], b.dataset.one)));
@@ -908,6 +1031,7 @@ VIEWS.paper.after = async (id) => {
     const text = decisionOf(id)?.citekey || id;
     try { await navigator.clipboard.writeText(text); toast("已复制 " + text, "ok"); } catch { toast("复制失败，请手动选择：" + text, "err"); }
   });
+  if (p) setupSplit(p);
   const prose = $("#prose");
   if (!p?.markdown) { prose.innerHTML = `<div class="empty">没有找到精读笔记。</div>`; return; }
   if (!(await waitLibs())) { prose.textContent = p.markdown; return; }
@@ -946,8 +1070,8 @@ VIEWS.review = async (_, params) => {
         <div style="min-width:0">
           <h3><a href="#/paper/${encodeURIComponent(p.id)}">${esc(p.title)}</a></h3>
           <div class="meta-line"><span>${esc(fmtDate(p.date))}</span><span class="mono">${esc(p.id)}</span>${stars(p.value_score)}<span class="status s-${esc(d.status)}">${statusLabel[d.status] || esc(d.status)}</span>${(p.topics || []).map(chip).join("")}</div>
-          <p>${esc(p.tldr)}</p>
-          ${p.core_insight ? `<p class="insight"><b>CORE INSIGHT</b>${esc(p.core_insight)}</p>` : ""}
+          <p>${mdInline(p.tldr)}</p>
+          ${p.core_insight ? `<p class="insight"><b>CORE INSIGHT</b>${mdInline(p.core_insight)}</p>` : ""}
           ${d.error ? `<p class="err">入库失败：${esc(d.error)}</p>` : ""}
           ${d.status === "imported" ? `<p style="font-size:13px;color:var(--ok)">已入库 ${esc(d.collection || "")} ${d.citekey ? `· <span class="mono">${esc(d.citekey)}</span>` : ""}</p>` : ""}
           <div class="acts">
@@ -961,7 +1085,7 @@ VIEWS.review = async (_, params) => {
     <aside>
       <div class="panel"><h3>Zotero</h3>
         <div class="zpill ${z?.ok ? "on" : ""}"><i></i>${esc(z ? (z.ok ? "已连接" : z.message || "未连接") : S.mode === "local" ? "检查中" : "未连接（需要本地助手）")}</div>
-        <p>默认分类：<span class="mono">${esc(z?.default_collection || "DailyPaper/{topic_name}")}</span></p>
+        <p>默认分类：<span class="mono">${esc(collectionLabel(z?.default_collection))}</span></p>
         <p>写入内容：条目、方向标签、PDF、精读笔记（子笔记）。需要 Zotero 桌面端保持打开。</p>
         <button class="btn" type="button" id="z-refresh">重新检测</button>
       </div>
@@ -1146,7 +1270,9 @@ async function route(force = false) {
   const view = name || "home"; const params = new URLSearchParams(qs || "");
   $$("[data-nav]").forEach((a) => { if (a.dataset.nav === (view === "paper" ? "library" : view)) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   const root = $("#view");
+  document.body.classList.remove("split-mode");
   try {
+    await waitLibs();  // 卡片里的行内 Markdown / 公式需要 marked、DOMPurify、KaTeX
     const html = await VIEWS[view](arg, params);
     root.innerHTML = `<div class="view">${html}</div>`;
     if (!force) window.scrollTo({ top: 0, behavior: "auto" });

@@ -84,6 +84,11 @@ class SiteContract:
             {
                 "schema_version": SCHEMA_VERSION,
                 "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                "site": {
+                    "title": self.cfg.settings.site.title,
+                    "base_url": self.cfg.settings.site.base_url,
+                    "repo_url": self.cfg.settings.site.repo_url,
+                },
                 "papers": [e.model_dump() for e in merged],
             },
         )

@@ -14,6 +14,7 @@ paths:
 site:
   title: DailyPaper
   base_url: ""                # 网站地址，例如 https://<用户名>.github.io/DailyPaper（用于 RSS 绝对链接）
+  repo_url: https://github.com/YuanChangYe/DailyPaper   # 网页上的 GitHub 链接
   adapter: mkdocs             # mkdocs | hugo | jekyll | generic_repo（见 README「接入个人网站」）
   adapter_options: {}
 

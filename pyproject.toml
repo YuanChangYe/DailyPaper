@@ -20,7 +20,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-pdf = ["pymupdf>=1.23"]
+pdf = ["pymupdf>=1.23,<2"]  # 2.0 强依赖 onnxruntime，部分 Windows 环境导入即崩溃
 app = ["fastapi>=0.110", "uvicorn>=0.27", "httpx>=0.25", "ruamel.yaml>=0.18"]
 site = ["mkdocs-material>=9.5"]
 dev = ["pytest>=7.4", "ruff>=0.4"]

@@ -106,6 +106,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
             "paper_types": ["method", "theory", "benchmark", "empirical", "survey", "position"],
             "counts": counts,
             "site_title": cfg.settings.site.title,
+            "repo_url": cfg.settings.site.repo_url,
             "git_enabled": git_enabled,
             "workspace": str(cfg.content_dir.parent),
             "running": runner.running,
@@ -125,6 +126,34 @@ def create_app(cfg: AppConfig) -> FastAPI:
             raise HTTPException(404, f"笔记文件不存在：{it.entry.note_path}")
         fm, body = read_markdown(path)
         return {"frontmatter": fm, "markdown": body}
+
+    @app.get("/api/pdf/{paper_id}")
+    def pdf(paper_id: str):
+        """同源提供论文 PDF（缓存在 .cache/pdf/），供网页在分栏里直接阅读。"""
+        import re
+
+        import httpx
+
+        from ..core.models import Paper
+        from ..integrations.site.contract import SiteContract
+
+        if not re.match(r"^\d{4}\.\d{4,5}$", paper_id):
+            raise HTTPException(400, "只支持 arXiv ID")
+        entry = next((e for e in SiteContract(cfg).load_index() if e.id == paper_id), None)
+        paper = Paper(id=paper_id, title="", url_pdf=(entry.url_pdf if entry else "") or f"https://arxiv.org/pdf/{paper_id}")
+        path = cfg.cache_dir / "pdf" / f"{paper.slug}.pdf"
+        if not path.exists():
+            try:
+                r = httpx.get(paper.url_pdf, timeout=120, follow_redirects=True,
+                              headers={"User-Agent": "DailyPaper/0.1 (personal research digest)"})
+            except httpx.HTTPError as e:
+                raise HTTPException(502, f"下载 PDF 失败: {e}") from e
+            if r.status_code != 200 or not r.content.startswith(b"%PDF"):
+                raise HTTPException(502, f"arXiv 没有返回 PDF（HTTP {r.status_code}）")
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(r.content)
+        return FileResponse(path, media_type="application/pdf",
+                            headers={"Content-Disposition": f'inline; filename="{paper_id}.pdf"'})
 
     @app.get("/api/zotero/status")
     def zotero_status():

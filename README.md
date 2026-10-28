@@ -268,11 +268,11 @@ dailypaper read <arXiv ID> --prompt-only                           # 只生成 p
 | 发现 | 最近一天的精读论文、统计，搜索框粘贴 arXiv ID 可直接精读 |
 | 今日 | 某一天的日报：精读列表、也值得关注的论文 |
 | 文库 | 所有已精读论文，按方向、类型、价值、日期筛选 |
-| 论文 | 完整精读笔记（Markdown + 公式）、目录、入库按钮 |
+| 论文 | 完整精读笔记（Markdown + 公式）、目录、入库按钮；「阅读 PDF」把页面分成左右两栏，左侧笔记、右侧原文，分隔线可拖动 |
 | 审核台 | 待审核队列：加入 Zotero / 稍后 / 不要，批量操作，Obsidian 同步，兴趣画像 |
 | 搜索设置 | 直接编辑研究方向、关键词、镜头问题、arXiv 分类、Top K、阈值；立即运行今日任务或精读指定论文 |
 
-网页根据环境自动切换模式：连接到本地助手时可读写；部署为静态网站时只读（设置页可导出 `topics.yaml`）；没有数据时显示示例。前后端接口约定见 [src/dailypaper/app/API.md](src/dailypaper/app/API.md)。
+列表中的论文带首页缩略图（由 `renderer.thumbnails` 步骤从 PDF 第一页生成，需要 `pymupdf`）；摘要、insight 等字段都按 Markdown 和 LaTeX 渲染。网页根据环境自动切换模式：连接到本地助手时可读写；部署为静态网站时只读（设置页可导出 `topics.yaml`）；没有数据时显示示例。前后端接口约定见 [src/dailypaper/app/API.md](src/dailypaper/app/API.md)。
 
 ---
 
@@ -594,6 +594,10 @@ arXiv 周末没有公告。也可能当天没有论文达到精读阈值，可�
 **arXiv 返回 429？**
 
 默认的 RSS 数据源只需一次请求，很少遇到。补抓历史日期用的 arXiv API 有频率限制，程序会自动退避重试，稍后再试即可。
+
+**`import pymupdf` 时程序直接崩溃（access violation）？**
+
+PyMuPDF 2.0 会自动加载版面分析模块并依赖 onnxruntime，在部分 Windows 环境下导入即崩溃。本项目把依赖固定在 `pymupdf<2`；如果环境里已经装了 2.0，运行 `pip install "pymupdf>=1.23,<2"` 降级即可。
 
 **精读笔记不完整？**
 

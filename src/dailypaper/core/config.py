@@ -169,6 +169,7 @@ class ObsidianConfig(BaseModel):
 class SiteConfig(BaseModel):
     title: str = "DailyPaper"
     base_url: str = ""
+    repo_url: str = "https://github.com/YuanChangYe/DailyPaper"  # 网页上的 GitHub 链接
     adapter: str = "mkdocs"
     adapter_options: dict = Field(default_factory=dict)
 

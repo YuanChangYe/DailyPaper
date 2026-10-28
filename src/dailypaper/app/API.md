@@ -22,6 +22,10 @@
 | POST | `/api/sync` | 从 Obsidian 收集入库请求并导入 |
 | POST | `/api/profile` | 从 Zotero 导出文库索引与兴趣画像 |
 | POST | `/api/git/pull`、`/api/git/push` | 同步审核结果 |
+| GET | `/api/pdf/{arXiv ID}` | 同源返回论文 PDF（缓存在 `.cache/pdf/`），论文页的分栏阅读用它嵌入 iframe |
+| GET | `/site/api/thumbs/{id}.jpg` | 论文首页缩略图，由 `renderer.thumbnails` 生成；不存在时网页显示占位 |
+| GET/PUT | `/api/config` | 搜索设置（见第 2.2 节，已实现） |
+| POST/GET | `/api/run`、`/api/run/status` | 触发运行与轮询（见第 2.3 节，已实现） |
 
 ## 2. 需要主会话新增的接口
 

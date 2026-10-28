@@ -18,6 +18,7 @@ pipelines:
     - {id: read,         use: reader.deep_read,  with: {workers: 2}}
     - {id: render,       use: renderer.markdown}
     - {id: site_index,   use: renderer.site_index}
+    - {id: thumbs,       use: renderer.thumbnails, on_error: skip}   # 论文首页缩略图（需要 pymupdf）
     - {id: review_queue, use: publisher.review_queue}
     - {id: mark_seen,    use: publisher.mark_seen}
     - {id: site,         use: publisher.site, on_error: skip}
@@ -32,6 +33,7 @@ pipelines:
     - {id: read,         use: reader.deep_read}
     - {id: render,       use: renderer.markdown, with: {digest: false}}
     - {id: site_index,   use: renderer.site_index}
+    - {id: thumbs,       use: renderer.thumbnails, on_error: skip}
     - {id: review_queue, use: publisher.review_queue}
 
   # 补抓历史日期（用 arXiv API，按提交日期）：dailypaper run --pipeline backfill --date 2026-10-20
@@ -45,5 +47,6 @@ pipelines:
     - {id: read,         use: reader.deep_read}
     - {id: render,       use: renderer.markdown}
     - {id: site_index,   use: renderer.site_index}
+    - {id: thumbs,       use: renderer.thumbnails, on_error: skip}
     - {id: review_queue, use: publisher.review_queue}
     - {id: mark_seen,    use: publisher.mark_seen}
