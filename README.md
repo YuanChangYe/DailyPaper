@@ -1,15 +1,23 @@
 # DailyPaper
 
 [![ci](https://github.com/YuanChangYe/DailyPaper/actions/workflows/ci.yml/badge.svg)](https://github.com/YuanChangYe/DailyPaper/actions/workflows/ci.yml)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![python](https://img.shields.io/badge/python-3.10%2B-blue.svg)
 
-> An automated arXiv reading assistant: it fetches new papers every day, screens them with an LLM against your research topics, and writes structured deep-reading notes focused on **insight and novelty**. Output goes to a static website, Obsidian, and (after your review) Zotero. Fully configurable and plugin-based.
+> An automated arXiv reading assistant: it fetches new papers every day, screens them with an LLM against your research topics, and writes structured deep-reading notes focused on **insight and novelty**. Output goes to a local web console, a static website, Obsidian, and (after your review) Zotero. Plugin-based and fully configurable. **Bring your own LLM API key, Zotero and Obsidian — this repository is the framework.**
 
 DailyPaper 每天自动抓取 arXiv 新论文，用大语言模型按你设定的研究方向筛选，再对最相关的几篇做全文精读，生成一份能在 10 分钟内读完、围绕 **insight 与 novelty** 展开的阅读笔记。
 
-- **不用自己搭服务器**：GitHub Actions 每天定时运行，GitHub Pages 免费托管网站。
-- **一份 Markdown，多处使用**：同一批文件既是网站内容，也可以直接放进 Obsidian。
-- **入库前先审核**：精读结果先进入审核页，你点击确认后才写入 Zotero。
-- **全部可配置**：研究方向、模型、精读框架、流水线步骤都由配置文件决定；新增功能只需写一个插件。
+**这个仓库提供的是一套完整的框架**：抓取、筛选、精读、输出、网页、联动接口和测试都已实现。你需要自己接入模型 API key，以及（可选的）Zotero、Obsidian 和 GitHub；每一步都有验证命令，全部通过后在本地打开网页即可使用。
+
+<p align="center">
+  <img src="assets/workflow.webp" alt="DailyPaper 工作流程" width="860">
+</p>
+
+- **不用自己搭服务器**：在自己电脑上定时运行，或用 GitHub Actions + GitHub Pages。
+- **一份 Markdown，多处使用**：同一批文件既是网页和网站的内容，也可以直接放进 Obsidian。
+- **入库前先审核**：精读结果先进入审核台，你点击确认后才写入 Zotero。
+- **全部可配置、可替换**：研究方向、模型、精读框架、流水线步骤都由配置文件决定；每一类组件都是插件。
 
 > [!NOTE]
 > 笔记由 LLM 生成，可能有误读或遗漏。它的定位是帮你判断"值不值得读、该读哪里"，不能替代阅读原文。
@@ -18,23 +26,117 @@ DailyPaper 每天自动抓取 arXiv 新论文，用大语言模型按你设定�
 
 ## 目录
 
+- [你需要自己准备什么](#你需要自己准备什么)
+- [接入与验证（按顺序做）](#接入与验证按顺序做)
 - [效果示例](#效果示例)
 - [工作流程](#工作流程)
-- [快速开始](#快速开始)
-- [部署：每天自动运行](#部署每天自动运行)
-- [配置你的研究方向](#配置你的研究方向)
+- [每天自动运行](#每天自动运行)
+- [配置研究方向](#配置研究方向)
 - [精读框架与 lens](#精读框架与-lens)
 - [网页](#网页)
-- [Zotero 联动与审核页](#zotero-联动与审核页)
-- [Obsidian](#obsidian)
-- [网站与站点接口](#网站与站点接口)
+- [接入 Zotero](#接入-zotero)
+- [接入 Obsidian](#接入-obsidian)
+- [接入网站](#接入网站)
 - [模型与费用](#模型与费用)
-- [代码结构](#代码结构)
+- [目录结构](#目录结构)
+- [架构与维护](#架构与维护)
 - [扩展开发](#扩展开发)
 - [命令参考](#命令参考)
 - [隐私与安全](#隐私与安全)
 - [常见问题](#常见问题)
 - [路线图](#路线图)
+
+---
+
+## 你需要自己准备什么
+
+| 项目 | 是否必需 | 用途 | 在哪里接入 |
+|---|---|---|---|
+| **Python 3.10+** | 必需 | 运行本项目 | 本机 |
+| **LLM API key** | 必需 | 筛选和精读。默认 Claude（`ANTHROPIC_API_KEY`），也支持任何 OpenAI 兼容接口（DeepSeek、Gemini、OpenRouter 等） | `.env` 文件 |
+| **Zotero 7 桌面端** | 可选 | 审核通过的论文一键入库（元数据、标签、PDF、精读子笔记），文库去重，个性化排序 | 本机 Zotero，需开启本地 API |
+| **Obsidian** | 可选 | 直接读写精读笔记；在笔记里评分、勾选入库 | 把输出目录指向 vault |
+| **GitHub 账号** | 可选 | 用 GitHub Actions 定时运行并发布 GitHub Pages 网站；或者只是存放你的 fork | GitHub Secrets / Pages |
+| **个人网站** | 可选 | 把笔记接进你已有的 Hugo / Jekyll / 任意网站 | `settings.yaml` 的 `site` |
+
+没有这些可选项，框架照样能跑：笔记以 Markdown 和 JSON 的形式留在本地，网页（`dailypaper app`）可以浏览、搜索和阅读。
+
+---
+
+## 接入与验证（按顺序做）
+
+每一步都有命令可以验证，上一步通过再做下一步。全部通过后，`dailypaper app` 打开的网页就是完整可用的。
+
+### 第 1 步：安装
+
+```bash
+git clone https://github.com/YuanChangYe/DailyPaper.git   # 或在 GitHub 上点 "Use this template" / Fork
+cd DailyPaper
+python -m venv .venv
+# Windows: .venv\Scripts\activate    macOS / Linux: source .venv/bin/activate
+pip install -e ".[all]"
+```
+
+验证：`dailypaper list-plugins` 能列出十几类插件；`pytest` 全部通过（离线测试，不联网、不花钱）。
+
+### 第 2 步：配置输出目录（推荐）
+
+把 `.env.example` 复制为 `.env`，设置一个项目目录之外的输出位置，笔记、状态和缓存都会放在那里，不会混进 git：
+
+```
+DAILYPAPER_WORKSPACE=D:/DailyPaperData        # 想让 Obsidian 直接读到，就指向 vault 里的子目录
+```
+
+验证：`dailypaper check` 第二行显示的"输出目录"是你设置的位置。
+
+### 第 3 步：不花钱跑通全流程
+
+用内置的离线假模型跑一遍（真实抓取 arXiv，但不调用付费模型）：
+
+```bash
+dailypaper run --provider fake --dry-run
+```
+
+验证：日志依次出现 `fetch → dedupe → prefilter → screen → fulltext → read → render` 并以 `完成` 结束；输出目录下出现 `docs/daily/<日期>.md` 和 `docs/api/index.json`。此时可以先 `dailypaper app` 看看网页（内容是假模型生成的占位文本）。
+
+### 第 4 步：接入模型 API
+
+在 `.env` 中填入 key（`.env` 已在 `.gitignore` 中，不会被提交）：
+
+```
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+用别的模型时，改 `config/llm.yaml` 的 `roles`，并填对应的环境变量，见[模型与费用](#模型与费用)。
+
+验证：`dailypaper check` 中每个角色前都是 ✓。然后真实精读一篇（约 $0.15）：
+
+```bash
+dailypaper read 2610.35877
+```
+
+输出目录下出现 `docs/papers/<年>/<月>/2610.35877.md`，内容是按 10 节框架写成的中文笔记，每个判断后带原文出处标记。
+
+### 第 5 步：设定你的研究方向
+
+编辑 `config/topics.yaml`（见[配置研究方向](#配置研究方向)），或在网页的"搜索设置"里直接改。仓库自带的方向只是示例。
+
+验证：`dailypaper run` 跑一次完整的每日流程（每天精读 5 篇约 $0.7），日报里的论文符合你的方向。
+
+### 第 6 步：接入可选项
+
+- **Zotero**：见[接入 Zotero](#接入-zotero)，验证命令 `dailypaper zotero-check`。
+- **Obsidian**：见[接入 Obsidian](#接入-obsidian)。
+- **每天自动运行**：见[每天自动运行](#每天自动运行)。
+- **网站**：见[接入网站](#接入网站)。
+
+### 第 7 步：日常使用
+
+```bash
+dailypaper app      # 打开 http://127.0.0.1:8765
+```
+
+浏览每日精读、搜索文库、左右分栏对照 PDF 阅读笔记、在审核台决定哪些入库、在搜索设置里调整方向，或者直接点"立即运行"。
 
 ---
 
@@ -56,25 +158,21 @@ DailyPaper 每天自动抓取 arXiv 新论文，用大语言模型按你设定�
 
 ## 工作流程
 
-<p align="center">
-  <img src="assets/workflow.webp" alt="DailyPaper 工作流程" width="860">
-</p>
-
 ```
-                ┌──── 定时触发：GitHub Actions 或本地任务计划（每个工作日） ────┐
+                ┌──── 定时触发：本地任务计划 或 GitHub Actions（每个工作日） ────┐
                 │                                                                │
  arXiv 每日 RSS ─▶ 去重 ─▶ 关键词预筛 ─▶ LLM 摘要筛选 ─▶ 全文获取 ─▶ LLM 精读 ─▶ 输出
                     ▲        几百→几十      小模型打分      HTML/PDF     大模型+lens    │
                     │                        top-k                                     │
         Zotero 文库索引 / 兴趣画像                                      Markdown · JSON · RSS
-        （跳过已有论文，按相似度调序）                                   + 审核队列
+        （跳过已有论文，按相似度调序）                                   + 审核队列 + 缩略图
                     ▲                                                               │
                     │                              ┌─────────────────────┬──────────┴──────────┐
                     │                              ▼                     ▼                     ▼
-                    │                      GitHub Pages 网站      Obsidian vault        本地审核页
-                    │                      （git push 后发布）    （直接写入或 Git 拉取）  dailypaper app
+                    │                      本地网页 / 静态网站      Obsidian vault        审核台
+                    │                      浏览、搜索、读 PDF     （直接写入或 Git 拉取）  点击确认
                     │                                                    │                     │
-                    │                                           评分 / 勾选入库          点击确认
+                    │                                           评分 / 勾选入库                 │
                     │                                                    └──────────┬──────────┘
                     └───────────────────────────────────────────────────────────────┘
                                               写入 Zotero，回流去重与排序
@@ -88,55 +186,11 @@ DailyPaper 每天自动抓取 arXiv 新论文，用大语言模型按你设定�
 | LLM 筛选 | 小模型读标题和摘要，按研究方向打分，判断论文类型和新颖程度 | 很低 |
 | 全文获取 | 优先用 arXiv HTML（保留章节和公式），其次 PDF，最后只用摘要 | 免费 |
 | 精读 | 大模型按固定框架写笔记，并按论文自动叠加分析指引（lens） | 主要开销 |
-| 输出 | 单篇笔记、日报、方向索引、首页、JSON API、RSS，并加入审核队列 | 免费 |
+| 输出 | 单篇笔记、日报、方向索引、JSON API、RSS、首页缩略图，并加入审核队列 | 免费 |
 
 ---
 
-## 快速开始
-
-需要 Python 3.10 或以上版本。
-
-```bash
-git clone https://github.com/YuanChangYe/DailyPaper.git
-cd DailyPaper
-python -m venv .venv
-# Windows: .venv\Scripts\activate    macOS / Linux: source .venv/bin/activate
-pip install -e ".[all]"
-```
-
-**不需要 API key 也能先体验**：用内置的离线假模型跑一遍完整流程（真实抓取 arXiv，但不调用付费模型）：
-
-```bash
-dailypaper run --provider fake --dry-run
-mkdocs serve          # 浏览器打开 http://127.0.0.1:8000 预览网站
-```
-
-**使用真实模型**：把 `.env.example` 复制为 `.env`，填入 API key（`.env` 已在 `.gitignore` 中，不会被提交）：
-
-```
-ANTHROPIC_API_KEY=sk-ant-...
-```
-
-然后：
-
-```bash
-dailypaper read 2610.35877    # 先精读一篇指定论文，看看效果
-dailypaper run                # 运行完整的每日流程
-```
-
-结果默认写在项目目录的 `docs/` 和 `data/` 下。个人使用时建议在 `.env` 中设置一个输出目录，让笔记、状态和缓存都放在项目之外，不会混进 git：
-
-```
-DAILYPAPER_WORKSPACE=D:/DailyPaperData
-```
-
-`dailypaper check` 会显示当前的输出位置。
-
----
-
-## 部署：每天自动运行
-
-有两种方式，按需选择。
+## 每天自动运行
 
 ### 方式 A：在自己的电脑上定时运行（推荐个人使用）
 
@@ -150,17 +204,17 @@ powershell -ExecutionPolicy Bypass -File scripts\install_task.ps1 -Time 14:00
 
 日志在项目目录的 `logs/` 下，保留 30 天。取消任务：`scripts\uninstall_task.ps1`。
 
-**macOS / Linux**：用 cron 调用同样的命令，例如 `0 14 * * 1-5 cd /path/to/DailyPaper && .venv/bin/dailypaper run >> logs/daily.log 2>&1`。
+**macOS / Linux**：用 cron 调用同样的命令，例如 `0 14 * * 1-5 cd /path/to/DailyPaper && .venv/bin/dailypaper --log-file logs/daily.log run`。
 
 ### 方式 B：在 GitHub Actions 上运行并发布网站
 
-适合想要一个公开的论文日报网站的情况。整套流程运行在 GitHub 上，不需要自己的服务器；每日任务会把生成的笔记提交回仓库，所以请使用你自己的仓库（fork 或复制一份）。
+适合想要一个公开的论文日报网站的情况。整套流程运行在 GitHub 上，不需要自己的服务器；每日任务会把生成的笔记提交回仓库，所以请使用你自己的仓库（fork 或 "Use this template"）。
 
-1. **Fork 本仓库**，并在 **Actions** 标签页启用工作流（fork 默认禁用）。
-2. **添加 API key**：**Settings → Secrets and variables → Actions → Secrets → New repository secret**，名称填 `ANTHROPIC_API_KEY`。如果用其他模型，就添加对应的名称，见[模型与费用](#模型与费用)。
+1. 在 **Actions** 标签页启用工作流（fork 默认禁用）。
+2. **添加 API key**：**Settings → Secrets and variables → Actions → Secrets → New repository secret**，名称填 `ANTHROPIC_API_KEY`（或你所用模型对应的变量名）。
 3. **开启定时**：同一页面的 **Variables** 中添加 `DAILYPAPER_SCHEDULE`，值填 `true`。不添加时只能手动触发，不会自动运行。
 4. **开启网站**：**Settings → Pages → Build and deployment → Source** 选择 **GitHub Actions**。页面上推荐的 Jekyll / Static HTML 模板不要点，仓库里已经有自己的发布流程。
-5. **试运行**：**Actions → daily → Run workflow**。工作流会先做自检，缺少 Secret 等问题会直接显示在页面的 Annotations 中。之后每个工作日 UTC 06:00 自动运行，时间可以在 `.github/workflows/daily.yml` 中修改。
+5. **试运行**：**Actions → daily → Run workflow**。工作流会先做自检（`dailypaper check`），缺少 Secret 等问题会直接显示在页面的 Annotations 中。之后每个工作日 UTC 06:00 自动运行，时间可以在 `.github/workflows/daily.yml` 中修改。
 6. **填写网站地址**：网站发布在 `https://<用户名>.github.io/<仓库名>/`。把它填进 `config/settings.yaml` 的 `site.base_url`，RSS 中的链接就会指向网站。
 
 > [!IMPORTANT]
@@ -168,7 +222,7 @@ powershell -ExecutionPolicy Bypass -File scripts\install_task.ps1 -Time 14:00
 
 ---
 
-## 配置你的研究方向
+## 配置研究方向
 
 所有配置都在 `config/` 目录下，通常只需要改这里，不用改代码。
 
@@ -178,9 +232,9 @@ powershell -ExecutionPolicy Bypass -File scripts\install_task.ps1 -Time 14:00
 | `pipeline.yaml` | 流水线步骤；每天精读几篇（`top_k`）、精读阈值（`min_score`）、arXiv 分类 |
 | `llm.yaml` | 每个环节用哪个模型；价格表；月度预算 |
 | `lenses.yaml` | 精读时可叠加哪些分析指引，以及什么时候使用 |
-| `settings.yaml` | 输出语言、网站、Zotero、Obsidian、本地审核页 |
+| `settings.yaml` | 输出语言、输出目录、网站、Zotero、Obsidian、本地网页 |
 
-仓库自带的 `topics.yaml` 是一份示例，关注 LLM / Agent 的不确定性量化、基于 conformal prediction 的 selective prediction、agent 自我改进、multi-agent 可信性。换成你自己的方向时，每个方向这样写：
+仓库自带的 `topics.yaml` 是一份示例（LLM / Agent 的不确定性量化、conformal prediction、agent 自我改进、multi-agent 可信性）。换成你自己的方向时，每个方向这样写：
 
 ```yaml
 topics:
@@ -197,7 +251,7 @@ topics:
       - exchangeability 假设在该场景下是否成立？
 ```
 
-关键词不区分大小写，空格也能匹配连字符，`*` 是通配符（例如 `calibrat*`）。
+关键词不区分大小写，空格也能匹配连字符，`*` 是通配符（例如 `calibrat*`）。网页的"搜索设置"可以直接编辑这些内容并保存，保存前会校验，文件中的注释会保留。
 
 YAML 中可以用 `${ENV}` 或 `${ENV:-默认值}` 引用环境变量。API key 只从环境变量读取，不要写进配置文件。
 
@@ -236,12 +290,7 @@ lens 只补充分析要点和检查清单，**不改变输出结构**。有三�
 | 论文类型 | `prompts/lenses/type_*.md`：method / theory / benchmark / empirical / survey / position，按筛选阶段判断的类型选择 |
 | 外部阅读 skill | 把现有的 Claude skill（`SKILL.md` 格式）接入为 lens，只抽取其中的分析方法 |
 
-每篇论文用哪些 lens 由三步决定：
-1. `lenses.yaml` 中的规则：例如"总是使用"、"属于某方向时"、"排序分 ≥ 7 时"、"论文类型为 theory 时"。
-2. 筛选阶段模型给出的建议。
-3. 按优先级和字符预算裁剪。
-
-实际用到的 lens 会记录在每篇笔记的 frontmatter 中。
+每篇论文用哪些 lens 由三步决定：`lenses.yaml` 中的规则（总是使用 / 属于某方向 / 排序分 ≥ 7 / 论文类型为 theory 等）→ 筛选阶段模型的建议 → 按优先级和字符预算裁剪。实际用到的 lens 记录在每篇笔记的 frontmatter 中。
 
 **接入外部 skill**：
 
@@ -251,102 +300,84 @@ dailypaper list-lenses                                             # 查看可�
 dailypaper read <arXiv ID> --prompt-only                           # 只生成 prompt（写到 .cache/prompts/），不调用模型
 ```
 
-然后在 `lenses.yaml` 的 `catalog` 中声明，再在 `rules` 中写明何时使用：
-- 带 `manifest.yaml` 的 skill 用 `adapter: skill_manifest`，可以按论文类型选取不同的片段；
-- 只有 `SKILL.md` 的 skill 用 `adapter: skill_markdown`，可以只选取指定的小节。
-
-接入时会自动去掉 skill 中的脚本、代码块和工具调用指令。示例配置引用了两个外部 skill（`nature-paper-card`、`ccf-idea-reviewer`），仓库中没有它们时会被自动跳过，不影响运行。
+然后在 `lenses.yaml` 的 `catalog` 中声明，再在 `rules` 中写明何时使用：带 `manifest.yaml` 的 skill 用 `adapter: skill_manifest`，可按论文类型选取片段；只有 `SKILL.md` 的用 `adapter: skill_markdown`，可只选取指定小节。接入时会自动去掉 skill 中的脚本、代码块和工具调用指令。示例配置引用的两个外部 skill 在仓库中不存在时会被自动跳过。
 
 ---
 
 ## 网页
 
-`dailypaper app` 打开的是一个单页网页，同一份文件也会随每日运行复制到内容目录，发布到 GitHub Pages 后以只读方式展示。
+`dailypaper app` 打开的是一个单页网页，同一份文件也会随每日运行复制到内容目录，发布为静态网站后以只读方式展示。
 
 | 视图 | 内容 |
 |---|---|
 | 发现 | 最近一天的精读论文、统计，搜索框粘贴 arXiv ID 可直接精读 |
-| 今日 | 某一天的日报：精读列表、也值得关注的论文 |
-| 文库 | 所有已精读论文，按方向、类型、价值、日期筛选 |
+| 今日 | 某一天的日报：精读列表（带首页缩略图）、也值得关注的论文 |
+| 文库 | 所有已精读论文，按方向、价值筛选，搜索标题、摘要、insight、作者、ID |
 | 论文 | 完整精读笔记（Markdown + 公式）、目录、入库按钮；「阅读 PDF」把页面分成左右两栏，左侧笔记、右侧原文，分隔线可拖动 |
 | 审核台 | 待审核队列：加入 Zotero / 稍后 / 不要，批量操作，Obsidian 同步，兴趣画像 |
 | 搜索设置 | 直接编辑研究方向、关键词、镜头问题、arXiv 分类、Top K、阈值；立即运行今日任务或精读指定论文 |
 
-列表中的论文带首页缩略图（由 `renderer.thumbnails` 步骤从 PDF 第一页生成，需要 `pymupdf`）；摘要、insight 等字段都按 Markdown 和 LaTeX 渲染。网页根据环境自动切换模式：连接到本地助手时可读写；部署为静态网站时只读（设置页可导出 `topics.yaml`）；没有数据时显示示例。前后端接口约定见 [src/dailypaper/app/API.md](src/dailypaper/app/API.md)。
+网页根据环境自动切换模式：连接到本地助手时可读写；部署为静态网站时只读（设置页可导出 `topics.yaml`）；没有数据时显示示例。本地助手只监听 `127.0.0.1`，写操作要求自定义请求头，其他网站无法通过你的浏览器调用它。前后端接口约定见 [src/dailypaper/app/API.md](src/dailypaper/app/API.md)。
 
 ---
 
-## Zotero 联动与审核页
+## 接入 Zotero
 
-精读结果不会直接写入 Zotero，而是先进入审核队列，由你决定。
+精读结果不会直接写入 Zotero，而是先进入审核队列，由你决定。默认通过**本机 Zotero 桌面端**写入，不需要 zotero.org 的 API key。
+
+1. 安装 Zotero 7，并保持打开。
+2. Zotero 设置 → 高级，勾选"允许此计算机上的其他应用程序与 Zotero 通信"。
+3. （推荐）新建一个 `DailyPaper` 分类，建在文库的哪一层都可以。入库时默认放入 `DailyPaper/<方向名>`，子分类不存在时退回 `DailyPaper`；都没有则放入文库根目录。通过本机 Zotero 写入时不能自动新建分类。
+4. 验证：
 
 ```bash
-dailypaper zotero-check   # 检查 Zotero 连接
-dailypaper app            # 打开审核页 http://127.0.0.1:8765
+dailypaper zotero-check
 ```
 
-**准备工作**：
-- 安装 Zotero 7，并保持打开。
-- 在 Zotero 设置 → 高级中，勾选"允许此计算机上的其他应用程序与 Zotero 通信"。
-- （推荐）在 Zotero 中新建一个 `DailyPaper` 分类，建在文库的哪一层都可以。入库时默认放入 `DailyPaper/<方向名>`，子分类不存在时退回 `DailyPaper`；都没有则放入文库根目录。通过本机 Zotero 写入时不能自动新建分类。
-
-**审核页**会列出每篇论文的价值评分、方向、TL;DR 和核心 insight，可以展开完整笔记（公式会正常渲染）。每篇有三个按钮：
-
-| 按钮 | 效果 |
-|---|---|
-| ✅ 加入 Zotero | 写入条目元数据、标签、PDF，以及作为子笔记的精读内容；可以选择目标分类；支持批量操作 |
-| ⏸ 稍后 | 留到以后再处理 |
-| ❌ 不要 | 不入库；这个决定也会作为排序反馈 |
-
-**写入方式**（在 `settings.yaml` 的 `zotero` 下配置）：
-- `connector`（默认）：通过本机 Zotero 桌面端写入，PDF 由 Zotero 下载，再按你在 Zotero 中的设置同步（Zotero 存储或 WebDAV 都可以），不需要额外的 key。
-- `web_api`：通过 zotero.org Web API 写入，可以在云端运行，会自动创建分类。需要设置 `zotero.web_api.library_id` 和环境变量 `ZOTERO_API_KEY`。
-
-**其他联动**：
+三行都是 ✓（读取、写入、Better BibTeX 可选）即接入成功。之后在网页的审核台点"加入 Zotero"，条目、方向标签、PDF 和精读子笔记会一起写入；PDF 由 Zotero 下载，再按你在 Zotero 中的设置同步（Zotero 存储或 WebDAV 都可以）。
 
 | 功能 | 入口 |
 |---|---|
 | 入库后把 citekey 和 `zotero://` 链接回写到笔记（装了 Better BibTeX 就用它的 citekey，否则按"姓+年份+标题词"生成） | 自动 |
-| 从文库导出去重索引和兴趣画像，用于跳过已有论文、按相似度调整排序 | `dailypaper zotero-profile` / 审核页"更新兴趣画像" |
+| 从文库导出去重索引和兴趣画像，用于跳过已有论文、按相似度调整排序 | `dailypaper zotero-profile` / 审核台"更新兴趣画像" |
 | 对文库中任意一篇论文做同样的精读（优先使用本地 PDF） | `dailypaper read <Zotero 条目 key>` |
-| 处理所有已批准但还没入库的论文（包括在 Obsidian 中勾选的） | `dailypaper zotero-sync` / 审核页"同步到 Zotero" |
+| 处理所有已批准但还没入库的论文（包括在 Obsidian 中勾选的） | `dailypaper zotero-sync` / 审核台"同步到 Zotero" |
 | 在命令行中审核 | `dailypaper review --approve <ID>` |
 
-审核页只监听本机地址，并校验请求来源，其他网站无法通过你的浏览器调用它。
+在云端运行并直接入库时，改用 zotero.org Web API：`settings.yaml` 中设 `zotero.writer: web_api`、`zotero.web_api.library_id`，并提供环境变量 `ZOTERO_API_KEY`（需要写权限）。
 
 ---
 
-## Obsidian
+## 接入 Obsidian
 
 笔记就是普通的 Markdown 文件，放进 vault 即可：
 - **本地运行**：把 `.env` 中的 `DAILYPAPER_WORKSPACE` 指向 vault 里的一个子目录，笔记会直接写到那里；或者在 `settings.yaml` 中设置 `obsidian.vault_path`，并在 `pipeline.yaml` 中启用 `obsidian` 步骤，每次运行后复制过去。
 - **GitHub Actions 运行**：把你的仓库 clone 到 vault 的子目录，安装社区插件 **Obsidian Git** 并开启定时拉取。
 
-笔记位于输出目录的 `docs/` 下：`daily/` 是日报，`papers/` 是单篇笔记，`topics/` 是方向索引。
-
-笔记 frontmatter 中的这些字段可以在 Obsidian 里编辑，重新生成笔记时会保留：
+笔记位于输出目录的 `docs/` 下：`daily/` 是日报，`papers/` 是单篇笔记，`topics/` 是方向索引。frontmatter 中的这些字段可以在 Obsidian 里编辑，重新生成笔记时会保留：
 
 | 字段 | 作用 |
 |---|---|
-| `rating: 1-5` | 你的评分，会回流到排序，用来小幅调整各方向的权重 |
-| `status` | 阅读状态，可以配合 Dataview 做阅读清单 |
+| `rating: 1-5` | 你的评分，会回流到排序，小幅调整各方向的权重 |
+| `status` | 阅读状态，可配合 Dataview 做阅读清单 |
 | `zotero_approve: true` | 在 Obsidian 中直接勾选入库 |
 | `citekey` / `zotero_key` / `zotero_link` | 入库后自动填写 |
 
 ---
 
-## 网站与站点接口
+## 接入网站
 
-默认使用 [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) 生成独立网站，支持深浅色、搜索、标签和公式。
+默认用 [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) 生成独立网站（`mkdocs serve` 预览），首页就是上面的网页，笔记页由 Markdown 渲染。
 
-如果你已经有自己的网站，DailyPaper 提供一套稳定的**站点数据契约**（字段只增不删），任何网站都可以直接使用：
+如果你已经有自己的网站，DailyPaper 提供一套稳定的**站点数据契约**（字段只增不删，定义在 `src/dailypaper/integrations/site/contract.py`）：
 
 | 文件 | 内容 |
 |---|---|
 | `docs/papers/**.md`、`docs/daily/*.md` | 带统一 frontmatter 的 Markdown |
-| `docs/api/index.json` | 所有已精读论文的索引 |
+| `docs/api/index.json` | 所有已精读论文的索引（含站点信息） |
 | `docs/api/daily/<日期>.json` | 某一天的日报数据 |
-| `docs/api/papers/<id>.json` | 单篇完整数据（含精读正文） |
+| `docs/api/papers/<id>.json` | 单篇完整数据（含精读正文和摘要） |
+| `docs/api/thumbs/<id>.jpg` | 论文首页缩略图 |
 | `docs/feed.xml` | RSS |
 
 也可以让 DailyPaper 把内容推送到你的网站仓库：
@@ -365,7 +396,7 @@ site:
 
 ## 模型与费用
 
-默认使用 Claude：摘要筛选用 `claude-haiku-5-5`，全文精读用 `claude-sonnet-5-5`。在 `config/llm.yaml` 中可以换成任何 OpenAI 兼容接口（DeepSeek、Gemini、OpenRouter 等），也可以为筛选和精读分别选择不同的模型。
+默认使用 Claude：摘要筛选用 `claude-haiku-5-5`，全文精读用 `claude-sonnet-5-5`。在 `config/llm.yaml` 中可以换成任何 OpenAI 兼容接口，也可以为筛选和精读分别选择不同的模型：
 
 ```yaml
 roles:
@@ -388,13 +419,102 @@ roles:
 
 ---
 
-## 代码结构
+## 目录结构
+
+### 仓库顶层
+
+```
+DailyPaper/
+├── config/            所有可调参数：pipeline / topics / llm / lenses / settings（用户主要改这里）
+├── prompts/           精读与筛选的 prompt 模板（Jinja2）和论文类型 lens
+├── src/dailypaper/    源代码（见下）
+├── tests/             离线测试：假模型 + 样例数据，不联网、不花钱
+├── scripts/           本地定时运行脚本（Windows 任务计划程序）
+├── examples/          一篇完整的精读笔记示例
+├── assets/            README 用到的图片
+├── docs/              网站源目录；运行后的笔记、JSON、RSS 默认写在这里（可通过 DAILYPAPER_WORKSPACE 移到项目外）
+├── skills/            外部阅读 skill 的文本副本（运行 sync-skills 后生成，可选）
+├── .github/workflows/ ci.yml（测试）、daily.yml（云端每日运行 + 发布网站，定时默认关闭）
+├── mkdocs.yml         静态网站配置
+├── pyproject.toml     包定义、依赖、可选依赖组（pdf / app / site / dev / all）
+└── .env.example       环境变量模板（复制为 .env）
+```
+
+### 源代码
+
+```
+src/dailypaper/
+├── cli.py                       命令行入口：run / read / check / app / review / zotero-* / sync-skills / list-*
+│
+├── core/                        核心层：只有接口和数据结构，不依赖任何具体插件或外部系统
+│   ├── models.py                Paper、ScreenResult、FulltextInfo、ReadingNote、Candidate、RunInfo
+│   ├── interfaces.py            Stage 基类与 Source / Filter / Ranker / Enricher / Reader / Renderer / Publisher
+│   ├── registry.py              插件注册 @register(kind, name)、自动发现、entry points
+│   ├── pipeline.py              按配置组装并执行 stage；检查点、--from 续跑、dry-run、错误隔离
+│   ├── config.py                读取 config/*.yaml（支持 ${ENV}）为带类型的配置对象
+│   ├── context.py               RunContext：一次运行的日期、配置、输入和共享服务
+│   ├── io.py                    原子写入、JSON / JSONL、Markdown frontmatter
+│   └── state.py                 已处理论文记录（seen.json）
+│
+├── llm/                         模型层
+│   ├── base.py                  LLMProvider 接口、瞬时错误判定
+│   ├── client.py                缓存、重试、JSON 解析与修复、用量日志；get_llm(ctx, 角色)
+│   ├── anthropic_provider.py    Claude（官方 SDK）
+│   ├── openai_compat.py         OpenAI 兼容接口（DeepSeek、Gemini、OpenRouter……）
+│   ├── fake.py                  离线假模型（调试、测试）
+│   └── usage.py                 按月累计花费与预算提醒
+│
+├── prompting/                   prompt 组合层
+│   ├── lens.py                  Lens、LensAdapter 基类
+│   ├── lens_adapters/basic.py   markdown 与 topic 两种 lens
+│   ├── lens_adapters/skills.py  skill_manifest 与 skill_markdown（接入外部 skill）
+│   ├── selector.py              lens 目录与选择规则
+│   ├── composer.py              模板渲染、按字符预算装入 lens
+│   └── skills_sync.py           把本机 skill 复制到仓库 skills/
+│
+├── plugins/                     流水线插件（每个目录一类，加文件即加功能）
+│   ├── sources/                 arxiv_rss（默认）、arxiv（API）、file（本地文件）、ids（read 命令）
+│   ├── filters/                 seen（去重）、keyword（关键词预筛）、zotero_index（跳过文库已有）
+│   ├── rankers/llm_screen.py    LLM 摘要筛选、反馈乘子、兴趣画像 → 排序与选择
+│   ├── fulltext/loaders.py      全文加载器 arxiv_html / pdf / local_pdf / abstract 与 fulltext 步骤
+│   ├── readers/deep_read.py     精读：选 lens → 组 prompt → 调模型 → 解析笔记
+│   ├── renderers/               markdown（笔记、日报）、site_index（JSON、RSS、方向页、网页副本）、thumbnails（缩略图）
+│   └── publishers/outputs.py    review_queue、git_commit、local_copy、site
+│
+├── integrations/                与外部系统联动
+│   ├── review.py                审核队列（云端写 queue，本地写 decisions，避免冲突）
+│   ├── zotero/                  base（接口）、http_api（读）、connector / web_api（写）、citekey、profile、service
+│   ├── site/                    contract（站点数据契约）、adapters（mkdocs / hugo / jekyll / generic_repo）
+│   └── obsidian/feedback.py     从笔记评分和审核决定计算排序反馈
+│
+└── app/                         本地网页
+    ├── server.py                FastAPI：静态挂载、审核、Zotero、配置读写、后台运行、PDF 代理
+    ├── config_editor.py         网页"搜索设置"的读写（校验 + 保留 YAML 注释）
+    ├── runner.py                后台子进程运行 dailypaper run / read
+    ├── API.md                   前后端接口约定
+    └── static/                  index.html（单页网页）、assets/（图片）
+```
+
+输出目录（默认项目内，设置 `DAILYPAPER_WORKSPACE` 后移到项目外）：
+
+```
+<输出目录>/
+├── docs/                笔记与网站内容：daily/、papers/、topics/、notes.md、api/、feed.xml、index.html、assets/
+├── data/                运行状态：seen.json、review_queue.json、review_decisions.json、zotero_index.json、interest_profile.json、usage*.json
+└── .cache/              运行检查点（runs/）、LLM 缓存（llm/）、全文（fulltext/）、PDF（pdf/）、调试用 prompt（prompts/）
+```
+
+`data/` 中的文件按写入方分开，避免云端与本地冲突：云端只写 `seen.json`、`review_queue.json`、`usage.json` 和新笔记；本地只写审核决定、Zotero 索引、兴趣画像、`usage.local.json`，以及笔记中的用户字段。
+
+---
+
+## 架构与维护
 
 ### 分层
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ 入口     cli.py（命令行）           app/（本地审核页，FastAPI）             │
+│ 入口     cli.py（命令行）           app/（本地网页，FastAPI）               │
 ├──────────────────────────────────────────────────────────────────────────┤
 │ 联动     integrations/  zotero · site · obsidian · review（审核队列）       │
 ├──────────────────────────────────────────────────────────────────────────┤
@@ -409,13 +529,14 @@ roles:
   上层依赖下层；core 不依赖任何具体插件、模型厂商或外部系统
 ```
 
-设计原则：
+### 设计原则
 
-- **一切皆插件**：数据源、过滤、排序、全文、精读、渲染、发布，以及模型厂商、lens 来源、Zotero 后端、网站框架，都通过 `@register(kind, name)` 注册。
-- **配置驱动**：流水线由 `config/pipeline.yaml` 组装，增删、重排步骤只需改配置。
-- **统一接口**：每个流水线步骤都是 `run(items: list[Candidate]) -> list[Candidate]`。
+- **一切皆插件**：数据源、过滤、排序、全文、精读、渲染、发布，以及模型厂商、lens 来源、Zotero 后端、网站框架，都通过 `@register(kind, name)` 注册，配置里用 `<kind>.<name>` 引用。
+- **配置驱动**：流水线由 `config/pipeline.yaml` 组装，增删、重排步骤只需改配置；`--enable` / `--disable` 可临时切换。
+- **统一接口**：每个流水线步骤都是 `run(items: list[Candidate]) -> list[Candidate]`，所以任意步骤都能插入、删除和重排。
 - **可续跑**：每一步的结果都保存到 `.cache/runs/`，可以用 `--from <步骤>` 从中间重新开始，调 prompt 时不必重新抓取和筛选。
-- **故障隔离**：单篇论文失败不影响其他论文；步骤可以配置 `on_error: skip`；某个插件缺少可选依赖时，只有它自己不可用。
+- **故障隔离**：单篇论文失败不影响其他论文；步骤可以配置 `on_error: skip`；某个插件缺少可选依赖时，只有它自己不可用；筛选失败的论文不会被记为已处理。
+- **外部系统只通过接口接入**：Zotero、网站、LLM 都有抽象接口和多个实现，更换后端不改调用方。
 
 ### 一篇论文的流转
 
@@ -429,66 +550,30 @@ roles:
 | screen | `ranker.llm_screen` | `screen`（方向分、类型、新颖度、理由、建议 lens）、`score`、`selected` |
 | fulltext | `enricher.fulltext` | `fulltext` |
 | read | `reader.deep_read` | `note` |
-| render / site_index | `renderer.markdown` / `renderer.site_index` | `note_path`；写出文件 |
+| render / site_index / thumbs | `renderer.*` | `note_path`；写出笔记、JSON、RSS、缩略图 |
 | review_queue / mark_seen / site / git | `publisher.*` | 写入审核队列、状态、网站、git |
 
 `publisher.*` 类步骤会产生外部副作用，`--dry-run` 时全部跳过。
 
-### 目录
+### 日常维护
 
-```
-config/                      配置（见"配置你的研究方向"）
-examples/paper-note.md       一篇完整的精读笔记示例
-scripts/                     本地定时运行脚本（Windows 任务计划程序）
-prompts/
-  base/                      base 框架模板（deep_read / screen，各分 system 与 user 两部分）
-  lenses/type_*.md           论文类型 lens
-skills/                      外部 skill 的文本副本（sync-skills 生成，可选）
-src/dailypaper/
-  cli.py                     命令行入口
-  core/
-    models.py                Paper、ScreenResult、FulltextInfo、ReadingNote、Candidate、RunInfo
-    interfaces.py            Stage 基类与 Source / Filter / Ranker / Enricher / Reader / Renderer / Publisher
-    registry.py              插件注册与自动发现（含 entry points）
-    pipeline.py              组装与执行、检查点、续跑、dry-run
-    config.py                读取 config/*.yaml（支持 ${ENV}）
-    context.py               RunContext：一次运行的上下文与共享服务
-    io.py                    原子写入、JSON / JSONL、frontmatter
-    state.py                 已处理论文记录
-  llm/
-    base.py                  LLMProvider 接口
-    client.py                缓存、重试、JSON 解析、get_llm(ctx, 角色)
-    anthropic_provider.py    Claude（官方 SDK）
-    openai_compat.py         OpenAI 兼容接口
-    fake.py                  离线假模型
-    usage.py                 用量与月度预算
-  prompting/
-    lens.py                  Lens 与 LensAdapter 基类
-    lens_adapters/basic.py   markdown 与 topic 两种 lens
-    lens_adapters/skills.py  skill_manifest 与 skill_markdown 两种 lens
-    selector.py              lens 目录与选择规则
-    composer.py              模板渲染与字符预算
-    skills_sync.py           同步外部 skill
-  plugins/
-    sources/                 arxiv_rss（默认）、arxiv（API，补抓历史日期）、file（本地文件）、ids（read 命令）
-    filters/                 seen、keyword、zotero_index
-    rankers/llm_screen.py    LLM 筛选与排序
-    fulltext/loaders.py      全文加载器（arxiv_html、pdf、local_pdf、abstract）与 fulltext 步骤
-    readers/deep_read.py     精读
-    renderers/               markdown（笔记、日报）、site_index（JSON、RSS、首页、方向页）
-    publishers/outputs.py    review_queue、git_commit、local_copy、site
-  integrations/
-    review.py                审核队列
-    zotero/                  base、http_api（读）、connector / web_api（写）、citekey、profile、service
-    site/                    contract（站点数据契约）、adapters（mkdocs / hugo / jekyll / generic_repo）
-    obsidian/feedback.py     从笔记和审核决定计算排序反馈
-  app/                       审核页后端（server.py）与前端（static/index.html）
-docs/                        生成的内容（网站源文件，也是 Obsidian 笔记）
-data/                        运行状态：已处理论文、审核队列与决定、Zotero 索引、兴趣画像、用量
-tests/                       离线测试（假模型 + 样例数据）
+| 想做的事 | 在哪里改 | 怎么验证 |
+|---|---|---|
+| 调整研究方向、关键词 | `config/topics.yaml` 或网页"搜索设置" | `dailypaper run --provider fake --until prefilter` 看预筛数量 |
+| 换模型 | `config/llm.yaml` 的 `roles` + `.env` | `dailypaper check` |
+| 改精读框架或 lens | `prompts/base/*.j2`、`prompts/lenses/*.md`、`config/lenses.yaml` | `dailypaper read <id> --prompt-only` 看组装结果，再真实精读一篇 |
+| 增删流水线步骤 | `config/pipeline.yaml` | `dailypaper run --provider fake --dry-run` |
+| 新增插件 | `src/dailypaper/plugins/<类别>/` | `dailypaper list-plugins`、补一个测试 |
+| 改网页 | `src/dailypaper/app/static/index.html`（原生 HTML / JS，无需构建） | `dailypaper app` 刷新页面 |
+| 改后端接口 | `src/dailypaper/app/server.py`，并更新 `app/API.md` | `pytest tests/test_app_api.py` |
+| 升级依赖 | `pyproject.toml` | `pytest`；CI 在 Python 3.10 / 3.12 / 3.13 上运行 |
+
+```bash
+pytest                   # 全部离线测试
+ruff check src tests     # 代码检查
 ```
 
-`docs/`、`data/` 和 `.cache/` 的位置由 `settings.yaml` 的 `paths` 决定，默认在项目目录内；设置 `DAILYPAPER_WORKSPACE` 后全部移到该目录下。`data/` 中的文件按写入方分开，避免云端与本地冲突：云端只写 `seen.json`、`review_queue.json`、`usage.json` 和新笔记；本地只写审核决定、Zotero 索引、兴趣画像、`usage.local.json`，以及笔记中的用户字段。
+CI（`.github/workflows/ci.yml`）在每次推送时运行同样的检查。参数拼错会在启动时直接报错（每个插件的 `Params` 模型会拒绝未知字段），配置文件读写都经过 pydantic 校验。
 
 ---
 
@@ -516,7 +601,7 @@ class MinAuthors(Filter):
 - {id: authors, use: filter.min_authors, with: {n: 3}}
 ```
 
-`dailypaper list-plugins` 可以列出全部可用插件。可扩展的类别有：
+可扩展的类别（`dailypaper list-plugins` 列出全部）：
 
 | 类别 | 内置实现 |
 |---|---|
@@ -525,7 +610,7 @@ class MinAuthors(Filter):
 | `ranker` | `llm_screen` |
 | `enricher` | `fulltext` |
 | `reader` | `deep_read` |
-| `renderer` | `markdown`、`site_index` |
+| `renderer` | `markdown`、`site_index`、`thumbnails` |
 | `publisher` | `review_queue`、`mark_seen`、`git_commit`、`local_copy`、`site` |
 | `fulltext_loader` | `arxiv_html`、`pdf`、`local_pdf`、`abstract` |
 | `llm` | `anthropic`、`openai_compat`、`fake` |
@@ -533,17 +618,7 @@ class MinAuthors(Filter):
 | `zotero_reader` / `zotero_writer` | `local_api`、`web_api` / `connector`、`web_api` |
 | `site_adapter` | `mkdocs`、`hugo`、`jekyll`、`generic_repo` |
 
-第三方包可以通过 entry point `dailypaper.plugins` 注册插件，不需要修改本仓库。
-
-**开发与测试**：
-
-```bash
-pip install -e ".[all]"
-pytest                 # 离线测试：假模型 + 样例数据，不联网、不花钱
-ruff check src tests
-```
-
-欢迎提交 Issue 和 Pull Request。
+第三方包可以通过 entry point `dailypaper.plugins` 注册插件，不需要修改本仓库。欢迎提交 Issue 和 Pull Request。
 
 ---
 
@@ -557,14 +632,15 @@ ruff check src tests
 | `dailypaper run --from read` / `--until screen` | 从某一步开始 / 运行到某一步为止 |
 | `dailypaper run --provider fake --dry-run` | 不调用真实模型，不写队列，不提交 |
 | `dailypaper run --enable git` / `--disable read` | 临时启用 / 禁用某个步骤 |
+| `dailypaper --log-file FILE run` | 同时把日志写入文件（定时任务用） |
 | `dailypaper read <ID> [<ID> ...]` | 精读指定论文（arXiv ID 或 Zotero 条目 key） |
 | `dailypaper read <ID> --prompt-only` | 只生成 prompt，不调用模型 |
-| `dailypaper app` | 打开本地审核页 |
+| `dailypaper app` | 打开本地网页 |
 | `dailypaper review [--approve ID] [--reject ID]` | 命令行审核 |
 | `dailypaper zotero-check` / `zotero-sync` / `zotero-profile` | Zotero 诊断 / 同步 / 导出兴趣画像 |
 | `dailypaper sync-skills [--only NAME ...]` | 同步外部 skill |
 | `dailypaper list-plugins` / `list-lenses` | 列出插件 / lens |
-| `mkdocs serve` / `mkdocs build` | 预览 / 构建网站 |
+| `mkdocs serve` / `mkdocs build` | 预览 / 构建静态网站 |
 
 ---
 
@@ -572,7 +648,8 @@ ruff check src tests
 
 - **API key**：只放在本地 `.env` 或 GitHub Secrets 中，不要写进代码或配置文件。GitHub Secrets 加密保存，日志中会被自动遮盖；来自 fork 的 Pull Request 无法读取你的 Secrets。建议为本项目单独创建一个 key，并在服务商控制台设置花费上限。
 - **本地运行**：设置 `DAILYPAPER_WORKSPACE` 后，笔记、状态和缓存都在项目目录之外，不会被提交到任何仓库。
-- **GitHub Actions 运行**：生成的笔记会提交到你的仓库；仓库公开时笔记也是公开的，介意的话请使用私有仓库。`skills/` 中的外部 skill 文本（运行 `sync-skills` 后生成）同样会随仓库公开。从 Zotero 文库导出的 `data/zotero_index.json` 和 `data/interest_profile.json`（包含你的文库标题和关键词）默认在 `.gitignore` 中，只在本地使用；想让云端也按文库去重和排序，可以从 `.gitignore` 中去掉它们，但请先确认你接受公开这些信息。私有仓库使用 GitHub Pages 需要付费账户；也可以改用 Cloudflare Pages 等免费服务，构建命令填 `pip install mkdocs-material && mkdocs build`，输出目录填 `site`。
+- **GitHub Actions 运行**：生成的笔记会提交到你的仓库；仓库公开时笔记也是公开的，介意的话请使用私有仓库。`skills/` 中的外部 skill 文本（运行 `sync-skills` 后生成）同样会随仓库公开。从 Zotero 文库导出的 `data/zotero_index.json` 和 `data/interest_profile.json`（包含你的文库标题和关键词）默认在 `.gitignore` 中，只在本地使用。私有仓库使用 GitHub Pages 需要付费账户；也可以改用 Cloudflare Pages 等免费服务，构建命令填 `pip install mkdocs-material && mkdocs build`，输出目录填 `site`。
+- **本地网页**：只监听 `127.0.0.1`，校验 Host，写操作要求自定义请求头；不要把它暴露到公网。
 - **版权**：笔记中引用了论文摘要和少量原文内容。请遵守相应论文的许可证，以及 [arXiv 的使用条款](https://info.arxiv.org/help/api/tou.html)。
 
 ---
@@ -603,6 +680,10 @@ PyMuPDF 2.0 会自动加载版面分析模块并依赖 onnxruntime，在部分 W
 
 可能是输出达到了 `max_tokens` 上限，笔记的错误信息中会有提示。可以调高 `llm.yaml` 中 `read` 角色的 `max_tokens`。
 
+**网页改了代码没生效？**
+
+`dailypaper app` 启动后会一直运行旧进程，改了 `server.py` 需要重启它；改了 `index.html` 只需强制刷新页面。
+
 ---
 
 ## 路线图
@@ -610,3 +691,7 @@ PyMuPDF 2.0 会自动加载版面分析模块并依赖 onnxruntime，在部分 W
 - [ ] 把 Zotero 中的高亮和批注同步到对应的 Obsidian 笔记
 - [ ] 更多数据源（OpenReview、Hugging Face Daily Papers）
 - [ ] 每周综述：汇总一周的高价值论文和研究趋势
+
+## 许可证
+
+[MIT](LICENSE)
