@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dailypaper"
+version = "0.1.0"
+description = "模块化的 arXiv 每日论文筛选与精读系统（LLM + 可插拔 skill lens + Zotero/Obsidian/网站联动）"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "pydantic>=2.5",
+    "pyyaml>=6.0",
+    "jinja2>=3.1",
+    "httpx>=0.25",
+    "beautifulsoup4>=4.12",
+    "lxml>=4.9",
+    "anthropic>=0.40",  # 默认模型为 Claude
+]
+
+[project.optional-dependencies]
+pdf = ["pymupdf>=1.23"]
+app = ["fastapi>=0.110", "uvicorn>=0.27", "httpx>=0.25"]
+site = ["mkdocs-material>=9.5"]
+dev = ["pytest>=7.4", "ruff>=0.4"]
+all = ["dailypaper[pdf,app,site,dev]"]
+
+[project.scripts]
+dailypaper = "dailypaper.cli:main"
+
+# 第三方插件示例（在别的包里声明即可被自动发现）：
+# [project.entry-points."dailypaper.plugins"]
+# my_source = "my_pkg.my_module"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+dailypaper = ["app/static/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501", "B008"]

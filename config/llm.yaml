@@ -1,0 +1,55 @@
+# LLM 配置。API key 只从环境变量读取（本地 shell 或 GitHub Secrets）。
+#
+# providers: 可用的模型服务。type 对应 src/dailypaper/llm/ 下注册的实现：
+#   anthropic      Claude 官方 SDK（Claude Max 附带的 API 额度可用于此）
+#   openai_compat  任何 OpenAI 兼容接口（DeepSeek、Gemini、OpenRouter、硅基流动……）
+#   fake           离线假模型，无需 key，用于调试和测试
+# roles: 每个环节用哪个 provider 和模型。切换模型只改这里。
+
+providers:
+  claude:
+    type: anthropic
+    api_key_env: ANTHROPIC_API_KEY
+    options:
+      fallbacks: true          # 服务端 refusal fallback（Haiku 不支持，会自动跳过）
+  deepseek:
+    type: openai_compat
+    base_url: https://api.deepseek.com
+    api_key_env: DEEPSEEK_API_KEY
+  gemini:
+    type: openai_compat
+    base_url: https://generativelanguage.googleapis.com/v1beta/openai
+    api_key_env: GEMINI_API_KEY
+  fake:
+    type: fake
+
+roles:
+  # 摘要级筛选：量大、任务简单，用便宜的模型
+  screen:
+    provider: claude
+    model: claude-haiku-5-5
+    max_tokens: 8000
+    effort: low
+    json_mode: true
+  # 全文精读：用推理更强的模型
+  read:
+    provider: claude
+    model: claude-sonnet-5-5
+    max_tokens: 16000
+    effort: high
+
+  # 备选示例（取消注释并替换上面的角色即可）：
+  # screen: {provider: deepseek, model: deepseek-chat, max_tokens: 8000, temperature: 0.1, json_mode: true}
+  # read:   {provider: gemini,   model: gemini-2.5-flash, max_tokens: 16000, temperature: 0.3}
+
+cache: true        # 相同 prompt 不重复花钱（缓存在 .cache/llm/）
+max_retries: 3
+
+# 花费统计（data/usage.json）与月度预算提醒。价格：美元 / 百万 token [输入, 输出]，2026-10 官方价。
+# Claude Max 套餐每月附带 API 额度（Max 5x $100 / Max 20x $200），按你的档位设置预算。
+monthly_budget_usd: 100
+budget_warn_ratio: 0.8
+pricing:
+  claude-haiku-5-5: [0.10, 0.50]
+  claude-sonnet-5-5: [2.00, 10.00]
+  claude-opus-5-5: [4.00, 20.00]

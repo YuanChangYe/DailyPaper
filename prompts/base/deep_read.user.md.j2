@@ -1,0 +1,13 @@
+标题: {{ paper.title }}
+作者: {{ paper.authors[:12] | join(", ") }}{% if paper.authors | length > 12 %} 等{% endif %}
+
+来源: {{ paper.source }} {{ paper.id }}{{ paper.version }}{% if paper.categories %}　分类: {{ paper.categories | join(", ") }}{% endif %}
+
+{% if screen %}
+筛选阶段的判断（仅基于摘要，供参考）：相关方向 {{ topics_hit | join(", ") }}；论文类型 {{ screen.paper_type }}；理由：{{ screen.reason }}
+{% endif %}
+全文来源: {{ fulltext_loader }}（{{ grounding }}）{% if grounding == "source-limited" %}——只有摘要和元数据，凡是需要正文才能判断的地方写"仅有摘要，无法判断"{% endif %}
+
+<paper>
+{{ fulltext }}
+</paper>

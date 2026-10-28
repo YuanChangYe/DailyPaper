@@ -1,0 +1,139 @@
+# 研究方向。调整方向只改这个文件。
+#
+# 字段：
+#   id            唯一标识（英文、下划线）
+#   name          显示名
+#   description   给 LLM 看的方向描述，越具体筛选越准
+#   weight        排序权重（1.0 为基准）
+#   keywords      强关键词：本地预筛时命中任意一个即可（不区分大小写，空格可匹配连字符，* 为通配）
+#   context       语境词：非空时还需同时命中其中一个（用来排除 CV/传统 ML 里的同名概念）
+#   exclude       排除词
+#   lens_questions  精读时针对该方向追加的"镜头问题"（会拼进精读 prompt）
+
+topics:
+  - id: llm_uq
+    name: LLM / RAG Uncertainty Quantification
+    weight: 1.0
+    description: >
+      大语言模型与检索增强生成（RAG）的不确定性量化：置信度估计、校准、semantic entropy、
+      verbalized confidence、hallucination detection、检索不确定性、生成结果的可信度评估。
+    keywords:
+      - uncertainty quantification
+      - uncertainty estimation
+      - predictive uncertainty
+      - epistemic uncertainty
+      - aleatoric uncertainty
+      - semantic entropy
+      - confidence estimation
+      - confidence calibration
+      - verbalized confidence
+      - calibrat*
+      - hallucination detection
+      - selective generation
+      - abstention
+      - know what they don't know
+      - "I don't know"
+    context: [LLM*, large language model*, language model*, RAG, retrieval-augmented, retrieval augmented, generative, QA, question answering]
+    exclude: []
+    lens_questions:
+      - 不确定性的粒度是什么（token / sequence / claim / answer-set）？用的是 white-box（logits、hidden states）、grey-box 还是 black-box（采样一致性、verbalized）信号？
+      - 评估指标是 AUROC / AUPRC / ECE / Brier / selective risk 中的哪些？是否把校准（calibration）和区分度（discrimination）分开评估？
+      - 在 RAG 设置下，检索的不确定性和生成的不确定性是否被区分或组合？
+      - 方法的计算开销（需要多少次采样 / 额外模型）是否被报告？
+
+  - id: agent_uq
+    name: Agent Uncertainty Quantification
+    weight: 1.2
+    description: >
+      LLM Agent 在多步决策、工具调用、规划中的不确定性量化与传播：step / trajectory 级置信度、
+      何时求助人类（ask for help）、何时停止或回退、不确定性驱动的探索与验证。
+    keywords:
+      - uncertainty
+      - confidence
+      - calibrat*
+      - abstain*
+      - ask for help
+      - know when to stop
+      - risk-aware
+      - trustworth*
+    context: [agent*, agentic, tool use, tool-use, tool call*, multi-step, planning, trajectory, web agent*, embodied]
+    exclude: []
+    lens_questions:
+      - 不确定性在哪一层被量化：单步动作、工具调用结果、完整轨迹，还是任务级成功概率？多步之间如何传播或聚合？
+      - 不确定性被用来做什么决策（停止、回退、求助、重新规划、选择性执行）？这个决策是否有风险或成本约束？
+      - 环境的非平稳性 / 序列依赖是否破坏了方法的统计假设？作者是否意识到？
+
+  - id: conformal_selective
+    name: Selective Prediction via Conformal Prediction
+    weight: 1.3
+    description: >
+      基于 conformal prediction / conformal risk control 的选择性预测与弃权：coverage 保证、
+      conformal factuality、learn-then-test、risk control、对 LLM 输出的 set-valued 预测或拒答机制。
+    keywords:
+      - conformal
+      - conformal prediction
+      - conformal risk control
+      - risk control
+      - learn then test
+      - selective prediction
+      - selective classification
+      - selective generation
+      - reject option
+      - abstention
+      - coverage guarantee
+      - distribution-free
+      - prediction set*
+    context: []
+    exclude: []
+    lens_questions:
+      - 保证的形式是什么：marginal coverage、conditional coverage、risk control（期望风险 ≤ α）、还是 PAC 式高概率保证？
+      - nonconformity / score function 是怎么定义的？是否依赖 logits？对 black-box LLM 是否可用？
+      - calibration set 怎么构造、需要多大？exchangeability 假设在该场景下是否合理（尤其是多步 agent、在线、分布漂移）？
+      - selective risk 与 coverage（接受率）的权衡曲线是否被报告？与非 conformal 的启发式阈值相比优势在哪？
+
+  - id: agent_rsi
+    name: Agent RSI × Selective Prediction
+    weight: 1.3
+    description: >
+      Agent 的递归自我改进（recursive self-improvement）、self-evolving / self-refining agent，
+      尤其是与选择性预测、置信度门控、验证器结合，决定何时接受自我修改或自我生成数据的工作。
+    keywords:
+      - self-improv*
+      - recursive self-improvement
+      - self-evolv*
+      - self-refin*
+      - self-training
+      - self-rewarding
+      - self-play
+      - self-correct*
+      - self-verif*
+      - autonomous improvement
+      - open-ended
+    context: [agent*, LLM*, language model*, model*]
+    exclude: []
+    lens_questions:
+      - 自我改进的闭环是什么（生成 → 评估 → 筛选 → 更新）？哪一步决定"接受"改进？是否有置信度或风险门控？
+      - 如何防止错误累积、reward hacking 或分布塌缩？有没有可证明的停止条件或安全约束？
+      - 能否把 conformal / selective prediction 嵌入到"接受自我修改"这一步？作者的方法给这类结合留下了什么接口？
+
+  - id: multiagent_trust
+    name: Multi-Agent Trustworthiness
+    weight: 1.1
+    description: >
+      多智能体系统的可信性：多 agent 辩论/协作中的可靠性、错误传播、对抗或拜占庭 agent、
+      共识与聚合机制、多 agent 不确定性与校准、安全与对齐。
+    keywords:
+      - multi-agent
+      - multiagent
+      - multi agent
+      - LLM debate
+      - agent debate
+      - collaborative agents
+      - agent society
+      - byzantine
+    context: [trust*, reliab*, robust*, uncertainty, confidence, calibrat*, safety, secur*, adversar*, consensus, verification, hallucination, error propagation]
+    exclude: []
+    lens_questions:
+      - 威胁模型是什么：随机错误、对抗 / 拜占庭 agent、prompt injection，还是共谋？
+      - 聚合机制（投票、辩论、加权、裁判 agent）如何利用各 agent 的置信度？是否有可靠性或鲁棒性保证？
+      - 错误在 agent 之间如何传播？作者是否量化了系统级的可信度，而不仅是最终准确率？

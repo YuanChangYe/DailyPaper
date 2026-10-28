@@ -1,0 +1,67 @@
+# 每个工作日自动运行：抓取 → 筛选 → 精读 → 提交 docs/ 与 data/ → 构建并发布网站。
+# 需要：仓库 Settings → Secrets and variables → Actions 中添加 ANTHROPIC_API_KEY；
+#       Settings → Pages → Source 选 "GitHub Actions"。
+name: daily
+
+on:
+  schedule:
+    - cron: "0 6 * * 1-5"   # UTC 06:00（北京/新加坡时间 14:00），arXiv 当天的 RSS 已更新
+  workflow_dispatch:
+    inputs:
+      args:
+        description: "额外参数，例如 --provider fake 或 --disable read"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: daily
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: pip install -e ".[pdf,site]"
+
+      - name: Run daily pipeline
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ZOTERO_API_KEY: ${{ secrets.ZOTERO_API_KEY }}
+          ZOTERO_USER_ID: ${{ vars.ZOTERO_USER_ID }}
+          EXTRA_ARGS: ${{ github.event.inputs.args }}
+        run: dailypaper run --enable git $EXTRA_ARGS
+
+      - name: Build site
+        env:
+          NO_MKDOCS_2_WARNING: "1"
+        run: mkdocs build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: run
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

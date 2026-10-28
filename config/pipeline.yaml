@@ -1,0 +1,49 @@
+# 流水线定义。每个 stage：
+#   id        唯一名称（用于 --from / --enable / --disable 和检查点文件名）
+#   use       插件 "<kind>.<name>"（`dailypaper list-plugins` 查看全部）
+#   with      插件参数（可选）
+#   enabled   false 时跳过（默认 true）
+#   on_error  fail（默认）| skip：失败时记录错误并继续
+# 增删模块 = 增删这里的条目；调整顺序 = 调整条目顺序。
+
+pipelines:
+  # 每日任务：dailypaper run
+  daily:
+    - {id: fetch,        use: source.arxiv_rss, with: {categories: [cs.CL, cs.LG, cs.AI, cs.MA, stat.ML]}}
+    - {id: dedupe,       use: filter.seen}
+    - {id: in_zotero,    use: filter.zotero_index}
+    - {id: prefilter,    use: filter.keyword,   with: {max_candidates: 60}}
+    - {id: screen,       use: ranker.llm_screen, with: {top_k: 5, min_score: 6.5, batch_size: 10}}
+    - {id: fulltext,     use: enricher.fulltext, with: {loaders: [arxiv_html, pdf, abstract]}}
+    - {id: read,         use: reader.deep_read,  with: {workers: 2}}
+    - {id: render,       use: renderer.markdown}
+    - {id: site_index,   use: renderer.site_index}
+    - {id: review_queue, use: publisher.review_queue}
+    - {id: mark_seen,    use: publisher.mark_seen}
+    - {id: site,         use: publisher.site, on_error: skip}
+    - {id: obsidian,     use: publisher.local_copy, enabled: false}          # 本地直接写 vault 时启用
+    - {id: git,          use: publisher.git_commit, enabled: false, with: {push: true}}  # Actions 中用 --enable git
+
+  # 指定论文精读：dailypaper read <arXiv ID 或 Zotero key> ...
+  read:
+    - {id: fetch,        use: source.ids}
+    - {id: screen,       use: ranker.llm_screen, with: {force_select: true}}
+    - {id: fulltext,     use: enricher.fulltext, with: {loaders: [local_pdf, arxiv_html, pdf, abstract]}}
+    - {id: read,         use: reader.deep_read}
+    - {id: render,       use: renderer.markdown, with: {digest: false}}
+    - {id: site_index,   use: renderer.site_index}
+    - {id: review_queue, use: publisher.review_queue}
+
+  # 补抓历史日期（用 arXiv API，按提交日期）：dailypaper run --pipeline backfill --date 2026-10-20
+  backfill:
+    - {id: fetch,        use: source.arxiv, with: {lookback_days: 1}}
+    - {id: dedupe,       use: filter.seen}
+    - {id: in_zotero,    use: filter.zotero_index}
+    - {id: prefilter,    use: filter.keyword,   with: {max_candidates: 60}}
+    - {id: screen,       use: ranker.llm_screen, with: {top_k: 5, min_score: 6.5}}
+    - {id: fulltext,     use: enricher.fulltext}
+    - {id: read,         use: reader.deep_read}
+    - {id: render,       use: renderer.markdown}
+    - {id: site_index,   use: renderer.site_index}
+    - {id: review_queue, use: publisher.review_queue}
+    - {id: mark_seen,    use: publisher.mark_seen}

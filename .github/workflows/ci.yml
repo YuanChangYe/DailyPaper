@@ -1,0 +1,23 @@
+# 代码检查与测试（不调用任何付费 API：测试使用 fake provider 和本地样例数据）。
+name: ci
+
+on:
+  push:
+    paths-ignore: ["docs/**", "data/**"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: pip install -e ".[dev,pdf,app]"
+      - run: ruff check src tests
+      - run: pytest

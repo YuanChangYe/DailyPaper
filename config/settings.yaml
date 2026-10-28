@@ -1,0 +1,43 @@
+# 通用设置与外部联动。
+
+language: zh                  # 精读输出语言：zh（中文 + 英文术语）/ en
+timezone: Asia/Shanghai
+
+paths:
+  content_dir: docs           # 生成的 Markdown（网站源 + Obsidian 同步内容）
+  data_dir: data              # 状态文件（seen、审核队列、Zotero 索引、兴趣画像）
+  cache_dir: .cache           # 运行检查点、LLM 缓存、全文缓存（不进 git）
+  skills_dir: skills          # sync-skills 同步来的外部 skill
+
+site:
+  title: DailyPaper
+  base_url: ""                # 网站地址，例如 https://<用户名>.github.io/DailyPaper（用于 RSS 绝对链接）
+  adapter: mkdocs             # mkdocs | hugo | jekyll | generic_repo（见 README「接入个人网站」）
+  adapter_options: {}
+
+zotero:
+  reader: local_api           # 读文库（去重、兴趣画像、反向精读）：local_api | web_api | none
+  writer: connector           # 写入审核通过的论文：connector | web_api | none
+  default_collection: "DailyPaper/{topic_name}"   # 可用变量：{topic_id} {topic_name}
+  attach_pdf: true
+  add_note: true
+  tags: [dailypaper]
+  local_api:
+    base_url: http://127.0.0.1:23119
+  web_api:                    # 仅当 writer/reader 用 web_api 时需要
+    library_type: user
+    library_id: "${ZOTERO_USER_ID:-}"
+    api_key_env: ZOTERO_API_KEY
+  profile:
+    collections: []           # 只用这些分类建兴趣画像；空 = 整个文库
+    max_items: 3000
+    top_terms: 400
+
+obsidian:
+  feedback: true              # 读取笔记 frontmatter 中的 rating / status / zotero_approve
+  vault_path: null            # publisher.local_copy 的目标目录（例如 D:/Obsidian/Vault/DailyPaper）
+
+app:
+  host: 127.0.0.1
+  port: 8765
+  auto_git: false             # 审核后自动 git pull / commit / push（data/ 与笔记 frontmatter）

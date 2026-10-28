@@ -1,0 +1,67 @@
+# 精读 lens：叠加在 base 框架（prompts/base/deep_read.*）上的补充分析指引。
+# lens 只增加分析要点和检查清单，不改变 base 框架的 10 节输出结构。
+#
+# catalog: 可用的 lens。adapter 决定内容从哪里来：
+#   markdown        prompts/lenses/ 下的 md 文件
+#   topic           topics.yaml 的 lens_questions（每个方向自动生成 topic:<id>，无需在此声明）
+#   skill_manifest  带 manifest.yaml 的外部 skill（skills/ 下，或本地 ~/.claude/skills/）
+#   skill_markdown  只有 SKILL.md 的外部 skill
+# 新增一个 skill：先 `dailypaper sync-skills --only <名字>`，再在下面加一条 catalog 和对应 rule。
+#
+# rules: 什么时候用哪些 lens（when 中的条件同时满足才生效）：
+#   always: true | topic: [...] | paper_type: [...] | min_score: 7 | min_novelty: 2 | source: [...]
+#   use 中的 "topic:*" = 该论文主要方向的 topic lens，"type:*" = type_<paper_type>
+
+budget_chars: 24000      # 所有 lens 内容的字符上限，超出时按 priority 截断或丢弃
+max_lenses: 4            # 非 topic lens 的数量上限
+llm_select:
+  enabled: true          # 允许筛选阶段的 LLM 从目录中补充建议 lens
+  max_extra: 1
+
+catalog:
+  # ---- 论文类型（自写，轻量）
+  - {id: type_method,    adapter: markdown, path: prompts/lenses/type_method.md,    priority: 60, sections: [3, 4, 6]}
+  - {id: type_theory,    adapter: markdown, path: prompts/lenses/type_theory.md,    priority: 60, sections: [1, 5]}
+  - {id: type_benchmark, adapter: markdown, path: prompts/lenses/type_benchmark.md, priority: 60, sections: [3, 6]}
+  - {id: type_empirical, adapter: markdown, path: prompts/lenses/type_empirical.md, priority: 60, sections: [2, 6]}
+  - {id: type_survey,    adapter: markdown, path: prompts/lenses/type_survey.md,    priority: 60, sections: [2, 3, 4, 8]}
+  - {id: type_position,  adapter: markdown, path: prompts/lenses/type_position.md,  priority: 60, sections: [2, 7, 8]}
+
+  # ---- 外部 skill：nature-paper-card（证据纪律 + 按论文类型的拆解要点 + 研究 idea 的门槛）
+  - id: nature-paper-card
+    adapter: skill_manifest
+    path: skills/nature-paper-card
+    title: "Skill · nature-paper-card（证据链与研究 idea 门槛）"
+    description: 证据溯源纪律、按论文类型的方法拆解检查、研究 idea 的可证伪性与验证门槛
+    priority: 50
+    sections: [4, 6, 7, 8]
+    options:
+      include_always_load: true
+      exclude: [static/core/workflow.md, static/core/output-contract.md]
+      axis: paper_type
+      axis_map: {method: methods, theory: methods, benchmark: resource, empirical: discovery, survey: review, position: review}
+      references: [references/evidence-and-provenance.md, references/research-idea-gates.md]
+      max_chars: 12000
+
+  # ---- 外部 skill：ccf-idea-reviewer（判断 insight / novelty 的评审标准）
+  - id: ccf-idea-reviewer
+    adapter: skill_markdown
+    path: skills/ccf-idea-reviewer
+    title: "Skill · ccf-idea-reviewer（novelty 与 insight 评审标准）"
+    description: 从问题重要性、相对最近工作的新颖性、概念洞察、机制自洽性等维度审视论文的核心思想
+    priority: 40
+    sections: [2, 3, 8]
+    options:
+      sections: ["Core Rule"]
+      references: [references/rubric.md]
+      max_chars: 7000
+
+rules:
+  - when: {always: true}
+    use: ["topic:*", "type:*"]
+  - when: {always: true}
+    use: [nature-paper-card]
+  - when: {min_score: 7}
+    use: [ccf-idea-reviewer]
+  - when: {min_novelty: 2}
+    use: [ccf-idea-reviewer]

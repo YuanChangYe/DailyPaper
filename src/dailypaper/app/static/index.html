@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DailyPaper 审核</title>
+<style>
+:root {
+  --bg: #f7f7f5; --panel: #ffffff; --text: #1d1d1f; --muted: #6b6b70; --line: #e4e4e0;
+  --accent: #2f6fed; --ok: #1f8a4c; --warn: #b7791f; --bad: #c0392b; --chip: #eef2fb;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #151517; --panel: #1e1e21; --text: #ececee; --muted: #9a9aa2; --line: #2e2e33;
+          --accent: #6e9bff; --ok: #4cc27f; --warn: #e0a84a; --bad: #ef6b5b; --chip: #26304a; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.6 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+header { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--line); padding: 12px 16px; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+h1 { font-size: 18px; margin: 0 12px 0 0; }
+.status { font-size: 13px; color: var(--muted); }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; background: var(--muted); }
+.dot.ok { background: var(--ok); } .dot.bad { background: var(--bad); }
+main { max-width: 980px; margin: 0 auto; padding: 16px; }
+.tabs button, .btn { border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 8px; padding: 5px 11px; cursor: pointer; font-size: 14px; }
+.tabs button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn:hover { border-color: var(--accent); }
+.btn.ok { color: var(--ok); } .btn.warn { color: var(--warn); } .btn.bad { color: var(--bad); }
+.btn.primary { background: var(--ok); color: #fff; border-color: var(--ok); }
+select { border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 8px; padding: 5px 8px; max-width: 280px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; }
+.card h3 { margin: 0 0 4px; font-size: 16px; line-height: 1.4; }
+.card h3 a { color: var(--text); text-decoration: none; } .card h3 a:hover { color: var(--accent); }
+.meta { font-size: 13px; color: var(--muted); }
+.chip { display: inline-block; background: var(--chip); border-radius: 6px; padding: 0 7px; margin-right: 4px; font-size: 12px; }
+.stars { color: #e3a008; letter-spacing: 1px; }
+.field { margin: 6px 0 0; } .field b { color: var(--muted); font-weight: 600; margin-right: 6px; }
+.actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.badge { font-size: 12px; border-radius: 6px; padding: 1px 8px; border: 1px solid var(--line); }
+.badge.imported { color: var(--ok); border-color: var(--ok); } .badge.rejected { color: var(--bad); border-color: var(--bad); }
+.badge.approved, .badge.later { color: var(--warn); border-color: var(--warn); } .badge.failed { color: var(--bad); }
+.note { margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 10px; overflow-x: auto; }
+.note table { border-collapse: collapse; font-size: 13px; } .note td, .note th { border: 1px solid var(--line); padding: 4px 6px; vertical-align: top; }
+.note pre { white-space: pre-wrap; }
+#log { position: fixed; right: 16px; bottom: 16px; max-width: 460px; z-index: 10; }
+.toast { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 8px 12px; margin-top: 8px; font-size: 13px; box-shadow: 0 4px 16px rgba(0,0,0,.12); white-space: pre-wrap; }
+.empty { text-align: center; color: var(--muted); padding: 48px 0; }
+.bulk { margin-left: auto; }
+@media (max-width: 640px) { .bulk { margin-left: 0; } select { max-width: 100%; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="row">
+    <h1>DailyPaper 审核</h1>
+    <span class="status" id="zstatus"><span class="dot"></span>正在连接 Zotero…</span>
+    <span class="bulk row">
+      <button class="btn" onclick="act('/api/git/pull')" title="从 GitHub 拉取云端最新的日报和队列">⟳ 拉取最新</button>
+      <button class="btn" onclick="act('/api/sync')" title="把已批准（含 Obsidian 中勾选）的论文写入 Zotero">⇪ 同步到 Zotero</button>
+      <button class="btn" onclick="act('/api/profile')" title="从 Zotero 文库导出去重索引和兴趣画像">☰ 更新兴趣画像</button>
+      <button class="btn" onclick="act('/api/git/push')" title="提交并推送审核结果">⇧ 推送审核结果</button>
+    </span>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <span class="tabs" id="tabs"></span>
+    <span class="bulk row">
+      <label class="meta">放入分类</label>
+      <select id="collection"></select>
+      <label class="meta"><input type="checkbox" id="checkall" onchange="toggleAll(this.checked)"> 全选</label>
+      <button class="btn primary" onclick="bulk('approve')">✅ 批量加入 Zotero</button>
+      <button class="btn bad" onclick="bulk('reject')">❌ 批量不要</button>
+    </span>
+  </div>
+</header>
+<main id="list"><div class="empty">加载中…</div></main>
+<div id="log"></div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script>
+const TABS = [["pending","待审核"],["approved","已批准"],["later","稍后"],["imported","已入库"],["rejected","不要"],["","全部"]];
+const STATUS_TEXT = {pending:"待审核", approved:"已批准（待入库）", later:"稍后", rejected:"不要", imported:"已入库", failed:"失败"};
+let current = "pending";
+let items = [];
+
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function stars(n) { return n ? "★".repeat(n) + "☆".repeat(5 - n) : "—"; }
+function toast(msg) {
+  const el = document.createElement("div"); el.className = "toast"; el.textContent = msg;
+  document.getElementById("log").appendChild(el); setTimeout(() => el.remove(), 9000);
+}
+async function api(url, body) {
+  const opt = body === undefined ? {} : {method: "POST", headers: {"Content-Type": "application/json", "X-DailyPaper": "1"}, body: JSON.stringify(body)};
+  const r = await fetch(url, opt);
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || r.statusText);
+  return data;
+}
+async function act(url) {
+  toast("处理中…");
+  try { (await api(url, {})).messages.forEach(toast); } catch (e) { toast("出错：" + e.message); }
+  load();
+}
+
+function renderTabs() {
+  document.getElementById("tabs").innerHTML = TABS.map(([k, v]) =>
+    `<button class="${k === current ? "active" : ""}" onclick="current='${k}';load()">${v}</button>`).join(" ");
+}
+function card(it) {
+  const e = it.entry, d = it.decision;
+  const topics = e.topics.map(t => `<span class="chip">${esc(t)}</span>`).join("");
+  const pending = ["pending", "later", "approved", "failed"].includes(d.status);
+  return `<div class="card" id="c-${esc(e.id)}">
+    <div class="row" style="align-items:flex-start;flex-wrap:nowrap">
+      <input type="checkbox" class="pick" value="${esc(e.id)}" style="margin-top:5px">
+      <div style="flex:1;min-width:0">
+        <h3><a href="${esc(e.url_abs)}" target="_blank" rel="noopener">${esc(e.title)}</a></h3>
+        <div class="meta"><span class="stars">${stars(e.value_score)}</span> · ${topics} · ${esc(e.paper_type)} · ${esc(e.date)} · 分数 ${e.score}
+          · <span class="badge ${d.status}">${STATUS_TEXT[d.status] || d.status}</span>
+          ${d.citekey ? ` · <code>@${esc(d.citekey)}</code>` : ""}
+          ${d.zotero_key ? ` · <a href="zotero://select/library/items/${esc(d.zotero_key)}">在 Zotero 中打开</a>` : ""}</div>
+        ${e.tldr ? `<p class="field"><b>TL;DR</b>${esc(e.tldr)}</p>` : ""}
+        ${e.core_insight ? `<p class="field"><b>Insight</b>${esc(e.core_insight)}</p>` : ""}
+        ${e.worth_reading ? `<p class="field"><b>读不读</b>${esc(e.worth_reading)}</p>` : ""}
+        ${d.error ? `<p class="field" style="color:var(--bad)"><b>上次入库失败</b>${esc(d.error)}</p>` : ""}
+        <div class="actions">
+          ${pending ? `<button class="btn primary" onclick="decide(['${esc(e.id)}'],'approve')">✅ 加入 Zotero</button>` : ""}
+          ${d.status !== "later" && d.status !== "imported" ? `<button class="btn warn" onclick="decide(['${esc(e.id)}'],'later')">⏸ 稍后</button>` : ""}
+          ${d.status !== "rejected" && d.status !== "imported" ? `<button class="btn bad" onclick="decide(['${esc(e.id)}'],'reject')">❌ 不要</button>` : ""}
+          ${d.status === "rejected" ? `<button class="btn" onclick="decide(['${esc(e.id)}'],'pending')">↺ 撤销</button>` : ""}
+          <button class="btn" onclick="toggleNote('${esc(e.id)}')">📖 精读笔记</button>
+          ${e.url_pdf ? `<a class="btn" href="${esc(e.url_pdf)}" target="_blank" rel="noopener">PDF</a>` : ""}
+        </div>
+        <div class="note" id="n-${esc(e.id)}" hidden></div>
+      </div>
+    </div>
+  </div>`;
+}
+async function load() {
+  renderTabs();
+  items = await api("/api/items?status=" + encodeURIComponent(current));
+  const list = document.getElementById("list");
+  list.innerHTML = items.length ? items.map(card).join("") : `<div class="empty">这里没有论文。</div>`;
+  document.getElementById("checkall").checked = false;
+}
+async function decide(ids, action) {
+  const collection = document.getElementById("collection").value;
+  try { localStorage.setItem("dp.collection", collection); } catch (e) {}
+  if (action === "approve") toast(`正在写入 Zotero（${ids.length} 篇）…`);
+  try { (await api("/api/decide", {ids, action, collection})).messages.forEach(toast); }
+  catch (e) { toast("出错：" + e.message); }
+  load();
+}
+function picked() { return [...document.querySelectorAll(".pick:checked")].map(x => x.value); }
+function toggleAll(v) { document.querySelectorAll(".pick").forEach(x => x.checked = v); }
+function bulk(action) { const ids = picked(); if (!ids.length) return toast("请先勾选论文"); decide(ids, action); }
+async function toggleNote(id) {
+  const el = document.getElementById("n-" + id);
+  if (!el.hidden) { el.hidden = true; return; }
+  el.hidden = false; el.textContent = "加载中…";
+  try {
+    const {markdown} = await api("/api/note/" + encodeURIComponent(id));
+    el.innerHTML = window.marked ? renderMarkdown(markdown) : `<pre>${esc(markdown)}</pre>`;
+  } catch (e) { el.textContent = e.message; }
+}
+// 先把公式换成占位符，避免 Markdown 把下划线等当作格式；渲染后再用 KaTeX 还原
+function renderMarkdown(md) {
+  const math = [];
+  const keep = (tex, display) => { math.push([tex, display]); return `@@MATH${math.length - 1}@@`; };
+  md = md.replace(/\$\$([\s\S]+?)\$\$/g, (_, t) => keep(t, true)).replace(/\$([^\n$]+?)\$/g, (_, t) => keep(t, false));
+  let html = marked.parse(md);
+  return html.replace(/@@MATH(\d+)@@/g, (_, i) => {
+    const [tex, display] = math[+i];
+    if (!window.katex) return esc(display ? `$$${tex}$$` : `$${tex}$`);
+    try { return katex.renderToString(tex, {displayMode: display, throwOnError: false}); }
+    catch (e) { return esc(tex); }
+  });
+}
+async function zstatus() {
+  const el = document.getElementById("zstatus"), sel = document.getElementById("collection");
+  try {
+    const s = await api("/api/zotero/status");
+    el.innerHTML = `<span class="dot ${s.ok ? "ok" : "bad"}"></span>${esc(s.message)}`;
+    let saved = ""; try { saved = localStorage.getItem("dp.collection") || ""; } catch (e) {}
+    const opts = [["", `默认：${s.default_collection || "文库根目录"}`], ...s.collections.map(c => [c, c])];
+    sel.innerHTML = opts.map(([v, t]) => `<option value="${esc(v)}" ${v === saved ? "selected" : ""}>${esc(t)}</option>`).join("");
+  } catch (e) { el.innerHTML = `<span class="dot bad"></span>${esc(e.message)}`; }
+}
+zstatus(); load();
+</script>
+</body>
+</html>

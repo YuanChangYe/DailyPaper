@@ -1,0 +1,44 @@
+[
+  {
+    "id": "2610.00001",
+    "title": "Conformal Abstention for Tool-Using LLM Agents with Risk Control",
+    "abstract": "We study selective prediction for LLM agents that call tools. Using conformal risk control we calibrate an abstention threshold so that the expected error of accepted actions stays below a target level, with finite-sample guarantees.",
+    "authors": ["Alice Zhang", "Bob Li"],
+    "categories": ["cs.LG", "cs.AI"],
+    "url_abs": "https://arxiv.org/abs/2610.00001",
+    "url_pdf": "https://arxiv.org/pdf/2610.00001v1",
+    "url_html": "https://arxiv.org/html/2610.00001v1"
+  },
+  {
+    "id": "2610.00002",
+    "title": "Semantic Entropy Probes for Hallucination Detection in Retrieval-Augmented Generation",
+    "abstract": "We propose an uncertainty quantification method for large language models in RAG pipelines, estimating semantic entropy from hidden states to detect hallucinations.",
+    "authors": ["Carol Wang"],
+    "categories": ["cs.CL"],
+    "url_abs": "https://arxiv.org/abs/2610.00002"
+  },
+  {
+    "id": "2610.00003",
+    "title": "Byzantine-Robust Consensus for Multi-Agent LLM Debate",
+    "abstract": "Multi-agent debate is vulnerable to adversarial agents. We design a consensus mechanism with reliability guarantees against byzantine LLM agents.",
+    "authors": ["Dan Chen", "Eve Liu"],
+    "categories": ["cs.MA"],
+    "url_abs": "https://arxiv.org/abs/2610.00003"
+  },
+  {
+    "id": "2610.00004",
+    "title": "Image Classification Calibration with Temperature Scaling for ResNets",
+    "abstract": "We revisit calibration of convolutional image classifiers on ImageNet.",
+    "authors": ["Frank Zhou"],
+    "categories": ["cs.CV"],
+    "url_abs": "https://arxiv.org/abs/2610.00004"
+  },
+  {
+    "id": "2610.00005",
+    "title": "A Faster Sorting Algorithm for GPUs",
+    "abstract": "We present a GPU radix sort.",
+    "authors": ["Grace Wu"],
+    "categories": ["cs.DS"],
+    "url_abs": "https://arxiv.org/abs/2610.00005"
+  }
+]

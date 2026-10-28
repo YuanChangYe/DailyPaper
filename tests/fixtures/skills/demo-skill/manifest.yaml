@@ -1,0 +1,11 @@
+name: demo-skill
+always_load:
+  - ../shared-skill/core/ledger.md
+  - static/core/principles.md
+  - static/core/workflow.md
+axes:
+  paper_type:
+    values:
+      methods: static/fragments/paper_type/methods.md
+      review: static/fragments/paper_type/review.md
+    default: methods

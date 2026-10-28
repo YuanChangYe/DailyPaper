@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://www.w3.org/2005/Atom" xml:lang="en-us">
+  <id>http://rss.arxiv.org/atom/cs.LG</id>
+  <title>cs.LG updates on arXiv.org</title>
+  <entry>
+    <id>oai:arXiv.org:2610.11111v1</id>
+    <title>Conformal Prediction for Agents</title>
+    <link href="https://arxiv.org/abs/2610.11111"/>
+    <summary>arXiv:2610.11111v1 Announce Type: new
+Abstract: We study conformal prediction for LLM agents.</summary>
+    <category term="cs.LG"/>
+    <category term="cs.AI"/>
+    <published>2026-10-28T00:00:00-04:00</published>
+    <arxiv:announce_type>new</arxiv:announce_type>
+    <dc:creator>Alice Zhang, Bob Li</dc:creator>
+  </entry>
+  <entry>
+    <id>oai:arXiv.org:2610.22222v2</id>
+    <title>An Old Paper Revised</title>
+    <link href="https://arxiv.org/abs/2610.22222"/>
+    <summary>arXiv:2610.22222v2 Announce Type: replace
+Abstract: Revised version.</summary>
+    <category term="cs.LG"/>
+    <published>2026-10-28T00:00:00-04:00</published>
+    <arxiv:announce_type>replace</arxiv:announce_type>
+    <dc:creator>Carol Wang</dc:creator>
+  </entry>
+</feed>
