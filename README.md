@@ -522,10 +522,9 @@ ruff check src tests
 - **API key**：只放在本地 `.env` 或 GitHub Secrets 中，不要写进代码或配置文件。GitHub Secrets 加密保存，日志中会被自动遮盖；来自 fork 的 Pull Request 无法读取你的 Secrets。建议为本项目单独创建一个 key，并在服务商控制台设置花费上限。
 - **公开仓库**：仓库公开时，下列内容也是公开的：
   - 生成的笔记；
-  - `data/zotero_index.json` 和 `data/interest_profile.json`（来自你的 Zotero 文库标题和关键词，只有运行 `zotero-profile` 后才会生成）；
   - `skills/` 中的外部 skill 文本（只有运行 `sync-skills` 后才会生成）。
 
-  介意的话，可以把这些文件加入 `.gitignore`，或使用私有仓库。私有仓库使用 GitHub Pages 需要付费账户；也可以改用 Cloudflare Pages 等免费服务，构建命令填 `pip install mkdocs-material && mkdocs build`，输出目录填 `site`。
+  从 Zotero 文库导出的 `data/zotero_index.json` 和 `data/interest_profile.json`（包含你的文库标题和关键词）默认在 `.gitignore` 中，只在本地使用；想让云端也按文库去重和排序，可以从 `.gitignore` 中去掉它们，但请先确认你接受公开这些信息。介意笔记公开的话，可以使用私有仓库。私有仓库使用 GitHub Pages 需要付费账户；也可以改用 Cloudflare Pages 等免费服务，构建命令填 `pip install mkdocs-material && mkdocs build`，输出目录填 `site`。
 - **版权**：笔记中引用了论文摘要和少量原文内容。请遵守相应论文的许可证，以及 [arXiv 的使用条款](https://info.arxiv.org/help/api/tou.html)。
 
 ---

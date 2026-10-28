@@ -7,3 +7,7 @@ __pycache__/
 /site/
 .env
 *.pyc
+
+# 本机 Zotero 文库导出的索引与兴趣画像（含文库标题），默认不提交
+data/zotero_index.json
+data/interest_profile.json
