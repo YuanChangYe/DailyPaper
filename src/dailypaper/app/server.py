@@ -48,7 +48,7 @@ class RunBody(BaseModel):
 def create_app(cfg: AppConfig) -> FastAPI:
     app = FastAPI(title="DailyPaper 本地助手", docs_url=None, redoc_url=None)
     store = ReviewStore(cfg)
-    runner = RunManager(cfg.root)
+    runner = RunManager(cfg.root, cache_dir=cfg.cache_dir)
 
     def zotero() -> ZoteroService:
         return ZoteroService.from_config(cfg)

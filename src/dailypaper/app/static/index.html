@@ -7,7 +7,9 @@
 <meta name="description" content="每天从 arXiv 筛选 LLM / RAG / Agent 可信性方向的新论文，围绕 insight 与 novelty 精读，审核后一键入库 Zotero。">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%230C232B'/%3E%3Cpath d='M8 23c4-5 8-5 12 0s8 5 12 0M8 16c4-5 8-5 12 0s8 5 12 0' fill='none' stroke='%23E6F0F2' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<!-- 字体非阻塞加载：Google Fonts 访问不到时不会拖慢首屏，直接用系统字体 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"></noscript>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <style>
 /* Layout: a misty-fjord reading room. One framed photographic hero with drifting fog,
@@ -88,26 +90,38 @@ main{min-height:60vh}
 .hero{position:relative;margin-top:-64px;border-radius:var(--r-lg);overflow:hidden;border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.35)}
 .hero-stage{position:relative;isolation:isolate;overflow:hidden}
 .hero-photo{position:absolute;inset:0;z-index:-3;overflow:hidden}
-.hero-photo img{width:100%;height:100%;object-fit:cover;object-position:center 35%;transform-origin:60% 40%;animation:kenburns 38s ease-in-out infinite alternate}
-@keyframes kenburns{from{transform:scale(1.04)}to{transform:scale(1.14) translate(-1.5%,-1%)}}
-.hero-shade{position:absolute;inset:0;z-index:-2;background:linear-gradient(95deg,rgba(9,30,38,.72) 0%,rgba(9,30,38,.38) 48%,rgba(9,30,38,.06) 80%),linear-gradient(180deg,rgba(9,30,38,.15) 0%,transparent 35%,rgba(9,30,38,.55) 100%)}
-.fog{position:absolute;inset:-20% -40%;z-index:-1;pointer-events:none;filter:blur(24px);mix-blend-mode:screen;opacity:.75;
+.hero-photo img{width:100%;height:100%;object-fit:cover;object-position:center 58%;transform-origin:55% 60%;animation:kenburns 42s ease-in-out infinite alternate;will-change:transform}
+@keyframes kenburns{from{transform:scale(1.04) translate(0,0)}to{transform:scale(1.13) translate(-1.2%,-1.5%)}}
+.hero-shade{position:absolute;inset:0;z-index:-2;background:linear-gradient(95deg,rgba(9,30,38,.78) 0%,rgba(9,30,38,.44) 46%,rgba(9,30,38,.08) 78%),linear-gradient(180deg,rgba(9,30,38,.28) 0%,transparent 40%,rgba(9,30,38,.62) 100%)}
+/* 跟随鼠标的暖色光斑：晨光打在玻璃上的感觉 */
+.glare{position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:0;transition:opacity .6s;mix-blend-mode:screen;
+  background:radial-gradient(560px circle at var(--mx,70%) var(--my,45%),rgba(255,214,190,.26),rgba(255,214,190,.08) 35%,transparent 62%)}
+.hero-stage:hover .glare{opacity:1}
+.fog{position:absolute;inset:-20% -40%;z-index:-1;pointer-events:none;filter:blur(24px);mix-blend-mode:screen;opacity:.45;
   background:radial-gradient(28% 18% at 22% 78%,rgba(240,248,250,.38),transparent 70%),radial-gradient(30% 16% at 64% 84%,rgba(240,248,250,.30),transparent 70%),radial-gradient(22% 14% at 90% 70%,rgba(240,248,250,.24),transparent 70%);
   animation:fog 46s linear infinite alternate}
-.fog.f2{opacity:.5;animation-duration:70s;animation-direction:alternate-reverse;background:radial-gradient(26% 15% at 40% 72%,rgba(240,248,250,.32),transparent 70%),radial-gradient(24% 12% at 80% 90%,rgba(240,248,250,.26),transparent 70%)}
+.fog.f2{opacity:.3;animation-duration:70s;animation-direction:alternate-reverse;background:radial-gradient(26% 15% at 40% 72%,rgba(240,248,250,.32),transparent 70%),radial-gradient(24% 12% at 80% 90%,rgba(240,248,250,.26),transparent 70%)}
 @keyframes fog{from{transform:translate3d(-9%,0,0)}to{transform:translate3d(9%,-2%,0)}}
 .hero-inner{display:grid;grid-template-columns:1.2fr .8fr;gap:32px;align-items:center;padding:116px 48px 236px}
-.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.08em;color:var(--mist);padding:5px 13px;border-radius:999px;background:rgba(238,245,246,.12);border:1px solid rgba(238,245,246,.25);backdrop-filter:blur(8px)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.08em;color:var(--mist);padding:5px 13px;border-radius:999px;background:rgba(238,245,246,.12);border:1px solid rgba(243,183,166,.45);backdrop-filter:blur(8px)}
+/* 动态玻璃：边缘高光 + 缓慢扫过的反光 */
+.glass{position:relative;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 0 0 1px rgba(255,255,255,.08),0 20px 50px rgba(0,0,0,.25)}
+.glass:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;
+  background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.16) 46%,rgba(255,228,214,.22) 50%,rgba(255,255,255,.14) 54%,transparent 65%);
+  background-size:260% 100%;animation:sheen 11s cubic-bezier(.4,0,.2,1) infinite}
+.glass>*{position:relative;z-index:2}
+@keyframes sheen{0%{background-position:120% 0}55%,100%{background-position:-120% 0}}
+.tilt{transform:perspective(900px) rotateX(var(--ry,0deg)) rotateY(var(--rx,0deg)) translateZ(0);transition:transform .25s ease-out;will-change:transform}
 .hero h1{font-size:clamp(36px,5.4vw,68px);line-height:1.08;letter-spacing:-.03em;font-weight:700;margin:20px 0 14px;color:#fff;text-shadow:0 2px 30px rgba(0,0,0,.18)}
 .hero .sub{color:rgba(238,245,246,.86);font-size:17px;margin:0 0 26px;max-width:40ch}
 .hero-actions{display:flex;gap:10px;flex-wrap:wrap}
-.float-card{justify-self:end;width:min(380px,100%);padding:14px;border-radius:22px;background:rgba(238,245,246,.14);border:1px solid rgba(238,245,246,.28);backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);color:var(--mist);box-shadow:0 20px 50px rgba(0,0,0,.25);animation:bob 9s ease-in-out infinite;transition:transform .3s}
-@keyframes bob{50%{transform:translateY(-8px)}}
-.float-card .thumb{height:132px;border-radius:14px;background:linear-gradient(160deg,rgba(9,30,38,.15),rgba(9,30,38,.6)),url(assets/hero-mist-wide-1200.jpg) center 70%/cover;display:flex;align-items:flex-end;padding:10px;font-size:11px;letter-spacing:.06em}
+.float-card{justify-self:end;width:min(380px,100%);padding:14px;border-radius:22px;background:rgba(238,245,246,.14);border:1px solid rgba(238,245,246,.3);backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%);color:var(--mist)}
+.float-card .thumb{height:132px;border-radius:14px;background:linear-gradient(160deg,rgba(9,30,38,.1),rgba(9,30,38,.6)),url(assets/hero-sunrise-640.jpg) center 62%/cover;display:flex;align-items:flex-end;padding:10px;font-size:11px;letter-spacing:.06em}
 .float-card h3{font-size:17.5px;line-height:1.35;margin:12px 4px 8px;color:#fff}
 .float-card p{margin:0 4px 10px;font-size:13.5px;line-height:1.6;color:rgba(238,245,246,.8);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .float-card a{display:inline-flex;gap:6px;margin:0 4px 4px;font-size:13px;border-bottom:1px solid rgba(238,245,246,.4)}
-.searchbox{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);width:min(860px,calc(100% - 48px));padding:14px;border-radius:22px;background:rgba(238,245,246,.14);border:1px solid rgba(238,245,246,.3);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);box-shadow:0 18px 50px rgba(0,0,0,.25)}
+.searchbox{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);width:min(860px,calc(100% - 48px));padding:14px;border-radius:22px;background:rgba(238,245,246,.14);border:1px solid rgba(238,245,246,.3);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%)}
+.searchbox.glass:before{animation-delay:-5s}
 .search-row{display:flex;align-items:center;gap:12px;padding:8px 8px 8px 20px;border-radius:999px;background:rgba(9,30,38,.38);border:1px solid rgba(238,245,246,.2)}
 .search-row input{flex:1;min-width:0;background:none;border:0;outline:0;color:#fff;font-size:16px;line-height:1.5}
 .search-row input::placeholder{color:rgba(238,245,246,.6)}
@@ -125,6 +139,16 @@ main{min-height:60vh}
 .stat{padding:18px 20px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--glass)}
 .stat b{display:block;font-size:30px;line-height:1.2;color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
 .stat span{font-size:13px;color:var(--muted)}
+.stat .stat-text{font-size:20px;line-height:1.5;min-height:36px;display:flex;align-items:center}
+a.stat:hover{border-color:var(--line-2)}
+.onboard{padding:28px 32px;border-radius:var(--r-md);border:1px dashed var(--line-2);background:var(--glass)}
+.onboard h2{font-size:22px;margin-bottom:8px}.onboard p{margin:6px 0;color:var(--body)}.onboard .muted{color:var(--muted);font-size:13px}
+.onboard ol{margin:10px 0 0;padding-left:22px}.onboard li{margin:6px 0}.onboard a{color:var(--accent)}
+.onboard code{font-family:var(--mono);font-size:.9em;padding:1px 6px;border-radius:5px;background:rgba(9,30,38,.5)}
+.pn{display:flex;gap:12px;justify-content:space-between;margin:36px 0 10px;padding-top:18px;border-top:1px solid var(--line)}
+.pn a{flex:1;max-width:48%;padding:12px 16px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--glass);color:var(--body);line-height:1.4}
+.pn a:hover{border-color:var(--line-2);color:var(--ink)}.pn a small{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+.pn a.next{text-align:right;margin-left:auto}
 
 /* ---------- paper cards ---------- */
 .rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(300px,1fr);gap:16px;overflow-x:auto;padding:4px 2px 18px;scroll-snap-type:x mandatory;scrollbar-width:thin}
@@ -201,7 +225,7 @@ select.input{padding-right:30px}
 .toc{position:sticky;top:100px;font-size:13px;display:flex;flex-direction:column;gap:2px;border-left:1px solid var(--line);padding-left:4px}
 .toc a{padding:5px 12px;border-radius:8px;color:var(--muted);border-left:2px solid transparent;margin-left:-5px}
 .toc a:hover{color:var(--ink)}.toc a.on{color:var(--ink);border-left-color:var(--accent);background:var(--glass)}
-.paper-head{padding:28px;border-radius:var(--r-lg);border:1px solid var(--line);background:linear-gradient(160deg,rgba(23,65,80,.6),rgba(12,35,43,.5)),url(assets/hero-mist-wide-1200.jpg) center 80%/cover;background-blend-mode:normal,soft-light}
+.paper-head{padding:28px;border-radius:var(--r-lg);border:1px solid var(--line);background:linear-gradient(160deg,rgba(23,65,80,.72),rgba(12,35,43,.62)),url(assets/hero-sunrise-1200.jpg) center 62%/cover;background-blend-mode:normal,soft-light}
 .paper-head h1{font-size:clamp(24px,3vw,34px);line-height:1.3;letter-spacing:-.015em;margin:10px 0 12px}
 .meta-line{display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--body)}
 .paper-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
@@ -228,7 +252,7 @@ select.input{padding-right:30px}
 .md-inline .katex{font-size:1em}.md-inline code{font-family:var(--mono);font-size:.88em;padding:0 4px;border-radius:4px;background:rgba(9,30,38,.45)}.md-inline strong{color:var(--ink)}
 
 /* ---------- hero quote, GitHub link ---------- */
-.hero .quote{margin:26px 0 34px;max-width:46ch;color:rgba(238,245,246,.92);font-size:18px;line-height:1.7;padding:0 0 0 18px;border-left:2px solid rgba(238,245,246,.45)}
+.hero .quote{margin:26px 0 34px;max-width:46ch;color:rgba(238,245,246,.92);font-size:18px;line-height:1.7;padding:0 0 0 18px;border-left:2px solid rgba(243,183,166,.75)}
 .hero .quote p{margin:0}
 .hero .quote cite{display:block;margin-top:8px;font-size:13px;font-style:normal;color:rgba(238,245,246,.62);letter-spacing:.02em}
 .gh{gap:6px}.gh svg{width:16px;height:16px;fill:currentColor}
@@ -390,7 +414,7 @@ footer a{border-bottom:1px solid var(--line-2)}
 <footer>
   <div class="wrap">
     <span>DailyPaper · 每天一点 insight。数据：<span id="foot-source">—</span></span>
-    <span><a id="gh-foot" href="https://github.com/YuanChangYe/DailyPaper" target="_blank" rel="noopener noreferrer">GitHub</a> · <a href="feed.xml">RSS</a> · 首页照片：Zhang liven / <a href="https://unsplash.com/photos/misty-blue-mountains-rise-above-calm-water-BiLh-YznD0I" target="_blank" rel="noopener noreferrer">Unsplash</a></span>
+    <span><a id="gh-foot" href="https://github.com/YuanChangYe/DailyPaper" target="_blank" rel="noopener noreferrer">GitHub</a> · <a href="feed.xml">RSS</a> · 首页照片：梅里雪山日照金山</span>
   </div>
 </footer>
 
@@ -643,10 +667,17 @@ async function boot() {
   if (S.mode === "demo") S.index = DEMO.papers;
   S.topics = S.meta?.topics?.length ? S.meta.topics : DEMO_CONFIG.topics.map(({ id, name }) => ({ id, name }));
   paintMode();
-  if (isLocal()) { refreshZotero(); refreshBadge(); pollRun(true); }
+  if (isLocal()) { refreshZotero(); refreshBadge(); await pollRun(true); }
   fillCollections();
   route();
 }
+const lastRunLabel = () => {
+  const r = S.run; if (!r) return "—";
+  if (r.running) return "运行中";
+  if (!r.finished_at) return "尚未运行";
+  const t = String(r.finished_at).replace("T", " ").slice(5, 16);
+  return `${t} ${r.ok ? "✓" : "✗"}`;
+};
 
 function paintMode() {
   const m = $("#mode");
@@ -671,6 +702,12 @@ function toast(msg, kind = "") {
 }
 const stars = (n) => { const v = Math.max(0, Math.min(5, Math.round(Number(n) || 0))); return `<span class="stars" aria-label="价值 ${v} / 5">${"★".repeat(v)}${"☆".repeat(5 - v)}</span>`; };
 const chip = (id) => `<span class="chip dot t-${esc(id)}" title="${esc(tname(id))}">${esc(tshort(id))}</span>`;
+const TYPE_ZH = { method: "方法", theory: "理论", benchmark: "Benchmark", empirical: "实证", survey: "综述", position: "观点" };
+// 精读 lens 的可读标签：topic:x → 镜头·方向，type_x → 镜头·类型，其余为外部 skill
+const lensChip = (l) => {
+  const label = l.startsWith("topic:") ? `镜头 · ${tshort(l.slice(6))}` : l.startsWith("type_") ? `镜头 · ${TYPE_ZH[l.slice(5)] || l.slice(5)}` : `skill · ${l}`;
+  return `<span class="chip" title="精读时叠加的分析指引：${esc(l)}">${esc(label)}</span>`;
+};
 const fmtDate = (d) => { const [y, m, dd] = String(d).split("-"); return y && m && dd ? `${+m}月${+dd}日` : d; };
 const weekday = (d) => { const t = new Date(d + "T00:00:00"); return isNaN(t) ? "" : "周" + "日一二三四五六"[t.getDay()]; };
 const decisionOf = (id) => (S.items?.find((i) => i.entry.id === id)?.decision) || S.demoDecisions[id] || null;
@@ -777,6 +814,10 @@ async function refreshBadge() {
 let runTimer = null;
 async function startRun(pipeline, ids = []) {
   if (!isLocal()) { toast(S.mode === "demo" ? `示例：会在本地助手里执行 dailypaper ${pipeline === "read" ? "read " + ids.join(" ") : "run"}` : "请在电脑上运行 dailypaper app 后再触发", S.mode === "demo" ? "" : "err"); return; }
+  // 会真实调用模型，先确认并给出费用量级（按 Sonnet 精读约 $0.14 / 篇估算）
+  const n = pipeline === "read" ? ids.length : Number(S.config?.daily?.top_k || DEMO_CONFIG.daily.top_k);
+  const what = pipeline === "read" ? `精读 ${ids.join("、")}` : `运行今日任务（抓取 → 筛选 → 精读最多 ${n} 篇）`;
+  if (!confirm(`${what}？\n会调用模型，大约 $${(n * 0.14).toFixed(2)}，需要几分钟。`)) return;
   try {
     const r = await send("/api/run", { pipeline, ids });
     (r.messages || [`已开始：${pipeline}`]).forEach((m) => toast(m, "ok"));
@@ -818,8 +859,8 @@ VIEWS.home = async () => {
   return `
   <section class="hero" aria-label="DailyPaper">
    <div class="hero-stage">
-    <div class="hero-photo"><img src="assets/hero-mist-wide.jpg" srcset="assets/hero-mist-wide-1200.jpg 1200w, assets/hero-mist-wide.jpg 2400w" sizes="100vw" alt="" fetchpriority="high"></div>
-    <div class="hero-shade"></div><div class="fog"></div><div class="fog f2"></div>
+    <div class="hero-photo"><img src="assets/hero-sunrise.jpg" srcset="assets/hero-sunrise-640.jpg 640w, assets/hero-sunrise-1200.jpg 1200w, assets/hero-sunrise.jpg 2000w" sizes="100vw" alt="" fetchpriority="high"></div>
+    <div class="hero-shade"></div><div class="glare"></div><div class="fog"></div><div class="fog f2"></div>
     <div class="hero-inner">
       <div>
         <span class="eyebrow">arXiv 每日论文雷达 · LLM / Agent 可信性</span>
@@ -827,13 +868,13 @@ VIEWS.home = async () => {
         <blockquote class="quote"><p>${esc(quote[0])}</p><cite>—— ${esc(quote[1])}</cite></blockquote>
         <div class="hero-actions"><a class="btn primary" href="#/daily">查看今日精选 →</a><a class="btn" href="#/review">去审核入库</a></div>
       </div>
-      ${top ? `<aside class="float-card" aria-label="今日首选">
+      ${top ? `<aside class="float-card glass tilt" id="float-card" aria-label="今日首选">
         <div class="thumb">今日首选 · ${esc(fmtDate(top.date))}</div>
         <h3>${esc(top.title)}</h3><p>${mdInline(top.tldr)}</p>
         <a href="#/paper/${encodeURIComponent(top.id)}">阅读精读笔记 →</a>
       </aside>` : ""}
     </div>
-    <form class="searchbox" id="hero-search" role="search">
+    <form class="searchbox glass" id="hero-search" role="search">
       <div class="search-row">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EEF5F6" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <label class="sr" for="q">搜索论文</label>
@@ -850,8 +891,19 @@ VIEWS.home = async () => {
     <div class="stat reveal"><b data-count="${today.length}">0</b><span>${esc(fmtDate(latest || ""))} 精读</span></div>
     <div class="stat reveal"><b data-count="${S.index.length}">0</b><span>累计笔记</span></div>
     <div class="stat reveal"><b data-count="${imported}">0</b><span>已入库 Zotero</span></div>
-    <div class="stat reveal"><b data-count="${S.topics.length}">0</b><span>研究方向</span></div>
+    ${isLocal() ? `<a class="stat reveal" href="#/settings" title="查看运行日志"><b class="stat-text">${esc(lastRunLabel())}</b><span>上次运行 · 点击看日志</span></a>`
+                : `<div class="stat reveal"><b data-count="${S.topics.length}">0</b><span>研究方向</span></div>`}
   </div>
+  ${!S.index.length ? `<section class="section"><div class="onboard">
+    <h2>还没有精读笔记</h2>
+    <p>${isLocal() ? "本地助手已连接。按下面三步开始：" : S.mode === "static" ? "这个网站还没有发布过内容，等每日任务运行后会自动出现。" : "当前显示的是示例数据。连接本地助手后，这里会变成你的笔记。"}</p>
+    ${isLocal() ? `<ol>
+      <li>在 <a href="#/settings">搜索设置</a> 里确认研究方向和关键词（也可以先用默认的试试）。</li>
+      <li>点右上角的 <b>立即运行</b>，或者在终端运行 <code>dailypaper run</code>；首次精读 5 篇大约 5 分钟。</li>
+      <li>跑完后回到这里，或者去 <a href="#/review">审核台</a> 决定哪些进 Zotero。</li>
+    </ol>
+    <p class="muted">想先不花钱看看效果：终端运行 <code>dailypaper run --provider fake --dry-run</code>。</p>` : ""}
+  </div></section>` : ""}
 
   <section class="section">
     <div class="section-head"><div><h2>今日精选</h2><p>勾选右上角的方框可以多选，底部会出现"加入 Zotero"。</p></div><a class="btn sm" href="#/daily">全部 →</a></div>
@@ -865,6 +917,20 @@ VIEWS.home = async () => {
 };
 VIEWS.home.after = () => {
   $$("[data-count]").forEach((el) => countUp(el, el.dataset.count));
+  // 动态玻璃：光斑跟随鼠标，首选卡片随鼠标轻微倾斜
+  const stage = $(".hero-stage"), card = $("#float-card");
+  if (stage && !reduced && matchMedia("(hover:hover)").matches) {
+    stage.addEventListener("pointermove", (e) => {
+      const r = stage.getBoundingClientRect();
+      stage.style.setProperty("--mx", `${((e.clientX - r.left) / r.width * 100).toFixed(1)}%`);
+      stage.style.setProperty("--my", `${((e.clientY - r.top) / r.height * 100).toFixed(1)}%`);
+      if (card) {
+        const c = card.getBoundingClientRect(), dx = (e.clientX - (c.left + c.width / 2)) / c.width, dy = (e.clientY - (c.top + c.height / 2)) / c.height;
+        card.style.setProperty("--rx", `${(dx * 6).toFixed(2)}deg`); card.style.setProperty("--ry", `${(-dy * 6).toFixed(2)}deg`);
+      }
+    });
+    stage.addEventListener("pointerleave", () => { card?.style.setProperty("--rx", "0deg"); card?.style.setProperty("--ry", "0deg"); });
+  }
   const form = $("#hero-search"), q = $("#q"), hint = $("#search-hint");
   q.addEventListener("input", () => {
     const m = q.value.trim().match(ARXIV_ID);
@@ -982,7 +1048,7 @@ VIEWS.paper = async (id) => {
         <div class="meta-line"><a href="#/daily/${esc(p.date)}">← ${esc(fmtDate(p.date))}日报</a><span class="mono">${esc(p.id)}</span><span>${esc(p.paper_type || "")}</span>${stars(p.value_score)}${statusPill(id)}</div>
         <h1>${esc(p.title)}</h1>
         <div class="meta-line">${esc((p.authors || []).slice(0, 8).join(", "))}${(p.authors || []).length > 8 ? " 等" : ""}</div>
-        <div class="meta-line" style="margin-top:10px">${(p.topics || []).map(chip).join("")}${(p.lenses || []).map((l) => `<span class="chip" title="精读 lens">${esc(l)}</span>`).join("")}</div>
+        <div class="meta-line" style="margin-top:10px">${(p.topics || []).map(chip).join("")}${(p.lenses || []).map(lensChip).join("")}</div>
         <div class="paper-actions">
           ${d?.status === "imported" ? `<span class="btn ok" aria-disabled="true">已在 Zotero${d.citekey ? ` · <span class="mono">${esc(d.citekey)}</span>` : ""}</span>` : `<button class="btn primary" type="button" data-one="approve">加入 Zotero</button>`}
           <button class="btn" type="button" data-one="later">稍后</button>
@@ -993,6 +1059,7 @@ VIEWS.paper = async (id) => {
         </div>
       </header>
       <article class="prose" id="prose"><p style="color:var(--muted)">正在渲染笔记…</p></article>
+      ${paperNav(id)}
     </div>
   </div>
   <div class="split-handle" id="split-handle" hidden role="separator" aria-orientation="vertical" title="拖动调整宽度"></div>
@@ -1002,6 +1069,18 @@ VIEWS.paper = async (id) => {
   </aside>
   </div>`;
 };
+/* 同一列表顺序（日期降序、分数降序）下的上一篇 / 下一篇 */
+function paperNeighbors(id) {
+  const list = [...S.index].sort((a, b) => b.date.localeCompare(a.date) || b.score - a.score);
+  const i = list.findIndex((p) => p.id === id);
+  return { prev: i > 0 ? list[i - 1] : null, next: i >= 0 && i < list.length - 1 ? list[i + 1] : null };
+}
+function paperNav(id) {
+  const { prev, next } = paperNeighbors(id);
+  if (!prev && !next) return "";
+  const link = (p, cls, label) => p ? `<a class="${cls}" href="#/paper/${encodeURIComponent(p.id)}"><small>${label}</small>${esc(p.title)}</a>` : "";
+  return `<nav class="pn" aria-label="相邻论文">${link(prev, "prev", "← 上一篇")}${link(next, "next", "下一篇 →")}</nav>`;
+}
 function setupSplit(p) {
   const split = $("#paper-split"), handle = $("#split-handle"), pane = $("#pdf-pane"), frame = $("#pdf-frame"), tog = $("#pdf-toggle");
   if (!split || !tog) return;
@@ -1010,7 +1089,7 @@ function setupSplit(p) {
     handle.hidden = pane.hidden = !on;
     if (on && !frame.getAttribute("src")) frame.src = pdfUrl(p);
     tog.textContent = on ? "关闭 PDF" : "阅读 PDF";
-    try { localStorage.setItem("dp.pdf", on ? "1" : "0"); } catch { /* 无痕模式 */ }
+    try { sessionStorage.setItem("dp.pdf", on ? "1" : "0"); } catch { /* 无痕模式 */ }
   };
   tog.addEventListener("click", () => setSplit(!split.classList.contains("on")));
   $("#pdf-close").addEventListener("click", () => setSplit(false));
@@ -1027,7 +1106,7 @@ function setupSplit(p) {
     };
     handle.addEventListener("pointermove", move); handle.addEventListener("pointerup", up); handle.addEventListener("pointercancel", up);
   });
-  let remembered = false; try { remembered = localStorage.getItem("dp.pdf") === "1"; } catch { /* 忽略 */ }
+  let remembered = false; try { remembered = sessionStorage.getItem("dp.pdf") === "1"; } catch { /* 忽略 */ }
   if (remembered && matchMedia("(min-width:1000px)").matches) setSplit(true);
 }
 VIEWS.paper.after = async (id) => {
@@ -1299,6 +1378,17 @@ document.addEventListener("change", (e) => {
 $$("[data-bulk]").forEach((b) => b.addEventListener("click", () => decide([...S.selected], b.dataset.bulk, $("#sel-collection").value)));
 $("#sel-clear").addEventListener("click", () => { S.selected.clear(); syncSelection(); });
 $("#run-now").addEventListener("click", () => startRun("daily"));
+// 键盘：首页 / 聚焦搜索；论文页 ← → 切换上一篇 / 下一篇
+document.addEventListener("keydown", (e) => {
+  if (e.target.closest("input, textarea, select, [contenteditable]") || e.metaKey || e.ctrlKey || e.altKey) return;
+  const m = location.hash.match(/^#\/paper\/([^?]+)/);
+  if (e.key === "/" && $("#q")) { e.preventDefault(); $("#q").focus(); }
+  else if (m && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+    const { prev, next } = paperNeighbors(decodeURIComponent(m[1]));
+    const to = e.key === "ArrowLeft" ? prev : next;
+    if (to) location.hash = "#/paper/" + encodeURIComponent(to.id);
+  }
+});
 addEventListener("hashchange", () => route());
 boot();
 </script>

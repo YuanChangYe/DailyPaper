@@ -32,9 +32,9 @@ def test_static_mounts(client, cfg):
     paper = client.get(f"/site/api/papers/{pid}.json").json()
     assert "## 0. TL;DR" in paper["markdown"] and paper["lenses"]
     assert client.get("/site/api/daily/2026-10-28.json").json()["papers"]
-    assert client.get("/assets/hero-mist-wide-1200.jpg").status_code == 200
+    assert client.get("/assets/hero-sunrise-640.jpg").status_code == 200
     # 网页本身也被复制进了内容目录（GitHub Pages 用）
-    assert (cfg.content_dir / "index.html").exists() and (cfg.content_dir / "assets" / "hero-mist-wide.jpg").exists()
+    assert (cfg.content_dir / "index.html").exists() and (cfg.content_dir / "assets" / "hero-sunrise.jpg").exists()
     assert (cfg.content_dir / "notes.md").exists() and not (cfg.content_dir / "index.md").exists()
 
 

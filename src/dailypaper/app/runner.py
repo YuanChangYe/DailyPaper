@@ -20,8 +20,9 @@ def _now() -> str:
 
 
 class RunManager:
-    def __init__(self, root: Path, log_lines: int = 200) -> None:
+    def __init__(self, root: Path, log_lines: int = 200, cache_dir: Path | None = None) -> None:
         self.root = root
+        self.cache_dir = cache_dir or (root / ".cache")
         self._lock = threading.Lock()
         self._proc: subprocess.Popen | None = None
         self.pipeline = ""
@@ -87,7 +88,34 @@ class RunManager:
         self.finished_at = _now()
         self.log.append(f"==== 结束，退出码 {proc.returncode}")
 
+    def last_recorded(self) -> dict | None:
+        """本进程还没跑过时，从 .cache/runs/*/run.json 找最近一次运行（由流水线写入）。"""
+        import json
+
+        runs = sorted(self.cache_dir.glob("runs/*/run.json"), key=lambda p: p.stat().st_mtime, reverse=True)
+        for p in runs[:1]:
+            try:
+                info = json.loads(p.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            stats = info.get("stats") or {}
+            return {
+                "running": False,
+                "pipeline": info.get("pipeline", ""),
+                "started_at": info.get("started_at"),
+                "finished_at": info.get("finished_at"),
+                "ok": bool(info.get("finished_at")) and not any("error" in v for v in stats.values() if isinstance(v, dict)),
+                "returncode": None,
+                "log_tail": [f"[{k}] " + ", ".join(f"{a}={b}" for a, b in v.items()) for k, v in stats.items() if isinstance(v, dict)],
+                "source": "run.json",
+            }
+        return None
+
     def status(self) -> dict:
+        if self.started_at is None:
+            return self.last_recorded() or {
+                "running": False, "pipeline": "", "started_at": None, "finished_at": None, "ok": None, "returncode": None, "log_tail": [],
+            }
         return {
             "running": self.running,
             "pipeline": self.pipeline,
