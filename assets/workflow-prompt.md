@@ -1,6 +1,6 @@
 # 工作流程图 · 图片生成提示词
 
-生成后保存为 `assets/workflow.png`（README 引用这个路径）。建议 16:9 或 3:2 横图，宽度 1600 px 以上。
+生成后保存为 `assets/workflow.webp`（README 引用这个路径）。建议 16:9 或 3:2 横图，宽度 1600 px 以上。
 
 ## 中文提示词
 

@@ -56,7 +56,7 @@ DailyPaper 每天自动抓取 arXiv 新论文，用大语言模型按你设定�
 ## 工作流程
 
 <p align="center">
-  <img src="assets/workflow.png" alt="DailyPaper 工作流程" width="860">
+  <img src="assets/workflow.webp" alt="DailyPaper 工作流程" width="860">
 </p>
 
 ```
