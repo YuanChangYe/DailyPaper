@@ -4,6 +4,6 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .cache/
-site/
+/site/
 .env
 *.pyc
