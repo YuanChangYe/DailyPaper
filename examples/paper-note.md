@@ -26,12 +26,6 @@ model: claude:claude-sonnet-5-5
 grounding: structure-grounded
 url_abs: https://arxiv.org/abs/2610.35877
 url_pdf: https://arxiv.org/pdf/2610.35877v1
-status: unread
-rating: null
-zotero_approve: true
-zotero_key: L2C6MABE
-citekey: mittal2026calibrated
-zotero_link: zotero://select/library/items/L2C6MABE
 ---
 
 # Calibrated for Which Policy? Conformal Uncertainty for Fixed World Models Under Intervention

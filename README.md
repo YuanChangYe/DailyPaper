@@ -39,7 +39,7 @@ DailyPaper 每天自动抓取 arXiv 新论文，用大语言模型按你设定�
 
 ## 效果示例
 
-每篇精读笔记都按同一个框架输出。下面摘录一篇 conformal prediction 方向论文的笔记片段：
+每篇精读笔记都按同一个框架输出，完整示例见 [examples/paper-note.md](examples/paper-note.md)。下面摘录其中几段：
 
 > **Core insight**：策略干预只改变 X 的边缘分布而不改变 P(Y|X) → 联合似然比只依赖 X，可以用无标签的 source/target 协变量学出 → 校准误差由 ratio 的 TV/L1 误差直接决定，预测器无需重训。
 >
@@ -111,28 +111,47 @@ dailypaper read 2610.35877    # 先精读一篇指定论文，看看效果
 dailypaper run                # 运行完整的每日流程
 ```
 
-结果写在 `docs/` 目录下。
+结果默认写在项目目录的 `docs/` 和 `data/` 下。个人使用时建议在 `.env` 中设置一个输出目录，让笔记、状态和缓存都放在项目之外，不会混进 git：
 
-> [!TIP]
-> 示例仓库的 `docs/` 和 `data/` 中带有作者自己的运行结果。如果你 fork 了本仓库，开始使用前请先清空它们，见[常见问题](#常见问题)。
+```
+DAILYPAPER_WORKSPACE=D:/DailyPaperData
+```
+
+`dailypaper check` 会显示当前的输出位置。
 
 ---
 
 ## 部署：每天自动运行
 
-整套系统可以完全运行在 GitHub 上，不需要自己的服务器。
+有两种方式，按需选择。
 
-1. **Fork 本仓库**（或者用自己的仓库推送一份代码）。
-2. **启用 Actions**：fork 出来的仓库默认不运行定时任务，需要在 **Actions** 标签页点击启用。
-3. **添加 API key**：**Settings → Secrets and variables → Actions → New repository secret**，名称填 `ANTHROPIC_API_KEY`。如果用其他模型，就添加对应的名称，见[模型与费用](#模型与费用)。
+### 方式 A：在自己的电脑上定时运行（推荐个人使用）
+
+笔记只留在本地（以及你的 Obsidian 和 Zotero），不经过任何服务器。电脑在运行时刻没开机的话，开机后会自动补跑。
+
+**Windows**：运行一次下面的命令，即可在任务计划程序中注册每天 14:00 的任务（当前用户，不需要管理员权限）：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\install_task.ps1 -Time 14:00
+```
+
+日志在项目目录的 `logs/` 下，保留 30 天。取消任务：`scripts\uninstall_task.ps1`。
+
+**macOS / Linux**：用 cron 调用同样的命令，例如 `0 14 * * 1-5 cd /path/to/DailyPaper && .venv/bin/dailypaper run >> logs/daily.log 2>&1`。
+
+### 方式 B：在 GitHub Actions 上运行并发布网站
+
+适合想要一个公开的论文日报网站的情况。整套流程运行在 GitHub 上，不需要自己的服务器；每日任务会把生成的笔记提交回仓库，所以请使用你自己的仓库（fork 或复制一份）。
+
+1. **Fork 本仓库**，并在 **Actions** 标签页启用工作流（fork 默认禁用）。
+2. **添加 API key**：**Settings → Secrets and variables → Actions → Secrets → New repository secret**，名称填 `ANTHROPIC_API_KEY`。如果用其他模型，就添加对应的名称，见[模型与费用](#模型与费用)。
+3. **开启定时**：同一页面的 **Variables** 中添加 `DAILYPAPER_SCHEDULE`，值填 `true`。不添加时只能手动触发，不会自动运行。
 4. **开启网站**：**Settings → Pages → Build and deployment → Source** 选择 **GitHub Actions**。页面上推荐的 Jekyll / Static HTML 模板不要点，仓库里已经有自己的发布流程。
-5. **试运行**：**Actions → daily → Run workflow** 手动触发一次。之后每个工作日 UTC 06:00 自动运行，时间可以在 `.github/workflows/daily.yml` 中修改。
-6. **填写网站地址**：网站发布在 `https://<用户名>.github.io/<仓库名>/`。把这个地址填进 `config/settings.yaml` 的 `site.base_url`，RSS 中的链接就会指向网站。
+5. **试运行**：**Actions → daily → Run workflow**。工作流会先做自检，缺少 Secret 等问题会直接显示在页面的 Annotations 中。之后每个工作日 UTC 06:00 自动运行，时间可以在 `.github/workflows/daily.yml` 中修改。
+6. **填写网站地址**：网站发布在 `https://<用户名>.github.io/<仓库名>/`。把它填进 `config/settings.yaml` 的 `site.base_url`，RSS 中的链接就会指向网站。
 
 > [!IMPORTANT]
-> 公开仓库中的所有内容都是公开的，包括生成的笔记，以及你选择提交的 Zotero 索引和外部 skill 文本。部署前请先阅读[隐私与安全](#隐私与安全)。
-
-每日任务完成后，会自动把新内容提交回仓库，并重新发布网站。
+> 这种方式下生成的笔记会提交到你的仓库。仓库公开时，笔记也是公开的；详见[隐私与安全](#隐私与安全)。
 
 ---
 
@@ -269,10 +288,11 @@ dailypaper app            # 打开审核页 http://127.0.0.1:8765
 
 ## Obsidian
 
-推荐用 Git 同步：
-1. 把你的仓库 clone 到 Obsidian vault 的某个子目录。
-2. 安装社区插件 **Obsidian Git**，开启定时拉取。
-3. 笔记位于 `docs/` 下：`daily/` 是日报，`papers/` 是单篇笔记，`topics/` 是方向索引。
+笔记就是普通的 Markdown 文件，放进 vault 即可：
+- **本地运行**：把 `.env` 中的 `DAILYPAPER_WORKSPACE` 指向 vault 里的一个子目录，笔记会直接写到那里；或者在 `settings.yaml` 中设置 `obsidian.vault_path`，并在 `pipeline.yaml` 中启用 `obsidian` 步骤，每次运行后复制过去。
+- **GitHub Actions 运行**：把你的仓库 clone 到 vault 的子目录，安装社区插件 **Obsidian Git** 并开启定时拉取。
+
+笔记位于输出目录的 `docs/` 下：`daily/` 是日报，`papers/` 是单篇笔记，`topics/` 是方向索引。
 
 笔记 frontmatter 中的这些字段可以在 Obsidian 里编辑，重新生成笔记时会保留：
 
@@ -282,8 +302,6 @@ dailypaper app            # 打开审核页 http://127.0.0.1:8765
 | `status` | 阅读状态，可以配合 Dataview 做阅读清单 |
 | `zotero_approve: true` | 在 Obsidian 中直接勾选入库 |
 | `citekey` / `zotero_key` / `zotero_link` | 入库后自动填写 |
-
-不想用 Git 的话，可以在 `settings.yaml` 中设置 `obsidian.vault_path`，并在 `pipeline.yaml` 中启用 `obsidian` 步骤，本地运行时会直接复制到 vault。
 
 ---
 
@@ -390,6 +408,8 @@ roles:
 
 ```
 config/                      配置（见"配置你的研究方向"）
+examples/paper-note.md       一篇完整的精读笔记示例
+scripts/                     本地定时运行脚本（Windows 任务计划程序）
 prompts/
   base/                      base 框架模板（deep_read / screen，各分 system 与 user 两部分）
   lenses/type_*.md           论文类型 lens
@@ -438,7 +458,7 @@ data/                        运行状态：已处理论文、审核队列与决
 tests/                       离线测试（假模型 + 样例数据）
 ```
 
-`data/` 中的文件按写入方分开，避免冲突：云端只写 `seen.json`、`review_queue.json`、`usage.json` 和新笔记；本地只写审核决定、Zotero 索引、兴趣画像、`usage.local.json`，以及笔记中的用户字段。
+`docs/`、`data/` 和 `.cache/` 的位置由 `settings.yaml` 的 `paths` 决定，默认在项目目录内；设置 `DAILYPAPER_WORKSPACE` 后全部移到该目录下。`data/` 中的文件按写入方分开，避免云端与本地冲突：云端只写 `seen.json`、`review_queue.json`、`usage.json` 和新笔记；本地只写审核决定、Zotero 索引、兴趣画像、`usage.local.json`，以及笔记中的用户字段。
 
 ---
 
@@ -501,6 +521,7 @@ ruff check src tests
 
 | 命令 | 作用 |
 |---|---|
+| `dailypaper check` | 自检：配置、API key、输出目录、模板、lens |
 | `dailypaper run` | 运行每日流水线 |
 | `dailypaper run --pipeline backfill --date YYYY-MM-DD` | 补抓某一天的论文（arXiv API） |
 | `dailypaper run --from read` / `--until screen` | 从某一步开始 / 运行到某一步为止 |
@@ -520,27 +541,17 @@ ruff check src tests
 ## 隐私与安全
 
 - **API key**：只放在本地 `.env` 或 GitHub Secrets 中，不要写进代码或配置文件。GitHub Secrets 加密保存，日志中会被自动遮盖；来自 fork 的 Pull Request 无法读取你的 Secrets。建议为本项目单独创建一个 key，并在服务商控制台设置花费上限。
-- **公开仓库**：仓库公开时，下列内容也是公开的：
-  - 生成的笔记；
-  - `skills/` 中的外部 skill 文本（只有运行 `sync-skills` 后才会生成）。
-
-  从 Zotero 文库导出的 `data/zotero_index.json` 和 `data/interest_profile.json`（包含你的文库标题和关键词）默认在 `.gitignore` 中，只在本地使用；想让云端也按文库去重和排序，可以从 `.gitignore` 中去掉它们，但请先确认你接受公开这些信息。介意笔记公开的话，可以使用私有仓库。私有仓库使用 GitHub Pages 需要付费账户；也可以改用 Cloudflare Pages 等免费服务，构建命令填 `pip install mkdocs-material && mkdocs build`，输出目录填 `site`。
+- **本地运行**：设置 `DAILYPAPER_WORKSPACE` 后，笔记、状态和缓存都在项目目录之外，不会被提交到任何仓库。
+- **GitHub Actions 运行**：生成的笔记会提交到你的仓库；仓库公开时笔记也是公开的，介意的话请使用私有仓库。`skills/` 中的外部 skill 文本（运行 `sync-skills` 后生成）同样会随仓库公开。从 Zotero 文库导出的 `data/zotero_index.json` 和 `data/interest_profile.json`（包含你的文库标题和关键词）默认在 `.gitignore` 中，只在本地使用；想让云端也按文库去重和排序，可以从 `.gitignore` 中去掉它们，但请先确认你接受公开这些信息。私有仓库使用 GitHub Pages 需要付费账户；也可以改用 Cloudflare Pages 等免费服务，构建命令填 `pip install mkdocs-material && mkdocs build`，输出目录填 `site`。
 - **版权**：笔记中引用了论文摘要和少量原文内容。请遵守相应论文的许可证，以及 [arXiv 的使用条款](https://info.arxiv.org/help/api/tou.html)。
 
 ---
 
 ## 常见问题
 
-**fork 之后怎么清空示例数据？**
+**本地运行的结果在哪里？**
 
-删除示例输出，保留网站配置用到的 `docs/javascripts/`：
-
-```bash
-git rm -r --quiet --ignore-unmatch docs/papers docs/daily docs/topics docs/api docs/index.md docs/feed.xml data
-git commit -m "Clear example output"
-```
-
-下次运行时会自动重新生成这些文件。
+`dailypaper check` 的第二行会列出笔记、状态和缓存的目录。没有设置 `DAILYPAPER_WORKSPACE` 时在项目目录内的 `docs/`、`data/`、`.cache/`。
 
 **今天没有生成日报？**
 

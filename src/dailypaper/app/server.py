@@ -43,8 +43,18 @@ def create_app(cfg: AppConfig) -> FastAPI:
             raise HTTPException(500, f"git {' '.join(args)} 失败: {r.stderr.strip()[:300]}")
         return r.stdout.strip()
 
+    def inside_repo(p: Path) -> bool:
+        try:
+            return p.resolve().is_relative_to(cfg.root.resolve()) and (cfg.root / ".git").exists()
+        except (OSError, ValueError):
+            return False
+
+    git_enabled = inside_repo(cfg.content_dir) and inside_repo(cfg.data_dir)
+
     def commit_and_push(message: str) -> str:
-        git("add", "--", cfg.settings.paths.data_dir, cfg.settings.paths.content_dir)
+        if not git_enabled:
+            return "输出目录不在 git 仓库内（DAILYPAPER_WORKSPACE），无需提交"
+        git("add", "--", str(cfg.data_dir), str(cfg.content_dir))
         if subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=cfg.root).returncode == 0:
             return "没有需要提交的变化"
         git("commit", "-m", message)
@@ -75,6 +85,8 @@ def create_app(cfg: AppConfig) -> FastAPI:
             "paper_types": ["method", "theory", "benchmark", "empirical", "survey", "position"],
             "counts": counts,
             "site_title": cfg.settings.site.title,
+            "git_enabled": git_enabled,
+            "workspace": str(cfg.content_dir.parent),
         }
 
     @app.get("/api/items")
@@ -130,6 +142,8 @@ def create_app(cfg: AppConfig) -> FastAPI:
 
     @app.post("/api/git/pull")
     def git_pull():
+        if not git_enabled:
+            return {"messages": ["输出目录不在 git 仓库内，无需拉取"]}
         return {"messages": [git("pull", "--rebase", "--autostash") or "已是最新"]}
 
     @app.post("/api/git/push")

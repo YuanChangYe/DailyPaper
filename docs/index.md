@@ -1,24 +1,8 @@
 # DailyPaper
 
-每天自动筛选 arXiv 新论文，围绕 insight 与 novelty 精读。
+这里的内容由每日任务自动生成：运行 `dailypaper run` 后，本页会被首页替换，并生成 `daily/`（日报）、`papers/`（精读笔记）、`topics/`（方向索引）、`api/`（JSON）和 `feed.xml`（RSS）。
 
-## 最近的日报
+- 本地运行并设置了 `DAILYPAPER_WORKSPACE` 时，输出写到该目录下的 `docs/`，不会修改这里。
+- 在 GitHub Actions 中运行时，输出提交回仓库并发布为网站。
 
-## 研究方向
-
-- [LLM / RAG Uncertainty Quantification](topics/llm_uq.md)
-
-- [Agent Uncertainty Quantification](topics/agent_uq.md)
-
-- [Selective Prediction via Conformal Prediction](topics/conformal_selective.md)
-
-- [Agent RSI × Selective Prediction](topics/agent_rsi.md)
-
-- [Multi-Agent Trustworthiness](topics/multiagent_trust.md)
-
-## 高价值论文
-
-暂无。
-
-
-[RSS](feed.xml) · [JSON](api/index.json)
+使用方法见仓库的 README。

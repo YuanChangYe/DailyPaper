@@ -70,10 +70,10 @@ input[type=search] { width: 220px; }
     <h1 id="title">DailyPaper 审核</h1>
     <span class="status" id="zstatus"><span class="dot"></span>正在连接 Zotero…</span>
     <span class="right row">
-      <button class="btn" onclick="act('/api/git/pull')" title="从 GitHub 拉取云端最新的日报和队列">⟳ 拉取最新</button>
+      <button class="btn git-only" hidden onclick="act('/api/git/pull')" title="从 GitHub 拉取云端最新的日报和队列">⟳ 拉取最新</button>
       <button class="btn" onclick="act('/api/sync')" title="把已批准（含 Obsidian 中勾选）的论文写入 Zotero">⇪ 同步到 Zotero</button>
       <button class="btn" onclick="act('/api/profile')" title="从 Zotero 文库导出去重索引和兴趣画像">☰ 更新兴趣画像</button>
-      <button class="btn" onclick="act('/api/git/push')" title="提交并推送审核结果">⇧ 推送审核结果</button>
+      <button class="btn git-only" hidden onclick="act('/api/git/push')" title="提交并推送审核结果">⇧ 推送审核结果</button>
     </span>
   </div>
   <div class="row">
@@ -244,7 +244,11 @@ function render() {
   open.forEach(id => toggleNote(id));
 }
 async function load() {
-  try { meta = await api("/api/meta"); topicName = Object.fromEntries(meta.topics.map(t => [t.id, t.name])); } catch (e) {}
+  try {
+    meta = await api("/api/meta");
+    topicName = Object.fromEntries(meta.topics.map(t => [t.id, t.name]));
+    document.querySelectorAll(".git-only").forEach(b => b.hidden = !meta.git_enabled);  // 输出在仓库外时不显示 git 按钮
+  } catch (e) {}
   renderTabs();
   items = await api("/api/items?status=" + encodeURIComponent(current));
   render();

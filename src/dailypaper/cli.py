@@ -31,16 +31,27 @@ def load_dotenv(path: Path) -> None:
             os.environ[key] = value
 
 
-def setup_logging(verbose: bool) -> None:
+def setup_logging(verbose: bool, log_file: str | None = None) -> None:
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8")
+    handlers: list[logging.Handler] = [logging.StreamHandler()]
+    if log_file:
+        # 定时任务用：程序自己以 UTF-8 追加写日志，不依赖外层 shell 的编码
+        Path(log_file).parent.mkdir(parents=True, exist_ok=True)
+        handlers.append(logging.FileHandler(log_file, encoding="utf-8"))
     logging.basicConfig(
         level=logging.DEBUG if verbose else logging.INFO,
         format="%(asctime)s %(levelname)-7s %(name)s: %(message)s",
-        datefmt="%H:%M:%S",
+        datefmt="%Y-%m-%d %H:%M:%S" if log_file else "%H:%M:%S",
+        handlers=handlers,
     )
     logging.getLogger("httpx").setLevel(logging.WARNING)
+
+
+def say(msg: str) -> None:
+    """面向用户的结果行：同时进终端和日志文件。"""
+    logging.getLogger("dailypaper.result").info(msg)
 
 
 def make_ctx(cfg: AppConfig, args, pipeline: str, **inputs) -> RunContext:
@@ -72,14 +83,14 @@ def summarize(items, cfg: AppConfig | None = None) -> None:
     if cfg is not None:
         from .llm.usage import budget_line
 
-        print(budget_line(cfg))
+        say(budget_line(cfg))
     read = [c for c in items if c.note]
-    print(f"\n完成：候选 {len(items)} 篇，精读 {len(read)} 篇。")
+    say(f"完成：候选 {len(items)} 篇，精读 {len(read)} 篇。")
     for c in read:
-        print(f"  [{c.note.value_score}/5] {c.paper.title[:80]}\n         → {c.note_path}")
+        say(f"  [{c.note.value_score}/5] {c.paper.title[:80]} → {c.note_path}")
     errs = [(c.id, e) for c in items for e in c.errors if c.selected]
     for pid, e in errs:
-        print(f"  ! {pid}: {e}")
+        say(f"  ! {pid}: {e}")
 
 
 # ------------------------------------------------------------------ commands
@@ -110,6 +121,7 @@ def cmd_check(cfg: AppConfig, args) -> int:
 
     problems: list[str] = []
     print(f"项目目录: {cfg.root}")
+    print(f"输出目录: 笔记 {cfg.content_dir} · 状态 {cfg.data_dir} · 缓存 {cfg.cache_dir}")
     pipelines = ", ".join(cfg.pipeline.pipelines) or "（无）"
     print(f"✓ 配置已加载：{len(cfg.topics)} 个研究方向，流水线 {pipelines}")
 
@@ -236,6 +248,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="dailypaper", description="arXiv 每日论文筛选与精读")
     p.add_argument("--root", help="项目根目录（默认自动查找含 config/pipeline.yaml 的目录）")
     p.add_argument("-v", "--verbose", action="store_true")
+    p.add_argument("--log-file", metavar="FILE", help="同时把日志追加写入该文件（UTF-8），供定时任务使用")
     sub = p.add_subparsers(dest="command", required=True)
 
     def common(sp, date_arg=True):
@@ -293,7 +306,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    setup_logging(args.verbose)
+    setup_logging(args.verbose, args.log_file)
+    if args.log_file:
+        log.info("==== dailypaper %s", " ".join(argv if argv is not None else sys.argv[1:]))
     root = Path(args.root).resolve() if args.root else find_root()
     load_dotenv(root / ".env")  # 先读 .env，配置里的 ${ENV} 才能取到值
     cfg = load_config(root)

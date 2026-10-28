@@ -60,8 +60,9 @@ def project(tmp_path: Path, monkeypatch) -> Path:
     lenses["rules"] = [{"when": {"always": True}, "use": ["topic:*", "type:*", "demo-skill", "demo-md"]}]
     (tmp_path / "config" / "lenses.yaml").write_text(yaml.safe_dump(lenses, allow_unicode=True), encoding="utf-8")
 
-    # 不让测试读到本机 ~/.claude/skills
+    # 不让测试读到本机 ~/.claude/skills，也不受本机 .env 中输出目录设置的影响
     monkeypatch.setenv("DAILYPAPER_SKILLS_FALLBACK", str(tmp_path / "no-such-dir"))
+    monkeypatch.delenv("DAILYPAPER_WORKSPACE", raising=False)
     return tmp_path
 
 

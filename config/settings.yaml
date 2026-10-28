@@ -3,11 +3,13 @@
 language: zh                  # 精读输出语言：zh（中文 + 英文术语）/ en
 timezone: Asia/Shanghai
 
+# 输出位置。默认在项目目录内（云端运行时由 Actions 提交回仓库）。
+# 个人在本地运行时，在 .env 中设置 DAILYPAPER_WORKSPACE=<某个目录>，所有输出就会写到那里，不会进入 git。
 paths:
-  content_dir: docs           # 生成的 Markdown（网站源 + Obsidian 同步内容）
-  data_dir: data              # 状态文件（seen、审核队列、Zotero 索引、兴趣画像）
-  cache_dir: .cache           # 运行检查点、LLM 缓存、全文缓存（不进 git）
-  skills_dir: skills          # sync-skills 同步来的外部 skill
+  content_dir: ${DAILYPAPER_WORKSPACE:-.}/docs      # 生成的 Markdown（网站源 + Obsidian 笔记）
+  data_dir: ${DAILYPAPER_WORKSPACE:-.}/data         # 状态文件（seen、审核队列、Zotero 索引、兴趣画像、用量）
+  cache_dir: ${DAILYPAPER_WORKSPACE:-.}/.cache      # 运行检查点、LLM 缓存、全文缓存
+  skills_dir: skills                                # sync-skills 同步来的外部 skill（随项目）
 
 site:
   title: DailyPaper

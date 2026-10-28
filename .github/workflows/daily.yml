@@ -32,6 +32,9 @@ env:
 
 jobs:
   run:
+    # 定时运行默认关闭：在仓库 Settings → Secrets and variables → Actions → Variables
+    # 中添加 DAILYPAPER_SCHEDULE = true 后才会按 cron 运行；手动触发不受影响。
+    if: github.event_name == 'workflow_dispatch' || vars.DAILYPAPER_SCHEDULE == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
