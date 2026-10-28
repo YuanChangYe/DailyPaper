@@ -138,6 +138,12 @@ dailypaper app      # 打开 http://127.0.0.1:8765
 
 浏览每日精读、搜索文库、左右分栏对照 PDF 阅读笔记、在审核台决定哪些入库、在搜索设置里调整方向，或者直接点"立即运行"。
 
+**不想开终端？** Windows 上运行一次下面的命令，桌面会出现一个 DailyPaper 图标，双击即在后台启动助手并打开网页；退出在网页的「搜索设置 → 本地助手」里：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\create_shortcut.ps1
+```
+
 ---
 
 ## 效果示例
@@ -313,11 +319,13 @@ dailypaper read <arXiv ID> --prompt-only                           # 只生成 p
 | 发现 | 最近一天的精读论文、统计，搜索框粘贴 arXiv ID 可直接精读 |
 | 今日 | 某一天的日报：精读列表（带首页缩略图）、也值得关注的论文 |
 | 文库 | 所有已精读论文，按方向、价值筛选，搜索标题、摘要、insight、作者、ID |
-| 论文 | 完整精读笔记（Markdown + 公式）、目录、入库按钮；「阅读 PDF」把页面分成左右两栏，左侧笔记、右侧原文，分隔线可拖动 |
+| 论文 | 完整精读笔记（Markdown + 公式）、目录、上一篇 / 下一篇（← →）、入库按钮；「阅读 PDF」把页面分成左右两栏，分隔线可拖动；选中文字可**高亮和批注**，右侧有**我的笔记**（写回笔记 frontmatter 的 `notes`，Obsidian 里可见） |
 | 审核台 | 待审核队列：加入 Zotero / 稍后 / 不要，批量操作，Obsidian 同步，兴趣画像 |
-| 搜索设置 | 直接编辑研究方向、关键词、镜头问题、arXiv 分类、Top K、阈值；立即运行今日任务或精读指定论文 |
+| 文献库 | 直接浏览 Zotero 的分类和条目；已精读的显示评分并可打开笔记，其余可一键精读 |
+| 趋势 | 近 7 / 14 / 30 / 90 天的每日篇数、方向分布、论文类型、最值得回看的论文；一键生成 **AI 阅读总结**（用筛选模型，约 $0.02，结果缓存） |
+| 搜索设置 | 直接编辑研究方向、关键词、镜头问题、arXiv 分类、Top K、阈值；立即运行今日任务或精读指定论文；退出本地助手 |
 
-网页根据环境自动切换模式：连接到本地助手时可读写；部署为静态网站时只读（设置页可导出 `topics.yaml`）；没有数据时显示示例。本地助手只监听 `127.0.0.1`，写操作要求自定义请求头，其他网站无法通过你的浏览器调用它。前后端接口约定见 [src/dailypaper/app/API.md](src/dailypaper/app/API.md)。
+顶栏的 ☀ / ☾ 切换白天和夜间模式。网页根据环境自动切换模式：连接到本地助手时可读写；部署为静态网站时只读（设置页可导出 `topics.yaml`）；没有数据时显示示例。本地助手只监听 `127.0.0.1`，写操作要求自定义请求头，其他网站无法通过你的浏览器调用它。前后端接口约定见 [src/dailypaper/app/API.md](src/dailypaper/app/API.md)。
 
 ---
 
@@ -429,7 +437,7 @@ DailyPaper/
 ├── prompts/           精读与筛选的 prompt 模板（Jinja2）和论文类型 lens
 ├── src/dailypaper/    源代码（见下）
 ├── tests/             离线测试：假模型 + 样例数据，不联网、不花钱
-├── scripts/           本地定时运行脚本（Windows 任务计划程序）
+├── scripts/           本地定时运行脚本、桌面快捷方式与启动器、图标生成（Windows）
 ├── examples/          一篇完整的精读笔记示例
 ├── assets/            README 用到的图片
 ├── docs/              网站源目录；运行后的笔记、JSON、RSS 默认写在这里（可通过 DAILYPAPER_WORKSPACE 移到项目外）
@@ -483,6 +491,8 @@ src/dailypaper/
 │
 ├── integrations/                与外部系统联动
 │   ├── review.py                审核队列（云端写 queue，本地写 decisions，避免冲突）
+│   ├── annotations.py           网页高亮与批注（data/annotations/，自由笔记写回 frontmatter）
+│   ├── trends.py                阅读趋势统计与 AI 总结（data/trends/）
 │   ├── zotero/                  base（接口）、http_api（读）、connector / web_api（写）、citekey、profile、service
 │   ├── site/                    contract（站点数据契约）、adapters（mkdocs / hugo / jekyll / generic_repo）
 │   └── obsidian/feedback.py     从笔记评分和审核决定计算排序反馈
@@ -690,7 +700,7 @@ PyMuPDF 2.0 会自动加载版面分析模块并依赖 onnxruntime，在部分 W
 
 - [ ] 把 Zotero 中的高亮和批注同步到对应的 Obsidian 笔记
 - [ ] 更多数据源（OpenReview、Hugging Face Daily Papers）
-- [ ] 每周综述：汇总一周的高价值论文和研究趋势
+- [x] 阅读趋势与 AI 总结（网页「趋势」视图）
 
 ## 许可证
 

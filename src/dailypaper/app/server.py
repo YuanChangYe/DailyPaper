@@ -223,6 +223,91 @@ def create_app(cfg: AppConfig) -> FastAPI:
         except ValueError as e:
             raise HTTPException(400, str(e)) from e
 
+    # ------------------------------------------------------------ 我的文献库（Zotero 分类）
+    @app.get("/api/zotero/library")
+    def zotero_library():
+        z = zotero()
+        if not z.reader:
+            raise HTTPException(503, "未配置 Zotero 读取（settings.yaml → zotero.reader）")
+        ok, msg = z.reader.available()
+        if not ok:
+            raise HTTPException(503, msg)
+        return {"collections": z.reader.collections()}
+
+    @app.get("/api/zotero/items")
+    def zotero_items(collection: str = ""):
+        from ..integrations.site.contract import SiteContract
+
+        z = zotero()
+        if not z.reader:
+            raise HTTPException(503, "未配置 Zotero 读取")
+        items = z.reader.items_in_collection(collection or None)
+        by_arxiv = {e.id: e for e in SiteContract(cfg).load_index()}
+        for it in items:
+            e = by_arxiv.get(it["arxiv_id"]) if it["arxiv_id"] else None
+            it["paper_id"] = e.id if e else ""
+            it["value_score"] = e.value_score if e else None
+        return {"items": items}
+
+    # ------------------------------------------------------------ 高亮与批注
+    @app.get("/api/annotations/{paper_id}")
+    def get_annotations(paper_id: str):
+        from ..integrations.annotations import AnnotationStore
+
+        return AnnotationStore(cfg).get(paper_id).model_dump()
+
+    @app.put("/api/annotations/{paper_id}")
+    def put_annotations(paper_id: str, body: dict):
+        from ..integrations.annotations import Annotations, AnnotationStore
+
+        try:
+            data = Annotations.model_validate(body)
+        except Exception as e:  # noqa: BLE001
+            raise HTTPException(400, f"格式不对: {e}") from e
+        it = store.get(paper_id)
+        return AnnotationStore(cfg).put(paper_id, data, it.entry.note_path if it else None).model_dump()
+
+    @app.get("/api/annotations")
+    def annotation_counts():
+        from ..integrations.annotations import AnnotationStore
+
+        return AnnotationStore(cfg).all_counts()
+
+    # ------------------------------------------------------------ 趋势
+    @app.get("/api/trends")
+    def trends(days: int = 7, end: str | None = None):
+        from datetime import date as _date
+
+        from ..integrations.trends import cached_summary, stats
+
+        days = max(1, min(days, 365))
+        end_d = _date.fromisoformat(end) if end else None
+        return {**stats(cfg, days, end_d), "summary": cached_summary(cfg, days, end_d)}
+
+    @app.post("/api/trends/summary")
+    def trends_summary(body: dict):
+        from datetime import date as _date
+
+        from ..core.context import RunContext
+        from ..integrations.trends import generate_summary
+
+        days = max(1, min(int(body.get("days", 7)), 365))
+        end_d = _date.fromisoformat(body["end"]) if body.get("end") else None
+        ctx = RunContext(config=cfg, run_date=_date.today(), pipeline="trends", provider_override=body.get("provider"))
+        try:
+            return {"summary": generate_summary(ctx, days, end_d, force=bool(body.get("force")))}
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
+
+    # ------------------------------------------------------------ 退出（桌面图标启动时没有终端可关）
+    @app.post("/api/shutdown")
+    def shutdown():
+        import os
+        from threading import Timer
+
+        Timer(0.6, lambda: os._exit(0)).start()
+        return {"messages": ["本地助手正在退出，可以关闭这个页面"]}
+
     # ------------------------------------------------------------ 触发运行
     @app.post("/api/run")
     def run(body: RunBody):

@@ -24,6 +24,12 @@
 | POST | `/api/git/pull`、`/api/git/push` | 同步审核结果 |
 | GET | `/api/pdf/{arXiv ID}` | 同源返回论文 PDF（缓存在 `.cache/pdf/`），论文页的分栏阅读用它嵌入 iframe |
 | GET | `/site/api/thumbs/{id}.jpg` | 论文首页缩略图，由 `renderer.thumbnails` 生成；不存在时网页显示占位 |
+| GET | `/api/zotero/library` | Zotero 分类树（文献库视图） |
+| GET | `/api/zotero/items?collection=KEY` | 某分类下的条目，附带是否已有精读笔记 |
+| GET/PUT | `/api/annotations/{id}` | 某篇论文的高亮与批注；`GET /api/annotations` 返回各篇数量 |
+| GET | `/api/trends?days=7` | 阅读统计（每日、方向、类型、Top）及缓存的 AI 总结 |
+| POST | `/api/trends/summary` `{days, force?}` | 用筛选模型生成并缓存阅读总结 |
+| POST | `/api/shutdown` | 退出本地助手（桌面图标启动时使用） |
 | GET/PUT | `/api/config` | 搜索设置（见第 2.2 节，已实现） |
 | POST/GET | `/api/run`、`/api/run/status` | 触发运行与轮询（见第 2.3 节，已实现） |
 

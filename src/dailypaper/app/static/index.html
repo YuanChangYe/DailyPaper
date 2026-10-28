@@ -26,6 +26,39 @@
   --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
   --r-lg:28px; --r-md:18px; --r-sm:12px;
 }
+/* 白天模式：同一套变量换成浅色；封面照片区域保持深色 */
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#EEF3F4; --bg-2:#E4EBEC; --panel:#FFFFFF; --panel-2:#F4F8F9;
+  --ink:#10272E; --body:#2F4A52; --muted:#5F7B84;
+  --mist:#10272E; --accent:#1B7A86;
+  --line:rgba(16,39,46,.12); --line-2:rgba(16,39,46,.24);
+  --glass:rgba(255,255,255,.72); --glass-2:rgba(255,255,255,.92); --glass-dark:rgba(255,255,255,.75);
+  --ok:#1E7F4F; --warn:#9A6B12; --bad:#B23A2E;
+  --code:rgba(16,39,46,.07);
+}
+:root{--code:rgba(9,30,38,.5)}
+:root[data-theme="light"] body{background-image:radial-gradient(1200px 600px at 85% -10%,rgba(27,122,134,.10),transparent 60%),radial-gradient(900px 500px at -10% 40%,rgba(27,122,134,.06),transparent 60%)}
+:root[data-theme="light"] .nav-bar{background:rgba(255,255,255,.72)}
+:root[data-theme="light"] .btn.primary{background:#10272E;color:#fff}
+:root[data-theme="light"] .btn.primary:hover{background:#1B3A43}
+:root[data-theme="light"] .filter[aria-pressed="true"],:root[data-theme="light"] .datebar a[aria-current="date"]{background:#10272E;color:#fff}
+:root[data-theme="light"] .datebar a[aria-current="date"] b,:root[data-theme="light"] .datebar a[aria-current="date"] small{color:#fff}
+:root[data-theme="light"] .insight{background:rgba(27,122,134,.08);color:var(--body)}
+:root[data-theme="light"] th{background:rgba(16,39,46,.04)}
+:root[data-theme="light"] .input,:root[data-theme="light"] input[type=text],:root[data-theme="light"] input[type=number],:root[data-theme="light"] textarea,:root[data-theme="light"] select{background:#fff}
+:root[data-theme="light"] .tag-analysis{color:#fff}
+:root[data-theme="light"] .pick span{background:rgba(255,255,255,.7)}
+:root[data-theme="light"] .pick input:checked+span:after{border-color:#fff}
+:root[data-theme="light"] .hero,:root[data-theme="light"] .paper-head{color:#EEF5F6}
+:root[data-theme="light"] .paper-head h1,:root[data-theme="light"] .paper-head .meta-line,:root[data-theme="light"] .paper-head .chip{color:#EEF5F6}
+:root[data-theme="light"] .paper-head .btn{color:#EEF5F6;border-color:rgba(238,245,246,.4)}
+:root[data-theme="light"] .paper-head .btn.primary{background:#EEF5F6;color:#10272E}
+:root[data-theme="light"] .hero .btn{color:#EEF5F6}:root[data-theme="light"] .hero .btn.primary{background:#EEF5F6;color:#10272E}
+:root[data-theme="light"] .search-chips .chip,:root[data-theme="light"] .hero .eyebrow,:root[data-theme="light"] .float-card{color:#EEF5F6}
+:root[data-theme="light"] .float-card h3{color:#fff}
+#theme-toggle .moon{display:none}:root[data-theme="light"] #theme-toggle .sun{display:none}:root[data-theme="light"] #theme-toggle .moon{display:inline}
+.btn.icon{min-width:36px;padding:4px 10px;font-size:16px;line-height:1}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{scroll-behavior:smooth;scroll-padding-top:96px}
@@ -241,7 +274,51 @@ select.input{padding-right:30px}
 .prose blockquote.c-tldr{border-left:3px solid var(--accent)}.prose blockquote.c-insight{background:linear-gradient(120deg,rgba(169,220,225,.14),rgba(206,226,232,.05));border-color:rgba(169,220,225,.4);color:var(--mist);font-size:17px}
 .prose blockquote.c-read{border-left:3px solid var(--warn)}.prose blockquote.c-meta{font-size:13px}
 .prose table{font-size:14px;margin:0}.prose .table-wrap{margin:14px 0}
-.prose code{font-family:var(--mono);font-size:.88em;padding:1px 5px;border-radius:5px;background:rgba(9,30,38,.5)}
+.prose code{font-family:var(--mono);font-size:.88em;padding:1px 5px;border-radius:5px;background:var(--code)}
+/* 高亮与批注 */
+mark.hl{background:rgba(255,214,102,.45);color:inherit;padding:0 1px;border-radius:3px;cursor:pointer;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+mark.hl.c-green{background:rgba(120,220,160,.4)}mark.hl.c-pink{background:rgba(255,150,170,.4)}mark.hl.c-blue{background:rgba(130,190,255,.4)}
+mark.hl.has-comment{border-bottom:2px dotted var(--accent)}
+.hl-pop{position:absolute;z-index:30;display:flex;gap:6px;align-items:center;padding:6px 8px;border-radius:12px;background:var(--panel);border:1px solid var(--line-2);box-shadow:0 12px 30px rgba(0,0,0,.25)}
+.hl-pop button{width:26px;height:26px;border-radius:50%;border:1px solid var(--line-2);cursor:pointer;padding:0}
+.hl-pop .c-yellow{background:#FFD666}.hl-pop .c-green{background:#78DCA0}.hl-pop .c-pink{background:#FF96AA}.hl-pop .c-blue{background:#82BEFF}
+.hl-pop .note-btn,.hl-pop .del-btn{width:auto;padding:0 10px;border-radius:999px;background:var(--glass);color:var(--ink);font-size:12px}
+.side-panel{margin-top:18px;padding:14px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--glass);font-size:13px}
+.side-panel h4{margin:0 0 8px;font-size:13px;color:var(--ink);letter-spacing:.04em}
+.side-panel textarea{width:100%;min-height:120px;resize:vertical;border-radius:10px;border:1px solid var(--line-2);background:var(--panel);padding:8px 10px;font-size:13px;line-height:1.6}
+.side-panel .hls{display:flex;flex-direction:column;gap:6px;margin:8px 0 0;padding:0;list-style:none;max-height:40vh;overflow:auto}
+.side-panel .hls li{padding:6px 8px;border-radius:8px;background:var(--panel);border-left:3px solid #FFD666;cursor:pointer;color:var(--body)}
+.side-panel .hls li.c-green{border-left-color:#78DCA0}.side-panel .hls li.c-pink{border-left-color:#FF96AA}.side-panel .hls li.c-blue{border-left-color:#82BEFF}
+.side-panel .hls li small{display:block;color:var(--muted);margin-top:2px}
+.side-panel .save-state{color:var(--muted);font-size:12px;margin-top:6px}
+.paper-layout .toc-col{position:sticky;top:100px;display:flex;flex-direction:column;max-height:calc(100vh - 120px);overflow:auto}
+.paper-layout .toc-col .toc{position:static}
+/* 文献库（Zotero） */
+.zlib{display:grid;grid-template-columns:260px minmax(0,1fr);gap:24px;align-items:start;padding-top:20px}
+.ztree{position:sticky;top:100px;max-height:calc(100vh - 120px);overflow:auto;padding:10px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--glass);font-size:13.5px}
+.ztree a{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;color:var(--body)}
+.ztree a:hover{background:var(--glass-2);color:var(--ink)}.ztree a[aria-current="true"]{background:var(--mist);color:#0C232B}
+:root[data-theme="light"] .ztree a[aria-current="true"]{background:#10272E;color:#fff}
+.ztree .lvl1{padding-left:24px}.ztree .lvl2{padding-left:38px}.ztree .lvl3{padding-left:52px}
+.zitem{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;padding:14px 18px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--glass);margin-bottom:10px}
+.zitem h3{font-size:15.5px;line-height:1.4}.zitem .meta{font-size:12.5px;color:var(--muted);margin-top:4px}
+.zitem .acts{display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:900px){.zlib{grid-template-columns:1fr}.ztree{position:static;max-height:240px}}
+/* 趋势 */
+.trend-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-top:18px}
+.chart{padding:18px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--glass)}
+.chart h3{font-size:15px;margin-bottom:12px}
+.bars{display:flex;align-items:flex-end;gap:6px;height:150px}
+.bars .bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
+.bars .bar i{display:block;width:100%;max-width:38px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--accent),rgba(169,220,225,.45));transition:height .6s cubic-bezier(.2,.7,.2,1)}
+.bars .bar b{font-size:12px;color:var(--ink);margin-bottom:4px}.bars .bar span{font-size:10.5px;color:var(--muted);margin-top:6px;white-space:nowrap}
+.hbars{display:flex;flex-direction:column;gap:8px}
+.hbars .row2{display:grid;grid-template-columns:140px 1fr 36px;gap:10px;align-items:center;font-size:13px}
+.hbars .row2 i{display:block;height:10px;border-radius:6px;background:var(--accent)}
+.hbars .row2 b{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
+.summary-box{margin-top:16px;padding:20px 24px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--glass)}
+.summary-box .prose{font-size:15px;padding:0}.summary-box .prose h2{font-size:17px;margin:16px 0 6px}
+@media (max-width:900px){.trend-grid{grid-template-columns:1fr}}
 .prose details{margin:20px 0;padding:12px 16px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--glass)}
 .prose summary{cursor:pointer;color:var(--ink)}
 .prose small{display:block;margin-top:24px;color:var(--muted);font-size:12px}
@@ -281,7 +358,7 @@ select.input{padding-right:30px}
 body.split-mode main.wrap{max-width:none}
 .paper-split.on{display:grid;grid-template-columns:minmax(340px,var(--split,50%)) 10px minmax(340px,1fr);gap:0 12px;align-items:start}
 .paper-split.on .paper-layout{grid-template-columns:1fr;gap:0}
-.paper-split.on .toc{display:none}
+.paper-split.on .toc-col{display:none}
 .paper-split.dragging{user-select:none}.paper-split.dragging iframe{pointer-events:none}
 .split-handle{align-self:stretch;position:sticky;top:96px;height:calc(100vh - 120px);border-radius:6px;background:var(--line);cursor:col-resize;transition:background .2s}
 .split-handle:hover,.split-handle.drag{background:var(--accent)}
@@ -356,7 +433,7 @@ footer a{border-bottom:1px solid var(--line-2)}
   .band{grid-template-columns:1fr;padding:26px 28px}.band p{border-left:0;padding-left:0}
   .stats{grid-template-columns:repeat(2,1fr)}
   .steps{grid-template-columns:1fr}
-  .paper-layout{grid-template-columns:1fr}.toc{display:none}
+  .paper-layout{grid-template-columns:1fr}.toc{display:none}.toc-col{position:static;max-height:none;order:2}
   .review-layout,.settings-layout{grid-template-columns:1fr}
 }
 @media (max-width:700px){
@@ -389,9 +466,12 @@ footer a{border-bottom:1px solid var(--line-2)}
       <a href="#/daily" data-nav="daily">今日</a>
       <a href="#/library" data-nav="library">文库</a>
       <a href="#/review" data-nav="review">审核台<span class="badge" id="pending-badge" hidden></span></a>
+      <a href="#/zlib" data-nav="zlib">文献库</a>
+      <a href="#/trends" data-nav="trends">趋势</a>
       <a href="#/settings" data-nav="settings">搜索设置</a>
     </nav>
     <div class="nav-end">
+      <button class="btn sm ghost icon" id="theme-toggle" type="button" title="切换白天 / 夜间" aria-label="切换主题"><span class="sun">☀</span><span class="moon">☾</span></button>
       <a class="btn sm ghost gh" id="gh-link" href="https://github.com/YuanChangYe/DailyPaper" target="_blank" rel="noopener noreferrer" title="GitHub 仓库"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
       <span class="mode" id="mode" title=""><i></i><span>连接中</span></span>
       <button class="btn primary sm" id="run-now" type="button">立即运行</button>
@@ -1042,7 +1122,16 @@ VIEWS.paper = async (id) => {
   return `
   <div class="paper-split" id="paper-split">
   <div class="paper-layout">
-    <nav class="toc" id="toc" aria-label="目录"></nav>
+    <div class="toc-col">
+      <nav class="toc" id="toc" aria-label="目录"></nav>
+      <div class="side-panel" id="anno-panel">
+        <h4>我的笔记</h4>
+        <textarea id="my-note" placeholder="写点想法…（会写回笔记 frontmatter 的 notes 字段，Obsidian 里能看到）"></textarea>
+        <h4 style="margin-top:12px">高亮与批注</h4>
+        <ul class="hls" id="hl-list"></ul>
+        <div class="save-state" id="anno-state"></div>
+      </div>
+    </div>
     <div style="min-width:0">
       <header class="paper-head reveal">
         <div class="meta-line"><a href="#/daily/${esc(p.date)}">← ${esc(fmtDate(p.date))}日报</a><span class="mono">${esc(p.id)}</span><span>${esc(p.paper_type || "")}</span>${stars(p.value_score)}${statusPill(id)}</div>
@@ -1132,6 +1221,183 @@ VIEWS.paper.after = async (id) => {
   $$("[data-sec]", toc).forEach((a) => a.addEventListener("click", (e) => { e.preventDefault(); document.getElementById(a.dataset.sec).scrollIntoView({ behavior: reduced ? "auto" : "smooth" }); }));
   const spy = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) $$("[data-sec]", toc).forEach((a) => a.classList.toggle("on", a.dataset.sec === e.target.id)); }), { rootMargin: "-20% 0px -70% 0px" });
   hs.forEach((h) => spy.observe(h));
+  setupAnnotations(id);
+};
+
+/* ---------- 高亮与批注 ---------- */
+const annoStore = {
+  async load(id) {
+    if (isLocal()) { try { return await getJSON(`/api/annotations/${encodeURIComponent(id)}`); } catch { /* 退回本地 */ } }
+    try { return JSON.parse(localStorage.getItem("dp.anno." + id) || "null") || { highlights: [], note: "" }; } catch { return { highlights: [], note: "" }; }
+  },
+  async save(id, data) {
+    try { localStorage.setItem("dp.anno." + id, JSON.stringify(data)); } catch { /* 忽略 */ }
+    return isLocal() ? send(`/api/annotations/${encodeURIComponent(id)}`, data, "PUT") : data;
+  },
+};
+function applyHighlights(root, hls) {
+  $$("mark.hl", root).forEach((m) => m.replaceWith(...m.childNodes));
+  root.normalize();
+  for (const h of hls) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      const i = node.data.indexOf(h.text);
+      if (i < 0 || node.parentElement.closest("mark.hl")) continue;
+      const range = document.createRange(); range.setStart(node, i); range.setEnd(node, i + h.text.length);
+      const mark = document.createElement("mark");
+      mark.className = `hl c-${h.color}${h.comment ? " has-comment" : ""}`; mark.dataset.hl = h.id; mark.title = h.comment || "点击：批注 / 删除";
+      try { range.surroundContents(mark); } catch { /* 跨元素的选区跳过 */ }
+      break;
+    }
+  }
+}
+function setupAnnotations(id) {
+  const prose = $("#prose"), panel = $("#anno-panel"), state = $("#anno-state"), list = $("#hl-list"), noteEl = $("#my-note");
+  if (!prose || !panel) return;
+  let data = { highlights: [], note: "" }, timer = null, pop = null;
+  const persist = () => {
+    clearTimeout(timer); state.textContent = "保存中…";
+    timer = setTimeout(async () => {
+      try { await annoStore.save(id, data); state.textContent = isLocal() ? "已保存" : "已保存在本浏览器（只读网站不写文件）"; }
+      catch (e) { state.textContent = "保存失败：" + e.message; }
+    }, 500);
+  };
+  const paintList = () => {
+    list.innerHTML = data.highlights.map((h) => `<li class="c-${esc(h.color)}" data-goto="${esc(h.id)}">${esc(h.text.slice(0, 90))}${h.text.length > 90 ? "…" : ""}${h.comment ? `<small>批注：${esc(h.comment)}</small>` : ""}${h.section ? `<small>${esc(h.section)}</small>` : ""}</li>`).join("")
+      || `<li style="border-left-color:transparent;color:var(--muted)">在正文里选中文字即可高亮或批注。</li>`;
+  };
+  const repaint = () => { applyHighlights(prose, data.highlights); paintList(); };
+  annoStore.load(id).then((d) => { data = { highlights: d.highlights || [], note: d.note || "" }; noteEl.value = data.note; repaint(); });
+  noteEl.addEventListener("input", () => { data.note = noteEl.value; persist(); });
+  list.addEventListener("click", (e) => {
+    const li = e.target.closest("[data-goto]"); if (!li) return;
+    prose.querySelector(`mark[data-hl="${li.dataset.goto}"]`)?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+  });
+  const closePop = () => { pop?.remove(); pop = null; };
+  const showPop = (x, y, html) => {
+    closePop(); pop = document.createElement("div"); pop.className = "hl-pop"; pop.innerHTML = html; document.body.append(pop);
+    pop.style.left = Math.max(8, Math.min(x - pop.offsetWidth / 2, innerWidth - pop.offsetWidth - 8)) + "px";
+    pop.style.top = Math.max(8, y + scrollY - pop.offsetHeight - 10) + "px";
+  };
+  const sectionOf = (node) => {
+    let el = node.nodeType === 1 ? node : node.parentElement;
+    while (el && el !== prose) { let s = el.previousElementSibling; while (s) { if (/^H[23]$/.test(s.tagName)) return s.textContent.trim(); s = s.previousElementSibling; } el = el.parentElement; }
+    return "";
+  };
+  const uid = () => Math.random().toString(36).slice(2, 10);
+  prose.addEventListener("mouseup", () => setTimeout(() => {
+    const sel = getSelection(); const text = sel?.toString().trim();
+    if (!text || text.length < 2 || text.length > 2000 || !prose.contains(sel.anchorNode) || sel.anchorNode.parentElement?.closest("mark.hl")) return;
+    const r = sel.getRangeAt(0).getBoundingClientRect(); const section = sectionOf(sel.anchorNode);
+    showPop(r.left + r.width / 2, r.top, ["yellow", "green", "pink", "blue"].map((c) => `<button type="button" class="c-${c}" data-c="${c}" title="高亮"></button>`).join("") + `<button type="button" class="note-btn" data-c="yellow" data-note="1">高亮并批注</button>`);
+    pop.addEventListener("click", (e) => {
+      const b = e.target.closest("button"); if (!b) return;
+      const h = { id: uid(), text, color: b.dataset.c, comment: "", section };
+      if (b.dataset.note) { const c = prompt("批注内容：", ""); if (c === null) { closePop(); return; } h.comment = c.trim(); }
+      data.highlights.push(h); sel.removeAllRanges(); closePop(); repaint(); persist();
+    });
+  }, 10));
+  prose.addEventListener("click", (e) => {
+    const m = e.target.closest("mark.hl"); if (!m) return;
+    const h = data.highlights.find((x) => x.id === m.dataset.hl); if (!h) return;
+    const r = m.getBoundingClientRect();
+    showPop(r.left + r.width / 2, r.top, `${h.comment ? `<span style="font-size:12px;max-width:260px;color:var(--body)">${esc(h.comment)}</span>` : ""}<button type="button" class="note-btn" data-edit="1">${h.comment ? "改批注" : "加批注"}</button><button type="button" class="del-btn" data-del="1">删除</button>`);
+    pop.addEventListener("click", (ev) => {
+      const b = ev.target.closest("button"); if (!b) return;
+      if (b.dataset.del) data.highlights = data.highlights.filter((x) => x.id !== h.id);
+      else { const c = prompt("批注内容：", h.comment); if (c === null) { closePop(); return; } h.comment = c.trim(); }
+      closePop(); repaint(); persist();
+    });
+    e.stopPropagation();
+  });
+  document.addEventListener("mousedown", (e) => { if (pop && !pop.contains(e.target)) closePop(); });
+}
+
+/* ---------- 我的文献库（Zotero 分类与条目） ---------- */
+VIEWS.zlib = async (_, params) => {
+  const head = `<div class="page-head"><h1>我的文献库</h1><p>直接浏览 Zotero 的分类和条目。已有精读笔记的显示评分并可直接打开；其余可以一键精读。</p></div>`;
+  if (!isLocal()) return head + `<div class="notice">需要本地助手并打开 Zotero 桌面端：在电脑上运行 <code>dailypaper app</code>。</div>`;
+  let lib;
+  try { lib = await getJSON("/api/zotero/library"); }
+  catch (e) { return head + `<div class="notice">读取 Zotero 失败：${esc(e.message)}。请确认 Zotero 已打开，并在 设置 → 高级 中允许本机其他程序通信。</div>`; }
+  const byParent = {};
+  lib.collections.forEach((c) => (byParent[c.parent || ""] ||= []).push(c));
+  Object.values(byParent).forEach((a) => a.sort((x, y) => x.name.localeCompare(y.name, "zh")));
+  const cur = params.get("c") || "";
+  const tree = (parent, lvl) => (byParent[parent] || []).map((c) => `<a href="#/zlib?c=${esc(c.key)}" class="lvl${Math.min(lvl, 3)}" aria-current="${cur === c.key}">${lvl ? "└ " : "📁 "}${esc(c.name)}</a>${tree(c.key, lvl + 1)}`).join("");
+  return head + `<div class="zlib">
+    <nav class="ztree" aria-label="Zotero 分类"><a href="#/zlib" aria-current="${!cur}">🗂 未分类的条目</a>${tree("", 0)}</nav>
+    <div id="zitems"><div class="empty">加载中…</div></div>
+  </div>`;
+};
+VIEWS.zlib.after = async (_, params) => {
+  const box = $("#zitems"); if (!box) return;
+  const cur = params.get("c") || "";
+  try {
+    const { items } = await getJSON("/api/zotero/items?collection=" + encodeURIComponent(cur));
+    box.innerHTML = `<p style="color:var(--muted);font-size:13px;margin:0 0 10px">${items.length} 条</p>` + (items.map((it) => `<article class="zitem">
+      <div style="min-width:0">
+        <h3>${it.paper_id ? `<a href="#/paper/${encodeURIComponent(it.paper_id)}">${esc(it.title)}</a>` : esc(it.title)}</h3>
+        <div class="meta">${esc(it.authors.slice(0, 4).join(", "))}${it.authors.length > 4 ? " 等" : ""}${it.date ? " · " + esc(String(it.date).slice(0, 10)) : ""}${it.arxiv_id ? ` · <span class="mono">${esc(it.arxiv_id)}</span>` : ""}${it.tags.length ? " · " + it.tags.slice(0, 4).map((t) => `<span class="chip">${esc(t)}</span>`).join(" ") : ""}</div>
+      </div>
+      <div class="acts">${it.paper_id ? stars(it.value_score) + `<a class="btn sm" href="#/paper/${encodeURIComponent(it.paper_id)}">看笔记</a>` : `<button class="btn sm primary" type="button" data-zread="${esc(it.arxiv_id || it.key)}">精读</button>`}<a class="btn sm ghost" href="zotero://select/library/items/${esc(it.key)}" title="在 Zotero 中打开">Zotero</a></div>
+    </article>`).join("") || `<div class="empty">这个分类下没有条目。</div>`);
+    $$("[data-zread]", box).forEach((b) => b.addEventListener("click", () => startRun("read", [b.dataset.zread])));
+  } catch (e) { box.innerHTML = `<div class="notice">读取条目失败：${esc(e.message)}</div>`; }
+};
+
+/* ---------- 阅读趋势 ---------- */
+function clientTrends(days) {
+  const end = new Date(); const start = new Date(end); start.setDate(end.getDate() - days + 1);
+  const iso = (d) => d.toISOString().slice(0, 10); const s = iso(start), e = iso(end);
+  const entries = S.index.filter((p) => p.date >= s && p.date <= e);
+  const per_day = [];
+  for (let i = 0; i < days; i++) { const d = new Date(start); d.setDate(start.getDate() + i); const k = iso(d); per_day.push({ date: k, count: entries.filter((p) => p.date === k).length }); }
+  const count = (arr) => { const m = {}; arr.forEach((x) => (m[x] = (m[x] || 0) + 1)); return Object.entries(m).sort((a, b) => b[1] - a[1]); };
+  return {
+    start: s, end: e, days, total: entries.length, per_day,
+    per_topic: count(entries.flatMap((p) => p.topics || [])).map(([id, c]) => ({ id, name: tname(id), count: c })),
+    per_type: count(entries.map((p) => p.paper_type).filter(Boolean)).map(([type, c]) => ({ type, count: c })),
+    top: [...entries].sort((a, b) => (b.value_score - a.value_score) || (b.score - a.score)).slice(0, 5),
+    avg_value: entries.length ? (entries.reduce((a, p) => a + (p.value_score || 0), 0) / entries.length).toFixed(2) : 0, summary: null,
+  };
+}
+VIEWS.trends = async (_, params) => {
+  const days = Number(params.get("d") || 7);
+  let t = null;
+  if (isLocal()) { try { t = await getJSON(`/api/trends?days=${days}`); } catch { /* 用前端统计 */ } }
+  if (!t) t = clientTrends(days);
+  const maxDay = Math.max(1, ...t.per_day.map((d) => d.count)), maxTopic = Math.max(1, ...t.per_topic.map((x) => x.count));
+  const dayLabel = (d) => d.slice(5).replace("-", "/");
+  return `
+  <div class="page-head"><h1>阅读趋势</h1><p>${esc(t.start)} 至 ${esc(t.end)}：精读 ${t.total} 篇，平均价值 ${t.avg_value} / 5。</p></div>
+  <div class="toolbar">${[7, 14, 30, 90].map((d) => `<a class="chip filter" href="#/trends?d=${d}" aria-pressed="${d === days}">近 ${d} 天</a>`).join("")}</div>
+  <div class="trend-grid">
+    <div class="chart"><h3>每日精读篇数</h3><div class="bars">${t.per_day.map((d) => `<div class="bar" title="${esc(d.date)}：${d.count} 篇"><b>${d.count || ""}</b><i style="height:${Math.round(d.count / maxDay * 100)}%"></i>${t.per_day.length <= 31 ? `<span>${esc(dayLabel(d.date))}</span>` : ""}</div>`).join("")}</div></div>
+    <div class="chart"><h3>方向分布</h3><div class="hbars">${t.per_topic.map((x) => `<div class="row2"><span title="${esc(x.name)}">${esc(tshort(x.id))}</span><i style="width:${Math.round(x.count / maxTopic * 100)}%"></i><b>${x.count}</b></div>`).join("") || `<p style="color:var(--muted)">暂无</p>`}</div>
+      <h3 style="margin-top:18px">论文类型</h3><div style="display:flex;gap:6px;flex-wrap:wrap">${t.per_type.map((x) => `<span class="chip">${esc(TYPE_ZH[x.type] || x.type)} ${x.count}</span>`).join("") || `<span style="color:var(--muted)">暂无</span>`}</div></div>
+  </div>
+  <div class="summary-box">
+    <div class="section-head" style="margin-bottom:8px"><div><h2 style="font-size:20px">AI 阅读总结</h2><p>基于这段时间所有精读笔记的 TL;DR、insight 和结论生成；用筛选模型（Haiku），一次约 $0.02，结果会缓存。</p></div>
+      ${isLocal() ? `<button class="btn primary sm" type="button" id="gen-summary">${t.summary ? "重新生成" : "生成总结"}</button>` : ""}</div>
+    <div class="prose" id="trend-summary"><p style="color:var(--muted)">${t.summary ? "正在渲染…" : isLocal() ? "还没有生成。" : "只读网站不生成总结。"}</p></div>
+  </div>
+  <section class="section"><div class="section-head"><div><h2>这段时间最值得回看</h2><p>按价值评分和筛选分排序。</p></div></div>
+    <div class="prows">${t.top.map((p) => paperRow(p)).join("") || `<div class="empty">这段时间没有精读记录。</div>`}</div></section>`;
+};
+VIEWS.trends.after = async (_, params) => {
+  const days = Number(params.get("d") || 7), box = $("#trend-summary");
+  const paintSummary = async (md) => { if (!md || !box) return; await waitLibs(); box.innerHTML = renderMarkdown(md.replace(/^<!--.*?-->\n/, "")); };
+  if (isLocal()) { try { const t = await getJSON(`/api/trends?days=${days}`); if (t.summary) await paintSummary(t.summary); } catch { /* 忽略 */ } }
+  $("#gen-summary")?.addEventListener("click", async (e) => {
+    const b = e.currentTarget;
+    if (!confirm(`用模型总结近 ${days} 天的阅读？约 $0.02。`)) return;
+    b.disabled = true; b.textContent = "生成中…";
+    try { const r = await send("/api/trends/summary", { days, force: true }); await paintSummary(r.summary); toast("总结已生成并缓存", "ok"); b.textContent = "重新生成"; }
+    catch (err) { toast("生成失败：" + err.message, "err"); b.textContent = "生成总结"; }
+    finally { b.disabled = false; }
+  });
 };
 
 /* ---------- 审核台 ---------- */
@@ -1258,6 +1524,10 @@ VIEWS.settings = async () => {
         <button class="btn" type="button" id="run-read">精读这些论文</button>
         <div class="log" id="run-log" style="margin-top:12px">（暂无日志）</div>
       </div>
+      ${isLocal() ? `<div class="panel"><h3>本地助手</h3>
+        <p>用桌面图标启动时没有终端窗口，可以在这里退出。退出后网页将无法读写，再次双击图标即可重新启动。</p>
+        <button class="btn bad" type="button" id="app-quit">退出本地助手</button>
+      </div>` : ""}
     </aside>
   </div>`;
 };
@@ -1314,6 +1584,10 @@ VIEWS.settings.after = () => {
     try { const { editable, ...body } = S.config; const r = await send("/api/config", body, "PUT"); (r.messages || ["已保存"]).forEach((m) => toast(m, "ok")); }
     catch (err) { toast("保存失败：" + err.message, "err"); } finally { e.currentTarget.disabled = false; }
   });
+  $("#app-quit")?.addEventListener("click", async () => {
+    if (!confirm("退出本地助手？")) return;
+    try { (await send("/api/shutdown")).messages.forEach((m) => toast(m, "ok")); } catch (e) { toast(e.message, "err"); }
+  });
   $("#run-daily").addEventListener("click", () => startRun("daily"));
   $("#run-read").addEventListener("click", () => {
     const ids = $("#read-ids").value.split(/[\s,]+/).map((s) => s.match(ARXIV_ID)?.[1]).filter(Boolean);
@@ -1347,7 +1621,7 @@ async function route(force = false) {
   const [path, qs] = raw.split("?");
   const [name = "", arg = ""] = path.split("/").map(decodeURIComponent);
   const key = path + "?" + (qs || "");
-  if (!["", "daily", "library", "paper", "review", "settings"].includes(name)) return; // 页内锚点，例如 #how
+  if (!["", "daily", "library", "paper", "review", "settings", "zlib", "trends"].includes(name)) return; // 页内锚点
   if (key === lastKey && !force) return;
   lastKey = key;
   document.removeEventListener("keydown", tagKeys);
@@ -1363,7 +1637,7 @@ async function route(force = false) {
     if (!force) window.scrollTo({ top: 0, behavior: "auto" });
     await VIEWS[view].after?.(arg, params);
     revealAll(root); syncSelection();
-    document.title = { home: "DailyPaper", daily: "今日 · DailyPaper", library: "文库 · DailyPaper", paper: "论文 · DailyPaper", review: "审核台 · DailyPaper", settings: "搜索设置 · DailyPaper" }[view];
+    document.title = { home: "DailyPaper", daily: "今日 · DailyPaper", library: "文库 · DailyPaper", paper: "论文 · DailyPaper", review: "审核台 · DailyPaper", settings: "搜索设置 · DailyPaper", zlib: "文献库 · DailyPaper", trends: "趋势 · DailyPaper" }[view];
   } catch (e) {
     root.innerHTML = `<div class="view"><div class="page-head"><h1>出错了</h1><p>${esc(e.message)}</p></div><a class="btn" href="#/">回到首页</a></div>`;
   }
@@ -1378,6 +1652,16 @@ document.addEventListener("change", (e) => {
 $$("[data-bulk]").forEach((b) => b.addEventListener("click", () => decide([...S.selected], b.dataset.bulk, $("#sel-collection").value)));
 $("#sel-clear").addEventListener("click", () => { S.selected.clear(); syncSelection(); });
 $("#run-now").addEventListener("click", () => startRun("daily"));
+// 主题：默认夜间，可切换白天；记住选择
+(() => {
+  let t = ""; try { t = localStorage.getItem("dp.theme") || ""; } catch { /* 忽略 */ }
+  if (t) document.documentElement.dataset.theme = t;
+  $("#theme-toggle").addEventListener("click", () => {
+    const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem("dp.theme", next); } catch { /* 忽略 */ }
+  });
+})();
 // 键盘：首页 / 聚焦搜索；论文页 ← → 切换上一篇 / 下一篇
 document.addEventListener("keydown", (e) => {
   if (e.target.closest("input, textarea, select, [contenteditable]") || e.metaKey || e.ctrlKey || e.altKey) return;

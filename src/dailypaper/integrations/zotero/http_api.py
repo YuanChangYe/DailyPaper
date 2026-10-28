@@ -80,6 +80,38 @@ class _HttpReader(ZoteroReader):
     def get_item(self, key: str) -> dict:
         return self._get(f"/items/{key}", format="json").json()["data"]
 
+    def items_in_collection(self, key: str | None, limit: int = 500) -> list[dict]:
+        """某个分类（None = 未分类的顶层条目）下的顶层条目，整理成网页需要的字段。"""
+        path = f"/collections/{key}/items/top" if key else "/items/top"
+        out: list[dict] = []
+        start = 0
+        while len(out) < limit:
+            batch = self._get(path, limit=100, start=start, format="json").json()
+            for it in batch:
+                d = it["data"]
+                if d.get("itemType") in ("attachment", "note"):
+                    continue
+                if key is None and d.get("collections"):
+                    continue
+                ids = _ARXIV_RE.findall(" ".join(str(d.get(k, "")) for k in ("url", "extra", "archiveID", "number")))
+                out.append({
+                    "key": it["key"],
+                    "title": d.get("title", ""),
+                    "authors": [c.get("name") or f"{c.get('firstName', '')} {c.get('lastName', '')}".strip()
+                                for c in d.get("creators", []) if c.get("creatorType", "author") == "author"],
+                    "date": d.get("date", ""),
+                    "item_type": d.get("itemType", ""),
+                    "arxiv_id": ids[0] if ids else "",
+                    "doi": d.get("DOI", ""),
+                    "url": d.get("url", ""),
+                    "tags": [t.get("tag", "") for t in d.get("tags", [])],
+                    "date_added": d.get("dateAdded", ""),
+                })
+            if len(batch) < 100:
+                break
+            start += 100
+        return out[:limit]
+
     def pdf_path(self, key: str) -> str | None:
         for child in self._get(f"/items/{key}/children", format="json").json():
             d = child["data"]
