@@ -1,0 +1,73 @@
+# DailyPaper 网页 ↔ 后端接口约定
+
+网页是一个静态文件 `index.html`（加 `assets/`），同一份文件用在三个地方：
+
+| 运行位置 | 怎么判断 | 能做什么 |
+|---|---|---|
+| 本地助手 `dailypaper app`（http://127.0.0.1:8765） | `GET /api/meta` 返回 200 | 全部功能：浏览、审核入库 Zotero、改搜索方向、触发运行 |
+| GitHub Pages / 个人网站 | `/api/meta` 失败，`api/index.json` 成功 | 只读浏览；设置页可导出 `topics.yaml` |
+| 都没有（本地直接打开、设计预览） | 两者都失败 | 内置示例数据，所有写操作只做演示 |
+
+所有写请求都带 `Content-Type: application/json` 和 `X-DailyPaper: 1`，与 `app/server.py` 现有的安全中间件一致。
+
+## 1. 已有接口（`app/server.py` 现状，网页直接使用）
+
+| 方法 | 路径 | 网页用途 |
+|---|---|---|
+| GET | `/api/meta` | 判断本地模式；研究方向名称；各审核状态数量 |
+| GET | `/api/items?status=` | 审核台列表（`{entry: QueueEntry, decision: Decision}[]`） |
+| GET | `/api/note/{id}` | 论文详情的备用来源（`/site/api/papers/{id}.json` 不可用时） |
+| GET | `/api/zotero/status` | Zotero 连接状态、分类列表、默认分类 |
+| POST | `/api/decide` `{ids, action, collection}` | 选中论文 → 入库 / 稍后 / 不要（任何页面的多选栏和审核台） |
+| POST | `/api/sync` | 从 Obsidian 收集入库请求并导入 |
+| POST | `/api/profile` | 从 Zotero 导出文库索引与兴趣画像 |
+| POST | `/api/git/pull`、`/api/git/push` | 同步审核结果 |
+
+## 2. 需要主会话新增的接口
+
+### 2.1 挂载内容目录（必须）
+```python
+from fastapi.staticfiles import StaticFiles
+app.mount("/site", StaticFiles(directory=cfg.content_dir), name="site")
+# 并让 "/" 返回新的 index.html，"/assets" 指向网页的 assets 目录
+```
+本地模式下，网页从 `/site/api/index.json`、`/site/api/daily/<date>.json`、`/site/api/papers/<id>.json` 读取内容，和 GitHub Pages 上读取相对路径 `api/...` 是同一份文件。
+
+### 2.2 搜索设置
+```
+GET /api/config
+→ {
+    "editable": true,
+    "topics": [ {"id","name","weight","description","keywords":[],"context":[],"exclude":[],"lens_questions":[]} ],
+    "daily":  {"categories": ["cs.CL", ...], "max_candidates": 60, "top_k": 5, "min_score": 6.5}
+  }
+
+PUT /api/config   （请求体同上，不含 editable）
+→ {"messages": ["已保存 topics.yaml 与 pipeline.yaml"]}
+```
+- `topics` 对应 `config/topics.yaml` 的 `topics`；`daily` 对应 `config/pipeline.yaml` 中 `pipelines.daily` 里 `source.*`（categories）、`filter.keyword`（max_candidates）、`ranker.llm_screen`（top_k、min_score）的参数。
+- 保存前用 `AppConfig` 校验；建议用 ruamel.yaml 保留注释。校验失败返回 400 和可读的中文原因。
+- 若 `config/` 不可写（例如云端），返回 `editable: false`，网页会把保存按钮换成"导出 YAML"。
+
+### 2.3 触发运行
+```
+POST /api/run  {"pipeline": "daily" | "read", "ids": ["2610.35877"], "date": "2026-10-28"}
+→ {"run_id": "...", "messages": ["已开始：daily"]}       （已有运行中的任务时返回 409）
+
+GET /api/run/status
+→ {"running": true, "pipeline": "daily", "started_at": "...", "finished_at": null,
+   "ok": null, "log_tail": ["[fetch] 213 篇", "..."]}
+```
+- 后台起子进程 `dailypaper run` / `dailypaper read <ids>`，把 stdout 最后约 200 行放进 `log_tail`。
+- 网页在运行期间每 2 秒轮询一次 status，结束后自动刷新数据。
+
+## 3. 网页里的功能 → 接口对照
+
+| 网页位置 | 动作 | 接口 |
+|---|---|---|
+| 任意论文卡片的勾选框 + 底部多选栏 | 加入 Zotero / 稍后 / 不要 | `POST /api/decide` |
+| 首页搜索框粘贴 arXiv ID | 精读这篇 | `POST /api/run {pipeline:"read", ids}` |
+| 顶栏"立即运行" | 跑今日任务 | `POST /api/run {pipeline:"daily"}` |
+| 审核台 | 状态筛选、单篇/批量决定、Obsidian 同步、兴趣画像、git 同步 | 第 1 节全部 |
+| 搜索设置 | 编辑方向、关键词、语境词、排除词、镜头问题、arXiv 分类、Top K、阈值 | `GET/PUT /api/config` |
+| 论文详情 | 精读笔记（Markdown + KaTeX）、目录、入库按钮 | `/site/api/papers/<id>.json`、`/api/decide` |

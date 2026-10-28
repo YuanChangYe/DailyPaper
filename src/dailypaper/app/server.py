@@ -1,5 +1,11 @@
 """本地助手后端（FastAPI）。``dailypaper app`` 启动，浏览器打开 http://127.0.0.1:8765 。
 
+提供：
+- ``/``            网页（static/index.html，与 GitHub Pages 上是同一份文件）
+- ``/assets``      网页用到的图片等
+- ``/site``        内容目录（笔记、api/*.json、feed.xml），网页从 /site/api/ 读数据
+- ``/api/...``     审核、Zotero、配置读写、触发运行（接口约定见同目录的 API.md）
+
 安全：只监听本机；所有写操作要求自定义请求头 ``X-DailyPaper: 1``（跨站页面无法在不经预检的情况下附带它，
 而本服务不开放 CORS），并校验 Host，防止其他网站借你的浏览器调用本地接口。
 """
@@ -13,12 +19,14 @@ from threading import Timer
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from ..core.config import AppConfig
 from ..core.io import read_markdown
 from ..integrations.review import ReviewStore
 from ..integrations.zotero.service import ZoteroService, collect_obsidian_approvals, import_approved
+from .runner import RunManager
 
 STATIC = Path(__file__).parent / "static"
 ALLOWED_HOSTS = {"127.0.0.1", "localhost"}
@@ -30,9 +38,17 @@ class DecideBody(BaseModel):
     collection: str = ""
 
 
+class RunBody(BaseModel):
+    pipeline: str = "daily"
+    ids: list[str] = []
+    date: str | None = None
+    provider: str | None = None  # 例如 fake，用于不花钱试跑
+
+
 def create_app(cfg: AppConfig) -> FastAPI:
     app = FastAPI(title="DailyPaper 本地助手", docs_url=None, redoc_url=None)
     store = ReviewStore(cfg)
+    runner = RunManager(cfg.root)
 
     def zotero() -> ZoteroService:
         return ZoteroService.from_config(cfg)
@@ -70,13 +86,18 @@ def create_app(cfg: AppConfig) -> FastAPI:
             return JSONResponse({"detail": "missing X-DailyPaper header"}, status_code=403)
         return await call_next(request)
 
+    # ------------------------------------------------------------ 页面与静态内容
     @app.get("/")
     def index():
-        return FileResponse(STATIC / "index.html")
+        return FileResponse(STATIC / "index.html", headers={"Cache-Control": "no-store"})
 
+    cfg.content_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/assets", StaticFiles(directory=STATIC / "assets"), name="assets")
+    app.mount("/site", StaticFiles(directory=cfg.content_dir), name="site")
+
+    # ------------------------------------------------------------ 元信息与审核
     @app.get("/api/meta")
     def meta():
-        """给前端的筛选项：研究方向名称、各状态数量。"""
         counts: dict[str, int] = {}
         for it in store.items():
             counts[it.decision.status] = counts.get(it.decision.status, 0) + 1
@@ -87,6 +108,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
             "site_title": cfg.settings.site.title,
             "git_enabled": git_enabled,
             "workspace": str(cfg.content_dir.parent),
+            "running": runner.running,
         }
 
     @app.get("/api/items")
@@ -100,7 +122,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
             raise HTTPException(404, "没有这篇笔记")
         path = cfg.content_dir / it.entry.note_path
         if not path.exists():
-            raise HTTPException(404, f"笔记文件不存在：{it.entry.note_path}（可能需要先 git pull）")
+            raise HTTPException(404, f"笔记文件不存在：{it.entry.note_path}")
         fm, body = read_markdown(path)
         return {"frontmatter": fm, "markdown": body}
 
@@ -121,6 +143,10 @@ def create_app(cfg: AppConfig) -> FastAPI:
         status = {"approve": "approved", "later": "later", "reject": "rejected", "pending": "pending"}.get(body.action)
         if not status:
             raise HTTPException(400, f"未知操作 {body.action}")
+        known = {e.id for e in store.entries()}
+        unknown = [i for i in body.ids if i not in known]
+        if unknown:
+            raise HTTPException(404, f"不在审核队列中：{', '.join(unknown)}")
         for pid in body.ids:
             store.decide(pid, status, collection=body.collection, error="")
         messages = []
@@ -128,7 +154,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
             messages = list(import_approved(cfg, zotero()))
         if cfg.settings.app.auto_git:
             messages.append(commit_and_push(f"review: {body.action} {len(body.ids)} paper(s)"))
-        return {"messages": messages}
+        return {"messages": messages or [f"已标记 {len(body.ids)} 篇为「{status}」"]}
 
     @app.post("/api/sync")
     def sync():
@@ -150,6 +176,42 @@ def create_app(cfg: AppConfig) -> FastAPI:
     def git_push():
         return {"messages": [commit_and_push("review: update decisions")]}
 
+    # ------------------------------------------------------------ 搜索设置
+    @app.get("/api/config")
+    def get_config():
+        from .config_editor import read_view
+
+        return read_view(cfg)
+
+    @app.put("/api/config")
+    def put_config(body: dict):
+        from .config_editor import read_view, write_config
+
+        if not read_view(cfg)["editable"]:
+            raise HTTPException(403, "配置文件不可写")
+        try:
+            return {"messages": write_config(cfg, body)}
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
+
+    # ------------------------------------------------------------ 触发运行
+    @app.post("/api/run")
+    def run(body: RunBody):
+        extra = ["--provider", body.provider] if body.provider else []
+        try:
+            started = runner.start(body.pipeline, body.ids, body.date, extra)
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
+        except RuntimeError as e:
+            raise HTTPException(409, str(e)) from e
+        label = f"read {' '.join(body.ids)}" if body.pipeline == "read" else body.pipeline
+        return {"run_id": started, "messages": [f"已开始：{label}"]}
+
+    @app.get("/api/run/status")
+    def run_status():
+        return runner.status()
+
+    app.state.runner = runner
     return app
 
 

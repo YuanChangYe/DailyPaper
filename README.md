@@ -24,6 +24,7 @@ DailyPaper 每天自动抓取 arXiv 新论文，用大语言模型按你设定�
 - [部署：每天自动运行](#部署每天自动运行)
 - [配置你的研究方向](#配置你的研究方向)
 - [精读框架与 lens](#精读框架与-lens)
+- [网页](#网页)
 - [Zotero 联动与审核页](#zotero-联动与审核页)
 - [Obsidian](#obsidian)
 - [网站与站点接口](#网站与站点接口)
@@ -255,6 +256,23 @@ dailypaper read <arXiv ID> --prompt-only                           # 只生成 p
 - 只有 `SKILL.md` 的 skill 用 `adapter: skill_markdown`，可以只选取指定的小节。
 
 接入时会自动去掉 skill 中的脚本、代码块和工具调用指令。示例配置引用了两个外部 skill（`nature-paper-card`、`ccf-idea-reviewer`），仓库中没有它们时会被自动跳过，不影响运行。
+
+---
+
+## 网页
+
+`dailypaper app` 打开的是一个单页网页，同一份文件也会随每日运行复制到内容目录，发布到 GitHub Pages 后以只读方式展示。
+
+| 视图 | 内容 |
+|---|---|
+| 发现 | 最近一天的精读论文、统计，搜索框粘贴 arXiv ID 可直接精读 |
+| 今日 | 某一天的日报：精读列表、也值得关注的论文 |
+| 文库 | 所有已精读论文，按方向、类型、价值、日期筛选 |
+| 论文 | 完整精读笔记（Markdown + 公式）、目录、入库按钮 |
+| 审核台 | 待审核队列：加入 Zotero / 稍后 / 不要，批量操作，Obsidian 同步，兴趣画像 |
+| 搜索设置 | 直接编辑研究方向、关键词、镜头问题、arXiv 分类、Top K、阈值；立即运行今日任务或精读指定论文 |
+
+网页根据环境自动切换模式：连接到本地助手时可读写；部署为静态网站时只读（设置页可导出 `topics.yaml`）；没有数据时显示示例。前后端接口约定见 [src/dailypaper/app/API.md](src/dailypaper/app/API.md)。
 
 ---
 
