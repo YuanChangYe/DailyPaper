@@ -12,3 +12,6 @@ __pycache__/
 data/zotero_index.json
 data/interest_profile.json
 logs/
+
+# 网页里编辑提示词时的历史版本
+prompts/.history/

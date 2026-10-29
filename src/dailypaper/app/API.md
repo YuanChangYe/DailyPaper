@@ -37,6 +37,14 @@
 | GET | `/api/storage` | 输出目录、笔记与批注占用、各类缓存（llm / fulltext / pdf / runs / prompts）的大小与文件数 |
 | POST | `/api/storage/clear` `{kind}` | 清空一类缓存目录，不动 data/ 与笔记 |
 | POST | `/api/open-folder` `{which}` | 在资源管理器中打开 workspace / content / data / cache / config 目录（仅本机） |
+| GET | `/api/prompts` | prompts/ 下可编辑的文件：base 模板、lens、schema.yaml；附是否改过默认、历史版本数、审核标记 |
+| GET/PUT/DELETE | `/api/prompts/{path}` | 读、写（`{content, reviewed, force}`：先程序校验，不通过且未 force 则 400）、删除（仅 lenses/）；每次保存把旧版放进 prompts/.history/ |
+| GET/POST | `/api/prompts/{path}/history`、`.../restore {version}`、`.../reset` | 历史版本、恢复到某版、恢复仓库默认（prompts/defaults/） |
+| POST | `/api/prompts/validate`、`/api/prompts/review` `{id, content}` | 程序校验（模板能渲染、精读模板仍含 JSON 元信息与全部小节、schema 字段齐全）；用筛选模型按检查清单审核，返回 `{ok, issues, suggestions}` |
+| POST | `/api/prompts/preview` `{paper_id, overrides?}` | 用索引里某篇论文组装精读提示词（可用未保存的内容覆盖），返回 system / user / 选中的 lens |
+| GET/PUT | `/api/lenses` | lenses.yaml：预算、catalog（优先级、作用小节、启用）、规则；本机未接入的 skill 列表 |
+| POST | `/api/lenses/simulate` `{paper_id}` | 某篇论文按当前规则会用到哪些 lens、哪些超预算被丢弃 |
+| POST | `/api/skills/import` `{names}`；GET `/api/skills/{id}/preview` | 从本机 ~/.claude/skills 复制 skill 文本并加入 catalog；查看 skill 原文与实际注入提示词的文本 |
 | GET | `/api/export/annotations.json`、`/api/export/notes.zip` | 导出全部高亮与批注；或把所有精读笔记打包，带批注的在末尾附上高亮与批注 |
 
 ## 2. 需要主会话新增的接口

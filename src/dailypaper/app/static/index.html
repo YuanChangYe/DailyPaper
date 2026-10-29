@@ -511,6 +511,33 @@ footer a{border-bottom:1px solid var(--line-2)}
 @media (max-width:1260px){.spanel .settings-layout{grid-template-columns:1fr}}.store-row b{display:block;color:var(--ink);font-size:14px}.store-row span{font-size:12px;color:var(--muted)}
 .store-row .sz{font-family:var(--mono);font-size:13px;color:var(--ink);white-space:nowrap}
 .key-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted);margin-right:5px}.key-dot.on{background:var(--ok)}
+.subtabs{margin:14px 0 18px}
+.pe-layout{display:grid;grid-template-columns:270px minmax(0,1fr);gap:22px;align-items:start}
+.pe-list{display:flex;flex-direction:column;gap:2px}.pe-list .sg-sep{margin:12px 10px 4px;font-size:11px;letter-spacing:.08em;color:var(--muted)}
+.pe-list a{display:block;padding:8px 12px;border-radius:10px;color:var(--body);font-size:13.5px;line-height:1.35}
+.pe-list a:hover{background:var(--glass)}.pe-list a[aria-current="true"]{background:var(--glass-2);color:var(--ink)}
+.pe-list a small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pe-list .flag{display:inline-block;font-size:10px;padding:0 6px;border-radius:999px;border:1px solid var(--line-2);color:var(--muted);margin-left:6px;vertical-align:1px}
+.pe-list .flag.mod{color:var(--warn);border-color:rgba(235,201,131,.5)}.pe-list .flag.off{color:var(--bad);border-color:rgba(239,161,149,.45)}
+.pe-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+.pe-head h2{font-size:20px}.pe-head p{margin:4px 0 0;font-size:13px;color:var(--muted)}
+.pe-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.editor{display:grid;grid-template-columns:46px minmax(0,1fr);border:1px solid var(--line-2);border-radius:12px;background:rgba(9,30,38,.45);overflow:hidden}
+.editor pre{margin:0;padding:12px 6px 12px 0;text-align:right;color:var(--muted);font:12.5px/1.6 var(--mono);user-select:none;overflow:hidden;border-right:1px solid var(--line)}
+.editor textarea{border:0;background:none;padding:12px 14px;font:12.5px/1.6 var(--mono);min-height:540px;resize:vertical;outline:0;white-space:pre;overflow:auto;tab-size:2;color:var(--ink);width:100%}
+:root[data-theme="light"] .editor{background:#fff}
+.pe-status{margin:12px 0;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--glass);font-size:13px}
+.pe-status ul{margin:6px 0 0;padding-left:18px}.pe-status.bad{border-color:rgba(239,161,149,.45)}.pe-status.ok{border-color:rgba(147,215,176,.45)}
+.pe-status .lab{display:inline-block;font-size:11px;letter-spacing:.06em;color:var(--muted);margin-right:6px}
+.pre-box{margin:0;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(9,30,38,.45);font:12.5px/1.55 var(--mono);white-space:pre-wrap;word-break:break-word;max-height:480px;overflow:auto;color:var(--body)}
+:root[data-theme="light"] .pre-box{background:#fff}
+.ptable td.ck{width:40px}.ptable td.pri{width:80px}.ptable td.secs{width:120px}
+.ptable input[type=checkbox]{width:auto;min-height:0;accent-color:var(--accent)}
+.rule{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.rule .input,.rule input[type=text]{width:100%;min-height:36px;padding:6px 12px;border-radius:10px;border:1px solid var(--line-2);background:rgba(9,30,38,.35);outline:0;font-family:var(--mono);font-size:12.5px}
+.rule .acts{display:flex;gap:4px}
+.skill-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}.skill-row .grow{flex:1 1 240px;min-width:0}.skill-row b{display:block;color:var(--ink)}.skill-row span{font-size:12.5px;color:var(--muted)}
+@media (max-width:1000px){.pe-layout{grid-template-columns:1fr}.rule{grid-template-columns:1fr}}
 .role-box{padding:16px 18px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--glass);margin-bottom:12px}.role-box h4{margin:0 0 12px;color:var(--ink);font-size:15px}
 .field select{width:100%;min-height:42px;padding:8px 12px;border-radius:var(--r-sm);border:1px solid var(--line-2);background:rgba(9,30,38,.35);outline:0}.field select:focus{border-color:var(--accent)}
 :root[data-theme="light"] .ptable input,:root[data-theme="light"] .field select{background:#fff}
@@ -1657,7 +1684,7 @@ const SETTINGS_GROUPS = [
   { id: "topics", name: "研究方向", icon: "⌖", cfg: true },
   { id: "run", name: "运行与费用", icon: "◷", cfg: true },
   { id: "data", name: "数据与隐私", icon: "⛁" },
-  { id: "prompts", name: "提示词与 Skill", icon: "✎", cfg: true, soon: true },
+  { id: "prompts", name: "提示词与 Skill", icon: "✎", cfg: true },
   { id: "about", name: "关于", icon: "ⓘ" },
 ];
 const seg = (key, options) => `<div class="seg" data-pref="${key}" role="group">${options.map(([v, t]) => `<button type="button" data-v="${esc(v)}" aria-pressed="${String(prefs()[key]) === String(v)}">${esc(t)}</button>`).join("")}</div>`;
@@ -1727,7 +1754,7 @@ VIEWS.settings = async (_, params) => {
   let body;
   if (g.id === "topics") body = await SETTINGS.topics();
   else if (g.soon) body = SETTINGS.soon(g);
-  else body = await SETTINGS[g.id]();
+  else body = await SETTINGS[g.id](params);
   return `<div class="settings-shell">${side}<div class="spanel" data-group="${g.id}">${body}</div></div>`;
 };
 SETTINGS.topics = async () => {
@@ -1887,6 +1914,279 @@ function afterRunGroup() {
   paintRun();
 }
 
+/* ---------- 提示词与 Skill：编辑 prompts/ 下的文件（程序校验 + LLM 审核）、lens 目录与规则、外部 skill ---------- */
+const PE = { list: [], cur: null, dirty: false, lenses: null };
+const peKinds = [["schema", "笔记结构"], ["base", "精读与筛选模板"], ["type", "论文类型 lens"], ["reading", "阅读 skill lens"]];
+const peKind = (it) => it.kind === "lens" ? (it.id.includes("/type_") ? "type" : "reading") : it.kind;
+const subtabs = (t) => `<div class="seg subtabs" id="pe-tabs">${[["files", "提示词与结构"], ["lenses", "lens 目录与规则"], ["skills", "外部 Skill"]].map(([v, n]) => `<a href="#/settings?g=prompts&t=${v}" role="button" aria-pressed="${t === v}" style="padding:5px 13px;border-radius:999px;font-size:13px">${n}</a>`).join("")}</div>`;
+SETTINGS.prompts = async (params) => {
+  const t = params.get("t") || "files";
+  const head = groupHead(SETTINGS_GROUPS[5], "精读框架、lens 与外部 skill。改提示词前先程序校验，再由筛选模型审核，保证网页仍能渲染。");
+  if (!isLocal()) return `${head}${subtabs(t)}<div class="notice">只读网站不能编辑提示词；连接本地助手后可用。文件在仓库的 prompts/ 与 config/lenses.yaml。</div>`;
+  if (t === "lenses") return head + subtabs(t) + await renderLensesTab();
+  if (t === "skills") return head + subtabs(t) + await renderSkillsTab();
+  let data;
+  try { data = await getJSON("/api/prompts"); } catch { return `${head}${subtabs(t)}<div class="notice">本地助手版本过旧，没有 <code>/api/prompts</code>。请重启本地助手。</div>`; }
+  PE.list = data.items;
+  const want = params.get("f") || PE.cur?.id || "schema.yaml";
+  const cur = PE.list.find((x) => x.id === want) || PE.list[0];
+  PE.cur = cur ? await getJSON(`/api/prompts/${cur.id}`) : null;
+  PE.dirty = false;
+  const list = peKinds.map(([k, name]) => {
+    const rows = PE.list.filter((x) => peKind(x) === k);
+    return rows.length ? `<span class="sg-sep">${name}</span>` + rows.map((x) => `<a href="#/settings?g=prompts&f=${encodeURIComponent(x.id)}" ${x.id === PE.cur?.id ? 'aria-current="true"' : ""}>${esc(x.title)}${x.has_default && !x.is_default ? `<span class="flag mod">已改</span>` : ""}${x.lens_enabled === false ? `<span class="flag off">停用</span>` : ""}<small>${esc(x.id)}${x.history ? ` · ${x.history} 个历史版本` : ""}</small></a>`).join("") : "";
+  }).join("");
+  return `${head}${subtabs(t)}
+  <div class="pe-layout">
+    <div><nav class="pe-list">${list}</nav>
+      <button class="btn sm" type="button" id="pe-new" style="margin:14px 10px 0">＋ 新建 lens</button>
+      <p style="font-size:12px;color:var(--muted);margin:12px 10px 0">文件在项目的 prompts/ 目录；每次保存把旧版放进 prompts/.history/（保留 20 版）。</p>
+    </div>
+    <div>${PE.cur ? renderEditor(PE.cur) : `<div class="empty">没有可编辑的文件。</div>`}</div>
+  </div>`;
+};
+function renderEditor(cur) {
+  const lines = cur.content.split("\n").length;
+  return `<div class="pe-head"><div><h2>${esc(cur.title)}</h2><p>${esc(cur.description || "")} <span class="mono">prompts/${esc(cur.id)}</span></p></div>
+    <div class="pe-tools">
+      <button class="btn sm" type="button" id="pe-validate">程序校验</button>
+      <button class="btn sm" type="button" id="pe-review">LLM 审核</button>
+      <button class="btn sm primary" type="button" id="pe-save">校验、审核并保存</button>
+      ${cur.history.length ? `<select class="input" id="pe-history" style="min-height:32px;padding:4px 10px;font-size:13px"><option value="">历史版本…</option>${cur.history.map((h) => `<option value="${esc(h.version)}">${esc(h.saved_at.replace("T", " "))} · ${(h.size / 1000).toFixed(1)}k</option>`).join("")}</select>` : ""}
+      ${cur.default !== null ? `<button class="btn sm ghost" type="button" id="pe-reset">恢复默认</button>` : ""}
+      ${cur.kind === "lens" ? `<button class="btn sm ghost bad" type="button" id="pe-delete">删除</button>` : ""}
+    </div></div>
+  <div class="pe-status" id="pe-status" hidden></div>
+  <div class="editor"><pre id="pe-gutter">${Array.from({ length: lines }, (_, i) => i + 1).join("\n")}</pre><textarea id="pe-text" spellcheck="false">${esc(cur.content)}</textarea></div>
+  <div class="panel" style="margin-top:16px"><h3>预览组装后的提示词</h3>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 10px">选一篇已精读的论文，用当前编辑框里的内容（未保存也可以）组装精读提示词，看 lens 怎么被选中、各节标题是否正确。不调用模型。</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select class="input" id="pe-paper" style="max-width:420px">${S.index.slice(0, 50).map((x) => `<option value="${esc(x.id)}">${esc(x.id)} · ${esc(x.title.slice(0, 60))}</option>`).join("")}</select><button class="btn sm" type="button" id="pe-preview">生成预览</button><span id="pe-preview-meta" style="font-size:12px;color:var(--muted)"></span></div>
+    <pre class="pre-box" id="pe-preview-out" style="margin-top:12px" hidden></pre>
+  </div>`;
+}
+function peStatus(kind, title, items, extra = "") {
+  const box = $("#pe-status"); if (!box) return;
+  box.hidden = false; box.className = `pe-status ${kind}`;
+  box.innerHTML = `<span class="lab">${title}</span>${items.length ? `<ul>${items.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "<b>通过</b>"}${extra}`;
+}
+async function peValidate() {
+  const r = await send("/api/prompts/validate", { id: PE.cur.id, content: $("#pe-text").value });
+  peStatus(r.problems.length ? "bad" : "ok", "程序校验", r.problems);
+  return r.problems;
+}
+async function peReview() {
+  peStatus("", "LLM 审核", ["正在用筛选模型审核……"]);
+  try {
+    const r = await send("/api/prompts/review", { id: PE.cur.id, content: $("#pe-text").value });
+    const items = [...r.issues.map((x) => "问题：" + x), ...r.suggestions.map((x) => "建议：" + x)];
+    peStatus(r.ok ? "ok" : "bad", `LLM 审核（${r.model}）`, items);
+    return r;
+  } catch (e) { peStatus("bad", "LLM 审核", ["调用失败：" + e.message]); return null; }
+}
+async function peSave(force = false, reviewed = null) {
+  const r = await send(`/api/prompts/${PE.cur.id}`, { content: $("#pe-text").value, force, reviewed }, "PUT");
+  r.messages.forEach((m) => toast(m, "ok")); PE.dirty = false; route(true);
+}
+function afterPromptsGroup(params) {
+  const t = params.get("t") || "files";
+  if (t === "lenses") return afterLensesTab();
+  if (t === "skills") return afterSkillsTab();
+  const ta = $("#pe-text"); if (!ta) return;
+  const gutter = $("#pe-gutter");
+  ta.addEventListener("input", () => { PE.dirty = true; const n = ta.value.split("\n").length; if (gutter.childNodes.length !== n) gutter.textContent = Array.from({ length: n }, (_, i) => i + 1).join("\n"); });
+  ta.addEventListener("scroll", () => (gutter.scrollTop = ta.scrollTop));
+  ta.addEventListener("keydown", (e) => { if (e.key === "Tab") { e.preventDefault(); const s0 = ta.selectionStart; ta.setRangeText("  ", s0, ta.selectionEnd, "end"); } });
+  $("#pe-validate").addEventListener("click", peValidate);
+  $("#pe-review").addEventListener("click", peReview);
+  $("#pe-save").addEventListener("click", async (e) => {
+    const btn = e.currentTarget; btn.disabled = true;
+    try {
+      const problems = await peValidate();
+      if (problems.some((x) => !x.startsWith("建议"))) {
+        $("#pe-status").insertAdjacentHTML("beforeend", `<p style="margin:8px 0 0"><button class="btn sm bad" type="button" id="pe-force">仍然保存</button></p>`);
+        $("#pe-force").addEventListener("click", () => peSave(true, false));
+        return;
+      }
+      const r = await peReview();
+      if (!r || !r.ok) {
+        $("#pe-status").insertAdjacentHTML("beforeend", `<p style="margin:8px 0 0"><button class="btn sm bad" type="button" id="pe-force">仍然保存（标记为未通过审核）</button></p>`);
+        $("#pe-force").addEventListener("click", () => peSave(true, false));
+        return;
+      }
+      await peSave(false, true);
+    } catch (err) { toast("保存失败：" + err.message, "err"); } finally { btn.disabled = false; }
+  });
+  $("#pe-history")?.addEventListener("change", async (e) => {
+    const v = e.target.value; if (!v) return;
+    if (!confirm("恢复到这个历史版本？当前内容会先存进历史。")) { e.target.value = ""; return; }
+    try { (await send(`/api/prompts/${PE.cur.id}/restore`, { version: v })).messages.forEach((m) => toast(m, "ok")); route(true); } catch (err) { toast(err.message, "err"); }
+  });
+  $("#pe-reset")?.addEventListener("click", async () => {
+    if (!confirm("恢复为仓库自带的默认版本？当前内容会先存进历史。")) return;
+    try { (await send(`/api/prompts/${PE.cur.id}/reset`)).messages.forEach((m) => toast(m, "ok")); route(true); } catch (err) { toast(err.message, "err"); }
+  });
+  $("#pe-delete")?.addEventListener("click", async () => {
+    if (!confirm(`删除 prompts/${PE.cur.id}？历史里会保留一份备份；lenses.yaml 里引用它的条目要在「lens 目录与规则」里去掉。`)) return;
+    try { (await send(`/api/prompts/${PE.cur.id}`, null, "DELETE")).messages.forEach((m) => toast(m, "ok")); PE.cur = null; location.hash = "#/settings?g=prompts&t=files"; route(true); } catch (err) { toast(err.message, "err"); }
+  });
+  $("#pe-new").addEventListener("click", async () => {
+    const name = prompt("新 lens 的文件名（字母、数字、下划线；论文类型 lens 以 type_ 开头）", "type_new");
+    if (!name || !/^[A-Za-z][A-Za-z0-9_-]*$/.test(name)) return;
+    const content = `---\ntitle: ${name}\ndescription: 这个 lens 用来……\n---\n- 分析要点 1\n- 分析要点 2\n`;
+    try { await send(`/api/prompts/lenses/${name}.md`, { content, reviewed: null }, "PUT"); toast("已创建，记得在「lens 目录与规则」里加入 catalog 和规则", "ok"); location.hash = `#/settings?g=prompts&f=${encodeURIComponent("lenses/" + name + ".md")}`; } catch (err) { toast(err.message, "err"); }
+  });
+  $("#pe-preview").addEventListener("click", async () => {
+    const out = $("#pe-preview-out"), meta = $("#pe-preview-meta");
+    meta.textContent = "组装中…";
+    try {
+      const r = await send("/api/prompts/preview", { paper_id: $("#pe-paper").value, overrides: { [PE.cur.id]: $("#pe-text").value } });
+      meta.textContent = `lens：${r.lenses.join("、") || "无"}${r.dropped.length ? `（超预算丢弃：${r.dropped.join("、")}）` : ""} · 系统提示 ${(r.chars.system / 1000).toFixed(1)}k 字符 · 用户消息 ${(r.chars.user / 1000).toFixed(1)}k 字符（全文来自 ${r.fulltext}）`;
+      out.hidden = false; out.textContent = "# SYSTEM\n\n" + r.system + "\n\n# USER\n\n" + r.user;
+    } catch (err) { meta.textContent = "预览失败：" + err.message; }
+  });
+  addEventListener("beforeunload", (e) => { if (PE.dirty) { e.preventDefault(); e.returnValue = ""; } }, { once: true });
+}
+
+/* lens 目录与规则 */
+async function renderLensesTab() {
+  let L;
+  try { L = await getJSON("/api/lenses"); } catch { return `<div class="notice">本地助手版本过旧，没有 <code>/api/lenses</code>。请重启本地助手。</div>`; }
+  PE.lenses = L;
+  const kindName = { type: "论文类型", reading: "阅读 skill", skill: "外部 skill" };
+  const secHelp = L.sections.map((x) => `${x.n} ${x.title}`).join("，");
+  return `
+  <div class="settings-layout">
+    <div>
+      <div class="panel"><h3>lens 目录</h3>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 10px">优先级高的先装入预算；「作用小节」会写进提示词提示模型主要用在哪几节（${esc(secHelp)}）。停用后规则里引用也不注入。</p>
+        <table class="ptable" id="lens-table"><thead><tr><th>lens</th><th>类型</th><th>优先级</th><th>作用小节</th><th>启用</th><th></th></tr></thead><tbody>
+        ${L.catalog.map((c, i) => `<tr data-lens-i="${i}"><td><b style="color:var(--ink)">${esc(c.title)}</b><br><span class="mono" style="font-size:11px;color:var(--muted)">${esc(c.id)} · ${esc(c.adapter)}${c.available ? "" : " · <span style='color:var(--bad)'>文件缺失</span>"}</span></td><td>${kindName[c.kind] || c.kind}</td><td class="pri"><input type="number" data-lk="priority" min="0" max="100" value="${c.priority}"></td><td class="secs"><input type="text" data-lk="sections" value="${esc(c.sections.join(","))}" placeholder="如 4,5,7"></td><td class="ck"><input type="checkbox" data-lk="enabled" ${c.enabled ? "checked" : ""}></td><td class="act" style="white-space:nowrap">${c.kind === "skill" ? `<button class="btn sm ghost" type="button" data-skill-preview="${esc(c.id)}" title="看实际注入的文本">预览</button>` : c.path ? `<a class="btn sm ghost" href="#/settings?g=prompts&f=${encodeURIComponent(c.path.replace(/^prompts\//, ""))}" title="编辑文件">编辑</a>` : ""}<button class="btn sm ghost" type="button" data-lens-del title="从目录移除">×</button></td></tr>`).join("")}
+        </tbody></table>
+        <p style="font-size:12px;color:var(--muted);margin:10px 0 0">新的论文类型 lens 在「提示词与结构」里新建文件后，用下面的按钮加入目录。</p>
+        <button class="btn sm" type="button" id="lens-add-md" style="margin-top:8px">＋ 把 prompts/lenses/ 里的文件加入目录</button>
+      </div>
+      <div class="panel"><h3>使用规则</h3>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 10px">按顺序匹配，条件全部满足才生效。条件写 JSON：<span class="mono">{"always": true}</span>、<span class="mono">{"topic": ["agent_uq"]}</span>、<span class="mono">{"paper_type": ["theory"]}</span>、<span class="mono">{"min_score": 7}</span>、<span class="mono">{"min_novelty": 2}</span>。lens 用逗号分隔；<span class="mono">topic:*</span> = 论文所属方向的镜头问题，<span class="mono">type:*</span> = 对应论文类型的 lens。</p>
+        <div id="rule-list">${L.rules.map((r, i) => ruleRow(r, i)).join("")}</div>
+        <button class="btn sm" type="button" id="rule-add" style="margin-top:10px">＋ 添加规则</button>
+      </div>
+    </div>
+    <aside>
+      <div class="panel"><h3>预算</h3>
+        <div class="field"><label for="lb-chars">所有 lens 的字符上限</label><input type="number" id="lb-chars" min="2000" max="200000" step="1000" value="${L.budget_chars}"></div>
+        <div class="field" style="margin-top:12px"><label for="lb-max">非方向 lens 的数量上限</label><input type="number" id="lb-max" min="0" max="20" value="${L.max_lenses}"></div>
+        <div class="field" style="margin-top:12px"><label for="lb-llm">允许筛选模型补充建议</label><select id="lb-llm"><option value="true" ${L.llm_select.enabled ? "selected" : ""}>允许</option><option value="false" ${L.llm_select.enabled ? "" : "selected"}>不允许</option></select></div>
+        <div class="field" style="margin-top:12px"><label for="lb-extra">最多补充几个</label><input type="number" id="lb-extra" min="0" max="5" value="${L.llm_select.max_extra}"></div>
+        <button class="btn primary" type="button" id="lens-save" ${L.editable ? "" : "hidden"} style="margin-top:14px">保存 lenses.yaml</button>
+      </div>
+      <div class="panel"><h3>模拟选择</h3>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 10px">看某篇论文按当前规则会用到哪些 lens（用已保存的配置）。</p>
+        <select class="input" id="sim-paper" style="width:100%">${S.index.slice(0, 50).map((x) => `<option value="${esc(x.id)}">${esc(x.id)} · ${esc(x.title.slice(0, 40))}</option>`).join("")}</select>
+        <button class="btn sm" type="button" id="sim-run" style="margin-top:10px">模拟</button>
+        <div id="sim-out" style="margin-top:12px;font-size:13px"></div>
+      </div>
+    </aside>
+  </div>
+  <div id="skill-modal" hidden></div>`;
+}
+const ruleRow = (r, i) => `<div class="rule" data-rule-i="${i}"><input type="text" data-rk="when" value="${esc(JSON.stringify(r.when))}" placeholder='{"always": true}'><input type="text" data-rk="use" value="${esc(r.use.join(", "))}" placeholder="topic:*, type:*"><div class="acts"><button class="btn sm ghost" type="button" data-rule-up title="上移">↑</button><button class="btn sm ghost" type="button" data-rule-del title="删除">×</button></div></div>`;
+function readLensesForm() {
+  const L = PE.lenses;
+  const catalog = [];
+  $$("[data-lens-i]").forEach((tr) => {
+    const c = L.catalog[+tr.dataset.lensI];
+    catalog.push({ id: c.id, adapter: c.adapter, path: c.path, title: c.title === c.id ? "" : (L.catalog[+tr.dataset.lensI].title_raw ?? ""), description: "", priority: Number($("[data-lk=priority]", tr).value),
+      sections: $("[data-lk=sections]", tr).value.split(/[,，\s]+/).filter(Boolean).map(Number).filter((n) => Number.isInteger(n) && n > 0), enabled: $("[data-lk=enabled]", tr).checked, options: c.options || {} });
+  });
+  const rules = [];
+  for (const row of $$("[data-rule-i]")) {
+    let when;
+    try { when = JSON.parse($("[data-rk=when]", row).value || "{}"); } catch { throw new Error("规则条件不是合法 JSON：" + $("[data-rk=when]", row).value); }
+    rules.push({ when, use: $("[data-rk=use]", row).value.split(/[,，\s]+/).filter(Boolean) });
+  }
+  return { budget_chars: Number($("#lb-chars").value), max_lenses: Number($("#lb-max").value), llm_select: { enabled: $("#lb-llm").value === "true", max_extra: Number($("#lb-extra").value) }, catalog, rules };
+}
+function showSkillPreview(id) {
+  const m = $("#skill-modal"); m.hidden = false; m.innerHTML = `<div class="panel" style="margin-top:16px"><h3>注入预览 · ${esc(id)}</h3><p style="font-size:13px;color:var(--muted)">加载中…</p></div>`;
+  getJSON(`/api/skills/${encodeURIComponent(id)}/preview`).then((r) => {
+    m.innerHTML = `<div class="panel" style="margin-top:16px"><div class="section-head" style="margin-bottom:8px"><div><h3>注入预览 · ${esc(r.title)}</h3><p style="font-size:12px;color:var(--muted);margin:4px 0 0">${esc(r.path || "")} · 实际注入 ${r.chars} 字符${r.available ? "" : " · 文件缺失"}</p></div><button class="btn sm ghost" type="button" id="skill-close">关闭</button></div>
+      <div class="two"><div><p style="font-size:12px;color:var(--muted);margin:0 0 6px">实际注入提示词的文本</p><pre class="pre-box">${esc(r.injected || "（空）")}</pre></div><div><p style="font-size:12px;color:var(--muted);margin:0 0 6px">原文（SKILL.md / 文件）</p><pre class="pre-box">${esc(r.raw || "（无）")}</pre></div></div></div>`;
+    $("#skill-close").addEventListener("click", () => (m.hidden = true));
+    m.scrollIntoView({ behavior: "smooth", block: "start" });
+  }).catch((e) => { m.innerHTML = `<div class="notice">${esc(e.message)}</div>`; });
+}
+function afterLensesTab() {
+  const L = PE.lenses; if (!L) return;
+  L.catalog.forEach((c) => { c.title_raw = ""; });
+  $("#lens-table").addEventListener("click", (e) => {
+    const del = e.target.closest("[data-lens-del]"); if (del) { const tr = del.closest("tr"); if (confirm("从目录移除这个 lens？文件不会删除。")) tr.remove(); return; }
+    const pv = e.target.closest("[data-skill-preview]"); if (pv) showSkillPreview(pv.dataset.skillPreview);
+  });
+  $("#lens-add-md").addEventListener("click", async () => {
+    const files = await getJSON("/api/prompts").then((r) => r.items.filter((x) => x.kind === "lens" && !x.lens_id)).catch(() => []);
+    if (!files.length) return toast("prompts/lenses/ 里的文件都已在目录中", "ok");
+    const pick = prompt("要加入目录的文件（输入序号）：\n" + files.map((f, i) => `${i + 1}. ${f.id}`).join("\n"), "1");
+    const f = files[Number(pick) - 1]; if (!f) return;
+    const id = f.id.replace(/^lenses\//, "").replace(/\.md$/, "");
+    L.catalog.push({ id, adapter: "markdown", path: "prompts/" + f.id, title: f.title, description: f.description, priority: 60, sections: [], enabled: true, options: {}, available: true, kind: id.startsWith("type_") ? "type" : "reading" });
+    const i = L.catalog.length - 1;
+    $("#lens-table tbody").insertAdjacentHTML("beforeend", `<tr data-lens-i="${i}"><td><b style="color:var(--ink)">${esc(f.title)}</b><br><span class="mono" style="font-size:11px;color:var(--muted)">${esc(id)} · markdown</span></td><td>${id.startsWith("type_") ? "论文类型" : "阅读 skill"}</td><td class="pri"><input type="number" data-lk="priority" min="0" max="100" value="60"></td><td class="secs"><input type="text" data-lk="sections" value=""></td><td class="ck"><input type="checkbox" data-lk="enabled" checked></td><td class="act"><button class="btn sm ghost" type="button" data-lens-del>×</button></td></tr>`);
+    toast("已加入表格，记得保存并在规则里引用 " + id, "ok");
+  });
+  $("#rule-list").addEventListener("click", (e) => {
+    const up = e.target.closest("[data-rule-up]"); if (up) { const row = up.closest(".rule"); row.previousElementSibling?.before(row); return; }
+    const del = e.target.closest("[data-rule-del]"); if (del) del.closest(".rule").remove();
+  });
+  $("#rule-add").addEventListener("click", () => $("#rule-list").insertAdjacentHTML("beforeend", ruleRow({ when: { always: true }, use: [] }, Date.now())));
+  $("#lens-save")?.addEventListener("click", async (e) => {
+    const btn = e.currentTarget; btn.disabled = true;
+    try { const body = readLensesForm(); (await send("/api/lenses", body, "PUT")).messages.forEach((m) => toast(m, "ok")); route(true); }
+    catch (err) { toast("保存失败：" + err.message, "err"); } finally { btn.disabled = false; }
+  });
+  $("#sim-run").addEventListener("click", async () => {
+    const out = $("#sim-out"); out.textContent = "模拟中…";
+    try {
+      const r = await send("/api/lenses/simulate", { paper_id: $("#sim-paper").value });
+      out.innerHTML = `<p style="margin:0 0 6px;color:var(--muted)">${esc(r.title.slice(0, 60))} · 方向 ${esc(r.topics.join("、") || "—")} · 类型 ${esc(r.paper_type)} · 分数 ${r.score}</p><ul style="margin:0;padding-left:18px">${r.lenses.map((x) => `<li><b style="color:var(--ink)">${esc(x.title)}</b> <span class="mono" style="font-size:11px">p=${x.priority} · ${x.chars} 字符${x.truncated ? " · 已截断" : ""}</span></li>`).join("")}</ul>${r.dropped.length ? `<p style="margin:8px 0 0;color:var(--warn)">超预算丢弃：${esc(r.dropped.join("、"))}</p>` : ""}`;
+    } catch (err) { out.textContent = "失败：" + err.message; }
+  });
+}
+
+/* 外部 Skill */
+async function renderSkillsTab() {
+  let L;
+  try { L = await getJSON("/api/lenses"); } catch { return `<div class="notice">本地助手版本过旧，没有 <code>/api/lenses</code>。请重启本地助手。</div>`; }
+  PE.lenses = L;
+  const mounted = L.catalog.filter((c) => c.kind === "skill");
+  return `
+  <div class="settings-layout">
+    <div>
+      <div class="panel"><h3>已接入的 skill</h3>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 6px">只抽取 skill 里"怎么分析"的文本注入提示词，不会执行脚本或改变输出结构。优先级、作用小节和启用在「lens 目录与规则」里改。</p>
+        ${mounted.length ? mounted.map((c) => `<div class="skill-row"><div class="grow"><b>${esc(c.title)}</b><span>${esc(c.description || "")}<br><span class="mono">${esc(c.id)} · ${esc(c.adapter)} · ${esc(c.path || "")}</span></span></div><span class="status ${c.available ? "s-imported" : "s-failed"}">${c.available ? "可用" : "文件缺失"}</span><span class="status ${c.enabled ? "s-pending" : "s-later"}">${c.enabled ? "已启用" : "已停用"}</span><button class="btn sm" type="button" data-skill-preview="${esc(c.id)}">注入预览</button></div>`).join("") : `<p style="color:var(--muted)">还没有接入外部 skill。</p>`}
+      </div>
+      <div class="panel"><h3>本机的 Claude skill</h3>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 6px">来自 <span class="mono">${esc(L.skills_source)}</span>。导入会把文本文件复制到 <span class="mono">${esc(L.skills_dir)}</span>（不含脚本），并加入 lens 目录；之后在「使用规则」里决定何时注入。</p>
+        ${L.local_skills.length ? L.local_skills.map((sk) => `<div class="skill-row"><div class="grow"><b>${esc(sk.name)}</b><span>${esc(sk.description || "")}</span></div>${sk.has_manifest ? `<span class="status">manifest</span>` : ""}${sk.mounted ? `<span class="status s-imported">已接入</span>` : `<button class="btn sm" type="button" data-skill-import="${esc(sk.name)}">导入</button>`}</div>`).join("") : `<p style="color:var(--muted)">这台电脑上没有找到 skill 目录。</p>`}
+      </div>
+    </div>
+    <aside>
+      <div class="panel"><h3>内置的阅读 skill</h3>
+        <p style="font-size:13px;color:var(--muted);margin:0">evidence_discipline（证据纪律与研究 idea 门槛）和 idea_review（idea 评审标准）是从 nature-paper-card 和 ccf-idea-reviewer 提炼的精简版，默认对所有论文启用，可以在「提示词与结构」里直接编辑。</p>
+      </div>
+    </aside>
+  </div>
+  <div id="skill-modal" hidden></div>`;
+}
+function afterSkillsTab() {
+  $$("[data-skill-preview]").forEach((b) => b.addEventListener("click", () => showSkillPreview(b.dataset.skillPreview)));
+  $$("[data-skill-import]").forEach((b) => b.addEventListener("click", async () => {
+    b.disabled = true;
+    try { (await send("/api/skills/import", { names: [b.dataset.skillImport] })).messages.forEach((m) => toast(m, "ok")); route(true); }
+    catch (err) { toast(err.message, "err"); b.disabled = false; }
+  }));
+}
+
 /* ---------- 数据与隐私：目录、缓存、导出 ---------- */
 const fmtBytes = (b) => b >= 1e9 ? (b / 1e9).toFixed(2) + " GB" : b >= 1e6 ? (b / 1e6).toFixed(1) + " MB" : (b / 1e3).toFixed(0) + " KB";
 SETTINGS.data = async () => {
@@ -1973,6 +2273,7 @@ VIEWS.settings.after = (_, params) => {
   const panel = $(".spanel");
   if (gid === "run") { afterRunGroup(); return; }
   if (gid === "data") { afterDataGroup(); return; }
+  if (gid === "prompts") { afterPromptsGroup(params); return; }
   if (gid !== "topics") {
     panel.addEventListener("click", (e) => {
       const b = e.target.closest("[data-pref] button[data-v]"); if (!b) return;

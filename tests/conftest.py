@@ -40,7 +40,7 @@ TEST_PIPELINE = {
 @pytest.fixture
 def project(tmp_path: Path, monkeypatch) -> Path:
     for d in ("config", "prompts"):
-        shutil.copytree(REPO / d, tmp_path / d)
+        shutil.copytree(REPO / d, tmp_path / d, ignore=shutil.ignore_patterns(".history", "__pycache__"))
     shutil.copytree(FIXTURES, tmp_path / "fixtures")
     shutil.copytree(FIXTURES / "skills", tmp_path / "skills")
     (tmp_path / "config" / "pipeline.yaml").write_text(yaml.safe_dump(TEST_PIPELINE), encoding="utf-8")

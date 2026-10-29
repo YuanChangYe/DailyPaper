@@ -12,6 +12,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import webbrowser
 from pathlib import Path
@@ -292,6 +293,140 @@ def create_app(cfg: AppConfig) -> FastAPI:
 
         return Response(export_notes_zip(cfg), media_type="application/zip",
                         headers={"Content-Disposition": 'attachment; filename="dailypaper-notes.zip"'})
+
+    # ------------------------------------------------------------ 提示词与 Skill
+    @app.get("/api/prompts")
+    def prompts_list():
+        from .prompts_editor import list_prompts
+
+        return {"items": list_prompts(cfg), "editable": os.access(cfg.path("prompts"), os.W_OK)}
+
+    @app.post("/api/prompts/validate")
+    def prompts_validate(body: dict):
+        from .prompts_editor import validate_prompt
+
+        try:
+            return {"problems": validate_prompt(cfg, str(body.get("id", "")), str(body.get("content", "")))}
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
+
+    @app.post("/api/prompts/review")
+    def prompts_review(body: dict):
+        from ..llm import LLMError
+        from .prompts_editor import llm_review
+
+        try:
+            return llm_review(cfg, str(body.get("id", "")), str(body.get("content", "")), body.get("provider"))
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
+        except LLMError as e:
+            raise HTTPException(502, f"模型调用失败：{e}") from e
+
+    @app.post("/api/prompts/preview")
+    def prompts_preview(body: dict):
+        from .prompts_editor import preview
+
+        try:
+            return preview(cfg, str(body.get("paper_id", "")), body.get("overrides") or None)
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
+
+    @app.get("/api/prompts/{pid:path}/history")
+    def prompts_history(pid: str):
+        from .prompts_editor import history
+
+        return {"items": history(cfg, pid)}
+
+    @app.post("/api/prompts/{pid:path}/restore")
+    def prompts_restore(pid: str, body: dict):
+        from .prompts_editor import restore
+
+        try:
+            return {"messages": restore(cfg, pid, str(body.get("version", "")))}
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
+
+    @app.post("/api/prompts/{pid:path}/reset")
+    def prompts_reset(pid: str):
+        from .prompts_editor import reset_default
+
+        try:
+            return {"messages": reset_default(cfg, pid)}
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
+
+    @app.get("/api/prompts/{pid:path}")
+    def prompts_get(pid: str):
+        from .prompts_editor import read_prompt
+
+        try:
+            return read_prompt(cfg, pid)
+        except FileNotFoundError:
+            raise HTTPException(404, "文件不存在") from None
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
+
+    @app.put("/api/prompts/{pid:path}")
+    def prompts_put(pid: str, body: dict):
+        from .prompts_editor import write_prompt
+
+        try:
+            return {"messages": write_prompt(cfg, pid, str(body.get("content", "")), body.get("reviewed"), bool(body.get("force")))}
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
+
+    @app.delete("/api/prompts/{pid:path}")
+    def prompts_delete(pid: str):
+        from .prompts_editor import delete_prompt
+
+        try:
+            return {"messages": delete_prompt(cfg, pid)}
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
+
+    @app.get("/api/lenses")
+    def lenses_get():
+        from .lenses_editor import read_lenses_view
+
+        return read_lenses_view(cfg)
+
+    @app.put("/api/lenses")
+    def lenses_put(body: dict):
+        from .lenses_editor import read_lenses_view, write_lenses
+
+        if not read_lenses_view(cfg)["editable"]:
+            raise HTTPException(403, "config/lenses.yaml 不可写")
+        try:
+            return {"messages": write_lenses(cfg, body)}
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
+
+    @app.post("/api/lenses/simulate")
+    def lenses_simulate(body: dict):
+        from .prompts_editor import simulate_lenses
+
+        try:
+            return simulate_lenses(cfg, str(body.get("paper_id", "")))
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
+
+    @app.post("/api/skills/import")
+    def skills_import(body: dict):
+        from .lenses_editor import import_skills
+
+        try:
+            return import_skills(cfg, [str(n) for n in body.get("names", [])])
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
+
+    @app.get("/api/skills/{lens_id}/preview")
+    def skills_preview(lens_id: str, paper_type: str = "method"):
+        from .lenses_editor import skill_preview
+
+        try:
+            return skill_preview(cfg, lens_id, paper_type)
+        except ValueError as e:
+            raise HTTPException(404, str(e)) from e
 
     # ------------------------------------------------------------ 我的文献库（Zotero 分类）
     @app.get("/api/zotero/library")
