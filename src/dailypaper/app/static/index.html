@@ -986,6 +986,7 @@ const lastRunLabel = () => {
   if (r.running) return "运行中";
   if (!r.finished_at) return "尚未运行";
   const t = String(r.finished_at).replace("T", " ").slice(5, 16);
+  if (r.ok && r.notes?.arxiv_empty) return `${t} arXiv 无新论文`;
   return `${t} ${r.ok ? "✓" : "✗"}`;
 };
 
@@ -1149,7 +1150,7 @@ async function pollRun(once = false) {
 function paintRun() {
   const el = $("#run-log"); if (!el) return;
   const r = S.run;
-  $("#run-state").textContent = !r ? (isLocal() ? "后端还没有 /api/run/status 接口" : "未连接本地助手") : r.running ? `运行中：${r.pipeline}（开始于 ${String(r.started_at).slice(11, 19)}）` : r.finished_at ? `上次运行：${r.pipeline} · ${r.ok ? "成功" : "失败"} · ${String(r.finished_at).replace("T", " ").slice(0, 16)}` : "还没有运行记录";
+  $("#run-state").textContent = !r ? (isLocal() ? "后端还没有 /api/run/status 接口" : "未连接本地助手") : r.running ? `运行中：${r.pipeline}（开始于 ${String(r.started_at).slice(11, 19)}）` : r.finished_at ? `上次运行：${r.pipeline} · ${r.ok ? "成功" : "失败"} · ${String(r.finished_at).replace("T", " ").slice(0, 16)}${r.notes?.arxiv_empty ? " · arXiv 当天没有发布新论文，没有可筛的内容" : ""}` : "还没有运行记录";
   el.textContent = (r?.log_tail || []).join("\n") || "（暂无日志）";
   el.scrollTop = el.scrollHeight;
 }
@@ -1260,8 +1261,8 @@ VIEWS.home.after = () => {
 /* ---------- 今日 ---------- */
 VIEWS.daily = async (date) => {
   const ds = dates(); date = date || ds[0];
-  let day = { papers: S.index.filter((p) => p.date === date), also: [] };
-  if (S.mode !== "demo") { try { const d = await getJSON(`${S.site}api/daily/${date}.json`); day = { papers: d.papers || day.papers, also: d.also || [] }; } catch { /* 用索引兜底 */ } }
+  let day = { papers: S.index.filter((p) => p.date === date), also: [], notes: {} };
+  if (S.mode !== "demo") { try { const d = await getJSON(`${S.site}api/daily/${date}.json`); day = { papers: d.papers || day.papers, also: d.also || [], notes: d.notes || {} }; } catch { /* 用索引兜底 */ } }
   else day.also = date === ds[0] ? DEMO.also : [];
   const st = S.mode === "demo" ? DEMO.stats[date] : null;
   const papers = [...day.papers].sort((a, b) => (b.value_score - a.value_score) || (b.score - a.score));
@@ -1269,9 +1270,10 @@ VIEWS.daily = async (date) => {
   return `
   <div class="page-head"><h1>${esc(fmtDate(date))} · ${esc(weekday(date))}</h1><p>当天精读 ${papers.length} 篇，按价值排序。勾选后可批量加入 Zotero。</p></div>
   <nav class="datebar" aria-label="选择日期">${ds.slice(0, 30).map((d) => `<a href="#/daily/${d}" ${d === date ? 'aria-current="date"' : ""}><b>${esc(fmtDate(d))}</b><small>${esc(weekday(d))} · ${S.index.filter((p) => p.date === d).length} 篇</small></a>`).join("")}</nav>
+  ${day.notes.arxiv_empty ? `<div class="notice info">arXiv 这天没有发布新论文（周末和节假日不公告；工作日美东晚上发布，北京时间次日早上，偶尔延迟），所以没有可筛的内容。流水线本身正常运行。${day.notes.arxiv_empty.feed_updated ? ` feed 更新时间 ${esc(String(day.notes.arxiv_empty.feed_updated).slice(0, 16).replace("T", " "))}。` : ""}</div>` : ""}
   ${st ? `<div class="funnel"><div><b>${st.fetched}</b><span>抓取</span></div><div><b>${st.prefiltered}</b><span>关键词预筛</span></div><div><b>${st.screened}</b><span>LLM 筛选</span></div><div><b>${st.read}</b><span>精读</span></div></div>` : ""}
   <section class="section" style="padding-top:20px">
-    <div class="prows">${papers.map((p, i) => paperRow(p, { rank: i + 1 })).join("") || `<div class="empty">这一天没有精读结果。</div>`}</div>
+    <div class="prows">${papers.map((p, i) => paperRow(p, { rank: i + 1 })).join("") || `<div class="empty">${day.notes.arxiv_empty ? "arXiv 这天没有新论文，所以没有精读。" : "这一天没有精读结果。"}</div>`}</div>
   </section>
   ${day.also.length ? `<section class="section">
     <div class="section-head"><div><h2>其余筛选结果</h2><p>相关但没进入精读的论文，附 LLM 的一句话理由。需要时可以单独精读。</p></div></div>

@@ -22,6 +22,7 @@ class RunContext:
     dry_run: bool = False  # 为 True 时跳过所有 publisher
     provider_override: str | None = None  # 例如 "fake"：所有 LLM 角色都用它
     inputs: dict[str, Any] = field(default_factory=dict)  # 命令行传入的额外参数（如 read 的论文 ID）
+    notes: dict[str, Any] = field(default_factory=dict)  # 各 stage 留给网页和日报的说明（如 arxiv_empty），写进 run.json 与 daily JSON
     _services: dict[str, Any] = field(default_factory=dict, repr=False)
 
     @property

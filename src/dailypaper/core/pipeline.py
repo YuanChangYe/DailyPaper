@@ -117,5 +117,6 @@ class Pipeline:
             write_jsonl(run_dir / b.checkpoint_name, items)
 
         info.finished_at = now_utc()
+        info.notes = dict(self.ctx.notes)
         write_json(run_dir / "run.json", info.model_dump(mode="json"))
         return items

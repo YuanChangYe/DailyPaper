@@ -128,3 +128,4 @@ class RunInfo(BaseModel):
     started_at: datetime = Field(default_factory=now_utc)
     finished_at: datetime | None = None
     stats: dict[str, Any] = Field(default_factory=dict)
+    notes: dict[str, Any] = Field(default_factory=dict)  # 各 stage 的说明，例如 arxiv_empty

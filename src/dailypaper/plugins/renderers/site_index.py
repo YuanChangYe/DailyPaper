@@ -37,7 +37,7 @@ class SiteIndexRenderer(Renderer):
                  "reason": c.screen.reason if c.screen else ""}
                 for c in items if not c.note and c.score > 0
             ][:30]
-            site.write_daily(date, entries, others)
+            site.write_daily(date, entries, others, dict(self.ctx.notes))
         site.write_feed(index, self.p.feed_limit)
         self.write_topic_pages(index)
         self.write_home(index)

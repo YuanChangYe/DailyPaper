@@ -103,10 +103,10 @@ class SiteContract:
         )
         return merged
 
-    def write_daily(self, date: str, selected: list[IndexEntry], others: list[dict]) -> None:
+    def write_daily(self, date: str, selected: list[IndexEntry], others: list[dict], notes: dict | None = None) -> None:
         write_json(
             self.api / "daily" / f"{date}.json",
-            {"schema_version": SCHEMA_VERSION, "date": date, "papers": [e.model_dump() for e in selected], "also": others},
+            {"schema_version": SCHEMA_VERSION, "date": date, "papers": [e.model_dump() for e in selected], "also": others, "notes": notes or {}},
         )
 
     def write_paper(self, entry: IndexEntry, markdown: str, extra: dict) -> None:

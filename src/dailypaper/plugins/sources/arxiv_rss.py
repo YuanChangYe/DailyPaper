@@ -31,6 +31,12 @@ def _t(el: ET.Element | None) -> str:
     return " ".join((el.text or "").split()) if el is not None else ""
 
 
+def feed_info(xml_text: str) -> dict:
+    """feed 级别的信息：条目总数（过滤前）和 feed 自己标的更新时间。"""
+    root = ET.fromstring(xml_text)
+    return {"entries": len(root.findall("atom:entry", NS)), "updated": _t(root.find("atom:updated", NS))}
+
+
 def parse_rss(xml_text: str, announce_types: set[str] | None = None) -> list[Paper]:
     root = ET.fromstring(xml_text)
     out: list[Paper] = []
@@ -86,4 +92,9 @@ class ArxivRssSource(Source):
         have = {c.id for c in items}
         new = [Candidate(paper=p) for p in papers if p.id not in have]
         self.log.info("arXiv RSS 返回 %d 篇（%s）", len(new), "/".join(self.p.announce_types))
+        if not papers:
+            info = feed_info(r.text)
+            # arXiv 周一到周五美东晚上发布公告（北京时间次日早上），周末和节假日没有；偶尔也会延迟。
+            self.ctx.notes["arxiv_empty"] = {"feed_updated": info["updated"], "entries": info["entries"], "categories": list(self.p.categories)}
+            self.log.warning("arXiv RSS 为空（feed 更新时间 %s）：今天没有发布新论文，或公告延迟。流水线继续，但没有论文可筛。", info["updated"] or "未知")
         return items + new

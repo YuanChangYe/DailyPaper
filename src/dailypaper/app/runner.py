@@ -107,6 +107,7 @@ class RunManager:
                 "ok": bool(info.get("finished_at")) and not any("error" in v for v in stats.values() if isinstance(v, dict)),
                 "returncode": None,
                 "log_tail": [f"[{k}] " + ", ".join(f"{a}={b}" for a, b in v.items()) for k, v in stats.items() if isinstance(v, dict)],
+                "notes": info.get("notes") or {},
                 "source": "run.json",
             }
         return None
@@ -116,6 +117,11 @@ class RunManager:
             return self.last_recorded() or {
                 "running": False, "pipeline": "", "started_at": None, "finished_at": None, "ok": None, "returncode": None, "log_tail": [],
             }
+        notes = {}
+        if not self.running:
+            rec = self.last_recorded()
+            if rec and rec.get("finished_at") and self.finished_at and str(rec["finished_at"])[:16] >= str(self.started_at)[:16]:
+                notes = rec.get("notes") or {}
         return {
             "running": self.running,
             "pipeline": self.pipeline,
@@ -124,6 +130,7 @@ class RunManager:
             "ok": None if self.returncode is None else self.returncode == 0,
             "returncode": self.returncode,
             "log_tail": list(self.log),
+            "notes": notes,
         }
 
     def wait(self, timeout: float | None = None) -> None:

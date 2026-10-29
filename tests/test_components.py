@@ -96,3 +96,26 @@ def test_deep_read_prompt_contains_framework_and_lenses(cfg):
                                     fulltext_loader="abstract", grounding="source-limited")
     assert "## 13. Follow-up idea" in p.system and "## 8. Take-aways" in p.system and "Lens：" in p.system
     assert "<paper>\nBODY\n</paper>" in p.user and "仅有摘要" in p.user
+
+
+def test_feed_info_and_empty_feed_note(cfg, monkeypatch):
+    from datetime import date
+
+    import httpx
+
+    from dailypaper.core.context import RunContext
+    from dailypaper.plugins.sources.arxiv_rss import ArxivRssSource, feed_info
+
+    xml = (FIX / "rss_sample.xml").read_text(encoding="utf-8")
+    assert feed_info(xml)["entries"] >= 1
+    empty = '<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><updated>2026-10-29T04:00:00Z</updated></feed>'
+    assert feed_info(empty) == {"entries": 0, "updated": "2026-10-29T04:00:00Z"}
+
+    class R:
+        text = empty
+        def raise_for_status(self): ...
+    monkeypatch.setattr(httpx, "get", lambda *a, **k: R())
+    ctx = RunContext(config=cfg, run_date=date(2026, 10, 29), provider_override="fake")
+    src = ArxivRssSource(ctx)
+    assert src.run([]) == []
+    assert ctx.notes["arxiv_empty"]["feed_updated"] == "2026-10-29T04:00:00Z"

@@ -125,6 +125,8 @@ class MarkdownRenderer(Renderer):
             f"今日候选 {len(items)} 篇（关键词预筛后），精读 {len(read)} 篇。",
             "## 精读",
         ]
+        if self.ctx.notes.get("arxiv_empty"):
+            lines.insert(2, "arXiv 今天没有发布新论文（周末和节假日不公告，工作日也偶有延迟），没有论文可筛。")
         if not read:
             lines.append("今天没有达到精读阈值的论文。")
         L = self.config.note_schema.label
