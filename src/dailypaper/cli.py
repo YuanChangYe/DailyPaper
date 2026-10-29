@@ -161,6 +161,22 @@ def cmd_check(cfg: AppConfig, args) -> int:
     return 1 if problems else 0
 
 
+def cmd_covers(cfg: AppConfig, args) -> int:
+    """扫描封面素材目录，生成网页用的三档尺寸和清单。"""
+    from .integrations.covers import build_covers, source_dir
+
+    src = source_dir(cfg)
+    if not src.exists():
+        src.mkdir(parents=True, exist_ok=True)
+        print(f"已创建素材目录 {src}，把照片放进去再运行一次。")
+        return 0
+    r = build_covers(cfg, force=args.force)
+    print(f"素材 {src}：共 {r['count']} 张，本次生成 {r['built']}，未变化 {r['skipped']}，清理 {r['removed']} 个旧文件 → {r['output_dir']}")
+    for e in r["errors"]:
+        print(f"  ! {e['source']}: {e['error']}")
+    return 0
+
+
 def cmd_list_plugins(cfg: AppConfig, args) -> int:
     for kind, names in registry.available().items():
         print(f"{kind:16s} {', '.join(names)}")
@@ -303,6 +319,9 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--provider", help="按该 provider 检查（例如 fake）")
     sp.set_defaults(func=cmd_check)
 
+    sp = sub.add_parser("covers", help="扫描首页封面素材目录（输出目录旁的 covers/），生成尺寸与清单")
+    sp.add_argument("--force", action="store_true", help="全部重新生成")
+    sp.set_defaults(func=cmd_covers)
     sub.add_parser("list-plugins", help="列出已注册的插件").set_defaults(func=cmd_list_plugins)
     sub.add_parser("list-lenses", help="列出精读 lens 及可用状态").set_defaults(func=cmd_list_lenses)
     return p

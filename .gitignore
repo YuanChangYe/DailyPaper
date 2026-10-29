@@ -22,3 +22,6 @@ prompts/.history/
 # 从本机 ~/.claude/skills 导入的 skill 文本。默认不提交：skill 可能是私有的；
 # 想让 GitHub Actions 里的精读也用到它们，删掉下面这行再提交。
 /skills/
+
+# 首页封面的原图（没有设置 DAILYPAPER_WORKSPACE 时放在项目里）
+/covers/

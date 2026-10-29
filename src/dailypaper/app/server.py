@@ -294,6 +294,34 @@ def create_app(cfg: AppConfig) -> FastAPI:
         return Response(export_notes_zip(cfg), media_type="application/zip",
                         headers={"Content-Disposition": 'attachment; filename="dailypaper-notes.zip"'})
 
+    # ------------------------------------------------------------ 封面素材
+    @app.get("/api/covers")
+    def covers_get():
+        from ..integrations.covers import covers_view
+
+        return covers_view(cfg)
+
+    @app.post("/api/covers/build")
+    def covers_build(body: dict):
+        from ..integrations.covers import build_covers, source_dir
+
+        source_dir(cfg).mkdir(parents=True, exist_ok=True)
+        try:
+            r = build_covers(cfg, force=bool(body.get("force")))
+        except ImportError as e:
+            raise HTTPException(500, f"需要 pymupdf（pip install -e .[pdf]）：{e}") from e
+        msg = f"素材 {r['count']} 张：生成 {r['built']}，未变化 {r['skipped']}，清理 {r['removed']}"
+        return {**r, "messages": [msg] + [f"{e['source']} 处理失败：{e['error']}" for e in r["errors"]]}
+
+    @app.put("/api/covers/{cover_id}")
+    def covers_meta(cover_id: str, body: dict):
+        from ..integrations.covers import set_cover_meta
+
+        try:
+            return set_cover_meta(cfg, cover_id, body.get("credit"), body.get("position"))
+        except ValueError as e:
+            raise HTTPException(404, str(e)) from e
+
     # ------------------------------------------------------------ 提示词与 Skill
     @app.get("/api/prompts")
     def prompts_list():

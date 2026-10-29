@@ -51,3 +51,36 @@ def test_trends_stats_and_summary(client, cfg):
 def test_zotero_library_without_reader(client):
     assert client.get("/api/zotero/library").status_code == 503
     assert client.get("/api/zotero/items").status_code == 503
+
+
+def test_covers_build_and_manifest(client, cfg):
+    import shutil
+
+    from dailypaper.integrations.covers import build_covers, covers_view, set_cover_meta, slugify, source_dir
+
+    pytest.importorskip("pymupdf")
+    assert slugify("梅里雪山 日照金山.jpg") and slugify("My Photo (1).JPG").startswith("my-photo-1-")
+    src = source_dir(cfg)
+    src.mkdir(parents=True)
+    from pathlib import Path
+
+    sample = Path(__file__).resolve().parents[1] / "src" / "dailypaper" / "app" / "static" / "assets" / "hero-sunrise-640.jpg"
+    shutil.copy(sample, src / "随便 起个名字.jpg")
+    shutil.copy(sample, src / "second.png")
+    r = build_covers(cfg)
+    assert r["count"] == 2 and r["built"] == 2
+    out = cfg.content_dir / "assets" / "covers"
+    assert (out / "covers.json").exists() and len(list(out.glob("cover-*-640.jpg"))) == 2
+    assert build_covers(cfg)["skipped"] == 2  # 第二次不重做
+    (src / "second.png").unlink()
+    assert build_covers(cfg)["removed"] == 3  # 三个尺寸一起清掉
+    view = covers_view(cfg)
+    assert view["sources"] == 1 and view["covers"][0]["credit"] == "随便 起个名字"
+    set_cover_meta(cfg, view["covers"][0]["id"], credit="某年某地", position="center 30%")
+    assert covers_view(cfg)["covers"][0]["position"] == "center 30%"
+    assert build_covers(cfg)["skipped"] == 1 and covers_view(cfg)["covers"][0]["credit"] == "某年某地"  # 重扫保留署名
+    api = client.get("/api/covers").json()
+    assert api["covers"][0]["files"]["640"].startswith("cover-")
+    assert client.get("/site/assets/covers/covers.json").status_code == 200
+    assert client.put(f"/api/covers/{api['covers'][0]['id']}", json={"credit": "x"}, headers=H).json()["credit"] == "x"
+    assert client.post("/api/covers/build", json={}, headers=H).json()["count"] == 1

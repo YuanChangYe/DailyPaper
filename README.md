@@ -335,7 +335,7 @@ dailypaper read <arXiv ID> --prompt-only                           # 只生成 p
 | 趋势 | 近 7 / 14 / 30 / 90 天的每日篇数、方向分布、论文类型、最值得回看的论文；一键生成 **AI 阅读总结**（用筛选模型，约 $0.02，结果缓存） |
 | 设置 | 外观（主题、字体、字号、行距、动态效果、列表密度）和阅读偏好（默认分栏、正文宽度、高亮颜色、出处标记）保存在浏览器里；研究方向（方向、关键词、镜头问题）、运行与费用（筛选 / 精读用哪个模型、effort、联网搜索、月度预算与价格表、每天精读几篇、阈值、arXiv 分类）写入项目配置并保留注释；运行与费用页显示本月花费、近几个月趋势和按模型明细；数据与隐私页查看目录占用、清理缓存、一键打开目录、导出笔记与批注；提示词与 Skill 页直接编辑精读模板、笔记结构（schema.yaml）和 lens 文件，保存前程序校验 + 筛选模型审核，带历史版本与恢复默认，可预览组装后的提示词、管理 lens 目录与规则、导入本机 Claude skill；关于页显示版本并检查更新 |
 
-顶栏的 ☀ / ☾ 切换白天和夜间模式（默认跟随系统）。API key 永远不经过网页：设置页只显示某个环境变量是否已配置。网页根据环境自动切换模式：连接到本地助手时可读写；部署为静态网站时只读（设置页可导出 `topics.yaml`）；没有数据时显示示例。本地助手只监听 `127.0.0.1`，写操作要求自定义请求头，其他网站无法通过你的浏览器调用它。前后端接口约定见 [src/dailypaper/app/API.md](src/dailypaper/app/API.md)。
+顶栏的 ☀ / ☾ 切换白天和夜间模式（默认跟随系统）。首页封面可以换成自己的照片：把图片放进输出目录旁的 `covers/` 文件夹（文件名随意），运行 `dailypaper covers` 或在「设置 → 外观 → 素材库」点「扫描」，会生成三档尺寸和清单，网页按日期轮换，页脚署名默认取文件名；原图不会被发布。API key 永远不经过网页：设置页只显示某个环境变量是否已配置。网页根据环境自动切换模式：连接到本地助手时可读写；部署为静态网站时只读（设置页可导出 `topics.yaml`）；没有数据时显示示例。本地助手只监听 `127.0.0.1`，写操作要求自定义请求头，其他网站无法通过你的浏览器调用它。前后端接口约定见 [src/dailypaper/app/API.md](src/dailypaper/app/API.md)。
 
 ---
 
@@ -503,6 +503,7 @@ src/dailypaper/
 │   ├── review.py                审核队列（云端写 queue，本地写 decisions，避免冲突）
 │   ├── annotations.py           网页高亮与批注（data/annotations/，自由笔记写回 frontmatter）
 │   ├── trends.py                阅读趋势统计与 AI 总结（data/trends/）
+│   ├── covers.py                首页封面素材库：生成尺寸与清单（covers/ → docs/assets/covers/）
 │   ├── zotero/                  base（接口）、http_api（读）、connector / web_api（写）、citekey、profile、service
 │   ├── site/                    contract（站点数据契约）、adapters（mkdocs / hugo / jekyll / generic_repo）
 │   └── obsidian/feedback.py     从笔记评分和审核决定计算排序反馈
@@ -662,6 +663,7 @@ class MinAuthors(Filter):
 | `dailypaper review [--approve ID] [--reject ID]` | 命令行审核 |
 | `dailypaper zotero-check` / `zotero-sync` / `zotero-profile` | Zotero 诊断 / 同步 / 导出兴趣画像 |
 | `dailypaper sync-skills [--only NAME ...]` | 同步外部 skill |
+| `dailypaper covers [--force]` | 扫描首页封面素材目录，生成尺寸与清单 |
 | `dailypaper list-plugins` / `list-lenses` | 列出插件 / lens |
 | `mkdocs serve` / `mkdocs build` | 预览 / 构建静态网站 |
 

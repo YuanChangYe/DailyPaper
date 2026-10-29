@@ -123,7 +123,7 @@ main{min-height:60vh}
 .hero{position:relative;margin-top:-64px;border-radius:var(--r-lg);overflow:hidden;border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.35)}
 .hero-stage{position:relative;isolation:isolate;overflow:hidden}
 .hero-photo{position:absolute;inset:0;z-index:-3;overflow:hidden}
-.hero-photo img{width:100%;height:100%;object-fit:cover;object-position:center 58%;transform-origin:55% 60%;animation:kenburns 42s ease-in-out infinite alternate;will-change:transform}
+.hero-photo img{width:100%;height:100%;object-fit:cover;object-position:var(--cover-pos,center 58%);transform-origin:55% 60%;animation:kenburns 42s ease-in-out infinite alternate;will-change:transform}
 @keyframes kenburns{from{transform:scale(1.04) translate(0,0)}to{transform:scale(1.13) translate(-1.2%,-1.5%)}}
 .hero-shade{position:absolute;inset:0;z-index:-2;background:linear-gradient(95deg,rgba(9,30,38,.78) 0%,rgba(9,30,38,.44) 46%,rgba(9,30,38,.08) 78%),linear-gradient(180deg,rgba(9,30,38,.28) 0%,transparent 40%,rgba(9,30,38,.62) 100%)}
 /* 跟随鼠标的暖色光斑：晨光打在玻璃上的感觉 */
@@ -149,7 +149,7 @@ main{min-height:60vh}
 .hero .sub{color:rgba(238,245,246,.86);font-size:17px;margin:0 0 26px;max-width:40ch}
 .hero-actions{display:flex;gap:10px;flex-wrap:wrap}
 .float-card{justify-self:end;width:min(380px,100%);padding:14px;border-radius:22px;background:rgba(238,245,246,.14);border:1px solid rgba(238,245,246,.3);backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%);color:var(--mist)}
-.float-card .thumb{height:132px;border-radius:14px;background:linear-gradient(160deg,rgba(9,30,38,.1),rgba(9,30,38,.6)),url(assets/hero-sunrise-640.jpg) center 62%/cover;display:flex;align-items:flex-end;padding:10px;font-size:11px;letter-spacing:.06em}
+.float-card .thumb{height:132px;border-radius:14px;background:linear-gradient(160deg,rgba(9,30,38,.1),rgba(9,30,38,.6)),var(--cover-640,url(assets/hero-sunrise-640.jpg)) var(--cover-pos,center 62%)/cover;display:flex;align-items:flex-end;padding:10px;font-size:11px;letter-spacing:.06em}
 .float-card h3{font-size:17.5px;line-height:1.35;margin:12px 4px 8px;color:#fff}
 .float-card p{margin:0 4px 10px;font-size:13.5px;line-height:1.6;color:rgba(238,245,246,.8);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .float-card a{display:inline-flex;gap:6px;margin:0 4px 4px;font-size:13px;border-bottom:1px solid rgba(238,245,246,.4)}
@@ -260,7 +260,7 @@ select.input{padding-right:30px}
 .toc a:hover{color:var(--ink)}.toc a.on{color:var(--ink);border-left-color:var(--accent);background:var(--glass)}
 .toc .toc-sep{margin:10px 0 4px 12px;font-size:11px;letter-spacing:.08em;color:var(--muted)}
 .prose .deep-sep{margin:40px 0 8px;padding-top:14px;border-top:1px dashed var(--line);font-size:12px;letter-spacing:.08em;color:var(--muted)}
-.paper-head{padding:28px;border-radius:var(--r-lg);border:1px solid var(--line);background:linear-gradient(160deg,rgba(23,65,80,.72),rgba(12,35,43,.62)),url(assets/hero-sunrise-1200.jpg) center 62%/cover;background-blend-mode:normal,soft-light}
+.paper-head{padding:28px;border-radius:var(--r-lg);border:1px solid var(--line);background:linear-gradient(160deg,rgba(23,65,80,.72),rgba(12,35,43,.62)),var(--cover-1200,url(assets/hero-sunrise-1200.jpg)) var(--cover-pos,center 62%)/cover;background-blend-mode:normal,soft-light}
 .paper-head h1{font-size:clamp(24px,3vw,34px);line-height:1.3;letter-spacing:-.015em;margin:10px 0 12px}
 .meta-line{display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--body)}
 .paper-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
@@ -544,6 +544,12 @@ footer a{border-bottom:1px solid var(--line-2)}
 .kbd{display:inline-block;min-width:22px;padding:1px 7px;border-radius:6px;border:1px solid var(--line-2);background:var(--glass);font-family:var(--mono);font-size:12px;color:var(--ink);text-align:center}
 .about-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-size:14px}
 .about-list li{display:flex;justify-content:space-between;gap:12px}
+.cover-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:12px}
+.cover-grid button{position:relative;padding:0;border:2px solid transparent;border-radius:12px;overflow:hidden;background:none;aspect-ratio:4/3;cursor:pointer}
+.cover-grid button img{width:100%;height:100%;object-fit:cover;display:block}
+.cover-grid button[aria-pressed="true"]{border-color:var(--accent)}
+.cover-grid button span{position:absolute;left:0;right:0;bottom:0;padding:4px 8px;font-size:11px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.6));text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cover-grid button i{position:absolute;top:6px;left:8px;font-size:10px;letter-spacing:.06em;color:#fff;background:rgba(0,0,0,.45);padding:1px 6px;border-radius:999px;font-style:normal}
 @media (max-width:1000px){
   .settings-shell{grid-template-columns:1fr;gap:18px}
   .sgroups{position:static;flex-direction:row;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}.sgroups::-webkit-scrollbar{display:none}
@@ -594,7 +600,7 @@ footer a{border-bottom:1px solid var(--line-2)}
 <footer>
   <div class="wrap">
     <span>DailyPaper · 每天一点 insight。数据：<span id="foot-source">—</span></span>
-    <span><a id="gh-foot" href="https://github.com/YuanChangYe/DailyPaper" target="_blank" rel="noopener noreferrer">GitHub</a> · <a href="feed.xml">RSS</a> · 首页照片：梅里雪山日照金山</span>
+    <span><a id="gh-foot" href="https://github.com/YuanChangYe/DailyPaper" target="_blank" rel="noopener noreferrer">GitHub</a> · <a href="feed.xml">RSS</a> · <span id="foot-cover">首页照片：梅里雪山日照金山</span></span>
   </div>
 </footer>
 
@@ -771,9 +777,40 @@ const S = {
 };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+/* ---------- 首页封面：assets/covers/covers.json（dailypaper covers 生成），按天轮换；没有就用自带的雪山图 ---------- */
+S.covers = [];
+async function loadCovers() {
+  if (S.mode === "demo") return;
+  try { const m = await getJSON(S.site + "assets/covers/covers.json"); S.covers = (m.covers || []).filter((c) => c.files); } catch { S.covers = []; }
+  applyCover();
+}
+function pickCover() {
+  const list = S.covers; if (!list.length) return null;
+  const want = prefs().cover || "daily";
+  if (want === "random") return list[Math.floor(Math.random() * list.length)];
+  const fixed = list.find((c) => c.id === want); if (fixed) return fixed;
+  const d = new Date(); const day = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 864e5);
+  return list[day % list.length];
+}
+const coverUrl = (c, w) => `${S.site}assets/covers/${c.files[String(w)]}`;
+function applyCover() {
+  const c = pickCover(); S.cover = c;
+  const h = document.documentElement.style;
+  if (!c) { ["--cover-640", "--cover-1200", "--cover-pos"].forEach((k) => h.removeProperty(k)); $("#foot-cover").textContent = "首页照片：梅里雪山日照金山"; }
+  else {
+    h.setProperty("--cover-640", `url("${coverUrl(c, 640)}")`); h.setProperty("--cover-1200", `url("${coverUrl(c, 1200)}")`); h.setProperty("--cover-pos", c.position || "center 50%");
+    $("#foot-cover").textContent = "首页照片：" + (c.credit || c.source || "");
+  }
+  const img = $(".hero-photo img");
+  if (img) { if (c) { img.src = coverUrl(c, 2000); img.srcset = `${coverUrl(c, 640)} 640w, ${coverUrl(c, 1200)} 1200w, ${coverUrl(c, 2000)} 2000w`; } else { img.src = "assets/hero-sunrise.jpg"; img.srcset = "assets/hero-sunrise-640.jpg 640w, assets/hero-sunrise-1200.jpg 1200w, assets/hero-sunrise.jpg 2000w"; } }
+}
+const heroImgTag = () => { const c = S.cover; return c
+  ? `<img src="${esc(coverUrl(c, 2000))}" srcset="${esc(coverUrl(c, 640))} 640w, ${esc(coverUrl(c, 1200))} 1200w, ${esc(coverUrl(c, 2000))} 2000w" sizes="100vw" alt="" fetchpriority="high">`
+  : `<img src="assets/hero-sunrise.jpg" srcset="assets/hero-sunrise-640.jpg 640w, assets/hero-sunrise-1200.jpg 1200w, assets/hero-sunrise.jpg 2000w" sizes="100vw" alt="" fetchpriority="high">`; };
+
 /* ---------- 偏好：外观与阅读设置，存在浏览器里（localStorage dp.prefs） ---------- */
 const PREF_DEFAULTS = { theme: "system", font: "default", customFont: "", fontSize: 15, proseSize: 16, lineHeight: "normal", motion: "system", density: "comfy",
-  paperDefault: "note", splitPct: 50, proseWidth: "full", hlColor: "yellow", srcMarks: "normal", confirmRun: false };
+  paperDefault: "note", splitPct: 50, proseWidth: "full", hlColor: "yellow", srcMarks: "normal", confirmRun: false, cover: "daily" };
 let PREFS = null;
 function prefs() {
   if (PREFS) return PREFS;
@@ -887,6 +924,7 @@ async function boot() {
     } else { S.mode = "demo"; }
   }
   if (S.mode === "demo") S.index = DEMO.papers;
+  await loadCovers();
   S.topics = S.meta?.topics?.length ? S.meta.topics : DEMO_CONFIG.topics.map(({ id, name }) => ({ id, name }));
   paintMode();
   if (isLocal()) { refreshZotero(); refreshBadge(); await pollRun(true); }
@@ -1097,7 +1135,7 @@ VIEWS.home = async () => {
   return `
   <section class="hero" aria-label="DailyPaper">
    <div class="hero-stage">
-    <div class="hero-photo"><img src="assets/hero-sunrise.jpg" srcset="assets/hero-sunrise-640.jpg 640w, assets/hero-sunrise-1200.jpg 1200w, assets/hero-sunrise.jpg 2000w" sizes="100vw" alt="" fetchpriority="high"></div>
+    <div class="hero-photo">${heroImgTag()}</div>
     <div class="hero-shade"></div><div class="glare"></div><div class="fog"></div><div class="fog f2"></div>
     <div class="hero-inner">
       <div>
@@ -1703,7 +1741,14 @@ SETTINGS.appearance = () => `${groupHead(SETTINGS_GROUPS[0], "主题、字体和
     ${opt("行距", "", seg("lineHeight", [["compact", "紧凑"], ["normal", "标准"], ["relaxed", "宽松"]]))}
     ${opt("动态效果", "封面照片的缓慢缩放与雾气、卡片倾斜、进入动画。关闭后更省电，也适合晕动的人。", seg("motion", [["system", "跟随系统"], ["on", "开"], ["off", "关"]]))}
     ${opt("列表密度", "紧凑模式下列表只显示标题和一句话总结，不显示缩略图。", seg("density", [["comfy", "舒适"], ["compact", "紧凑"]]))}
-  </div>`;
+    ${opt("封面照片", S.covers.length ? `素材库里有 ${S.covers.length} 张。每日轮换按日期顺序换，同一天刷新不变。` : "还没有素材库，用的是自带的雪山图。", seg("cover", [["daily", "每日轮换"], ["random", "每次随机"]]) + (S.covers.some((c) => c.id === prefs().cover) ? `<span class="status s-pending">已固定</span>` : ""))}
+  </div>
+  ${S.covers.length ? `<div class="cover-grid" id="cover-grid">${S.covers.map((c) => `<button type="button" data-cover="${esc(c.id)}" aria-pressed="${prefs().cover === c.id}" title="固定为这张"><img src="${esc(coverUrl(c, 640))}" alt="" loading="lazy">${S.cover?.id === c.id ? "<i>今日</i>" : ""}<span>${esc(c.credit || c.source)}</span></button>`).join("")}</div>` : ""}
+  ${isLocal() ? `<div class="panel" style="margin-top:18px"><h3>素材库</h3>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 10px">把照片（文件名随意，jpg / png / webp 都行）放进 <span class="mono" id="cover-src">…</span>，然后点「扫描」：会生成网页用的三档尺寸和清单，原图不会被发布。署名默认取文件名，点缩略图下方的名字可以改。</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm primary" type="button" id="cover-build">扫描素材目录</button><button class="btn sm" type="button" data-open="covers">打开素材目录</button><button class="btn sm ghost" type="button" id="cover-rebuild" title="忽略缓存，全部重新生成">全部重新生成</button></div>
+    <p id="cover-state" style="font-size:12px;color:var(--muted);margin:10px 0 0"></p>
+  </div>` : ""}`;
 SETTINGS.reading = () => `${groupHead(SETTINGS_GROUPS[1], "论文页的默认布局、正文宽度和高亮。")}
   <div class="opts">
     ${opt("打开论文时", "分栏会在右侧同时打开 PDF（需要本地助手和足够宽的窗口）。", seg("paperDefault", [["note", "只看笔记"], ["split", "自动分栏 PDF"]]))}
@@ -2279,6 +2324,7 @@ VIEWS.settings.after = (_, params) => {
       const box = b.closest("[data-pref]"); let v = b.dataset.v; if (v === "true") v = true; else if (v === "false") v = false;
       setPref(box.dataset.pref, v);
       $$("button", box).forEach((x) => x.setAttribute("aria-pressed", x === b));
+      if (box.dataset.pref === "cover") { applyCover(); route(true); }
     });
     panel.addEventListener("input", (e) => {
       const el = e.target.closest("input[data-pref], select[data-pref]"); if (!el) return;
@@ -2287,6 +2333,29 @@ VIEWS.settings.after = (_, params) => {
       if (el.type === "range") el.nextElementSibling.value = v + (el.dataset.pref === "splitPct" ? "%" : "px");
       if (el.dataset.pref === "font") $("#custom-font-row").hidden = v !== "custom";
     });
+    if (gid === "appearance") {
+      $("#cover-grid")?.addEventListener("click", (e) => {
+        const b = e.target.closest("[data-cover]"); if (!b) return;
+        if (e.target.closest("span")) {
+          const c = S.covers.find((x) => x.id === b.dataset.cover);
+          const credit = prompt("署名（显示在页脚）", c.credit || ""); if (credit === null) return;
+          send(`/api/covers/${encodeURIComponent(c.id)}`, { credit }, "PUT").then(() => { c.credit = credit; applyCover(); route(true); }).catch((err) => toast(err.message, "err"));
+          return;
+        }
+        setPref("cover", prefs().cover === b.dataset.cover ? "daily" : b.dataset.cover); applyCover(); route(true);
+      });
+      if (isLocal()) {
+        getJSON("/api/covers").then((r) => { $("#cover-src").textContent = r.source_dir; $("#cover-state").textContent = r.sources ? `目录里有 ${r.sources} 个图片文件，清单 ${r.covers.length} 张${r.generated_at ? "，上次扫描 " + r.generated_at.slice(0, 16).replace("T", " ") : ""}。` : "目录里还没有图片。"; }).catch(() => {});
+        const build = async (force) => {
+          $("#cover-state").textContent = "正在生成…";
+          try { const r = await send("/api/covers/build", { force }); r.messages.forEach((m) => toast(m, r.errors?.length ? "err" : "ok")); await loadCovers(); route(true); }
+          catch (err) { toast(err.message, "err"); $("#cover-state").textContent = "失败：" + err.message; }
+        };
+        $("#cover-build")?.addEventListener("click", () => build(false));
+        $("#cover-rebuild")?.addEventListener("click", () => build(true));
+        $$("[data-open]").forEach((b) => b.addEventListener("click", async () => { try { await send("/api/open-folder", { which: b.dataset.open }); } catch (err) { toast(err.message, "err"); } }));
+      }
+    }
     if (gid === "about") {
       const repo = (S.meta?.repo_url || S.siteInfo?.repo_url || DEFAULT_REPO).match(/github\.com\/([^/]+\/[^/#?]+)/);
       const out = $("#about-latest");

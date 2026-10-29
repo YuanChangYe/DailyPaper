@@ -26,7 +26,7 @@ CACHE_KINDS: dict[str, tuple[str, str]] = {
     "prompts": ("--prompt-only 生成的提示词", "prompts"),
 }
 
-OPENABLE = {"workspace", "content", "data", "cache", "config"}
+OPENABLE = {"workspace", "content", "data", "cache", "config", "covers"}
 
 
 def dir_size(path: Path) -> tuple[int, int]:
@@ -81,6 +81,7 @@ def open_folder(cfg: AppConfig, which: str) -> str:
         "data": cfg.data_dir,
         "cache": cfg.cache_dir,
         "config": cfg.root / "config",
+        "covers": cfg.content_dir.parent / "covers",
     }[which]
     path.mkdir(parents=True, exist_ok=True)
     if sys.platform == "win32":
