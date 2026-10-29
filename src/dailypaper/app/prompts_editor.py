@@ -196,8 +196,6 @@ def validate_prompt(cfg: AppConfig, pid: str, content: str) -> list[str]:
         for n, s in cfg.note_schema.numbered(True):
             if f"## {n}. {s.title}" not in rendered:
                 problems.append(f"没有输出第 {n} 节「{s.title}」的标题（模板应按 schema.sections 循环生成）")
-        if re.search(r"^# ", rendered.split("# 补充分析指引")[0].replace("# 补充", ""), re.M) and "# 补充分析指引" not in rendered:
-            pass
     if pid.endswith("screen.system.md.j2") and "json" not in rendered.lower():
         problems.append("筛选提示词需要要求 JSON 输出（排序阶段按 JSON 解析）")
     return problems
@@ -287,7 +285,19 @@ def delete_prompt(cfg: AppConfig, pid: str) -> list[str]:
         raise ValueError("文件不存在")
     _backup(cfg, pid)
     f.unlink()
-    return [f"已删除 prompts/{pid}（历史里还有备份）"]
+    msgs = [f"已删除 prompts/{pid}（历史里还有备份）"]
+    stale = [s.id for s in cfg.lenses.catalog if s.path == f"prompts/{pid}"]
+    if stale:
+        from .lenses_editor import read_lenses_view, write_lenses
+
+        view = read_lenses_view(cfg)
+        body = {k: view[k] for k in ("budget_chars", "max_lenses", "llm_select")}
+        body["catalog"] = [{**{k: v for k, v in c.items() if k in ("id", "adapter", "path", "priority", "sections", "enabled", "options")},
+                            "title": c["title_raw"], "description": c["description_raw"]} for c in view["catalog"] if c["id"] not in stale]
+        body["rules"] = [{"when": r["when"], "use": [u for u in r["use"] if u not in stale]} for r in view["rules"]]
+        write_lenses(cfg, body)
+        msgs.append(f"已从 lenses.yaml 移除 {', '.join(stale)}")
+    return msgs
 
 
 # ---------------------------------------------------------------- LLM 审核

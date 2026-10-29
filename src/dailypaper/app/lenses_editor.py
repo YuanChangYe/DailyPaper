@@ -48,6 +48,7 @@ def read_lenses_view(cfg: AppConfig) -> dict[str, Any]:
             "id": spec.id, "adapter": spec.adapter, "path": spec.path, "kind": _kind(spec),
             "title": adapter.title() if adapter else (spec.title or spec.id),
             "description": adapter.description() if adapter else spec.description,
+            "title_raw": spec.title, "description_raw": spec.description,  # lenses.yaml 里写的原值，保存时原样回传
             "priority": spec.priority, "sections": list(spec.sections), "enabled": spec.enabled, "options": dict(spec.options),
             "available": bool(adapter and adapter.available()),
             "used_by_rules": [i for i, r in enumerate(rules) if spec.id in r["use"]],
@@ -158,6 +159,7 @@ def write_lenses(cfg: AppConfig, body: dict) -> list[str]:
     yaml = YAML()
     yaml.preserve_quotes = True
     yaml.width = 140
+    yaml.indent(mapping=2, sequence=4, offset=2)  # 保持手写文件的 "  - {...}" 缩进
     path = cfg.root / "config" / "lenses.yaml"
     doc = yaml.load(path.read_text(encoding="utf-8")) or CommentedMap()
     doc["budget_chars"] = data.budget_chars
@@ -203,7 +205,15 @@ def write_lenses(cfg: AppConfig, body: dict) -> list[str]:
         else:
             node["enabled"] = False
         if c.options:
-            node["options"] = c.options
+            opts = node.get("options")
+            if isinstance(opts, dict):  # 原地更新，保留原来的行内写法与注释
+                for k in [k for k in list(opts) if k not in c.options]:
+                    del opts[k]
+                for k, v in c.options.items():
+                    if opts.get(k) != v:
+                        opts[k] = v
+            else:
+                node["options"] = c.options
         else:
             node.pop("options", None)
 
@@ -242,7 +252,8 @@ def import_skills(cfg: AppConfig, names: list[str]) -> dict:
     if not copied:
         raise ValueError("这些目录下没有 SKILL.md")
     view = read_lenses_view(cfg)
-    catalog = [{k: v for k, v in c.items() if k in CatalogIn.model_fields} for c in view["catalog"]]
+    catalog = [{**{k: v for k, v in c.items() if k in CatalogIn.model_fields}, "title": c["title_raw"], "description": c["description_raw"]}
+               for c in view["catalog"]]
     known = {c["id"] for c in catalog}
     added = []
     for name in copied:

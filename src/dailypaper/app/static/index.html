@@ -2044,8 +2044,8 @@ function afterPromptsGroup(params) {
       out.hidden = false; out.textContent = "# SYSTEM\n\n" + r.system + "\n\n# USER\n\n" + r.user;
     } catch (err) { meta.textContent = "预览失败：" + err.message; }
   });
-  addEventListener("beforeunload", (e) => { if (PE.dirty) { e.preventDefault(); e.returnValue = ""; } }, { once: true });
 }
+addEventListener("beforeunload", (e) => { if (PE.dirty) { e.preventDefault(); e.returnValue = ""; } });
 
 /* lens 目录与规则 */
 async function renderLensesTab() {
@@ -2095,7 +2095,7 @@ function readLensesForm() {
   const catalog = [];
   $$("[data-lens-i]").forEach((tr) => {
     const c = L.catalog[+tr.dataset.lensI];
-    catalog.push({ id: c.id, adapter: c.adapter, path: c.path, title: c.title === c.id ? "" : (L.catalog[+tr.dataset.lensI].title_raw ?? ""), description: "", priority: Number($("[data-lk=priority]", tr).value),
+    catalog.push({ id: c.id, adapter: c.adapter, path: c.path, title: c.title_raw || "", description: c.description_raw || "", priority: Number($("[data-lk=priority]", tr).value),
       sections: $("[data-lk=sections]", tr).value.split(/[,，\s]+/).filter(Boolean).map(Number).filter((n) => Number.isInteger(n) && n > 0), enabled: $("[data-lk=enabled]", tr).checked, options: c.options || {} });
   });
   const rules = [];
@@ -2117,7 +2117,6 @@ function showSkillPreview(id) {
 }
 function afterLensesTab() {
   const L = PE.lenses; if (!L) return;
-  L.catalog.forEach((c) => { c.title_raw = ""; });
   $("#lens-table").addEventListener("click", (e) => {
     const del = e.target.closest("[data-lens-del]"); if (del) { const tr = del.closest("tr"); if (confirm("从目录移除这个 lens？文件不会删除。")) tr.remove(); return; }
     const pv = e.target.closest("[data-skill-preview]"); if (pv) showSkillPreview(pv.dataset.skillPreview);
@@ -2128,7 +2127,7 @@ function afterLensesTab() {
     const pick = prompt("要加入目录的文件（输入序号）：\n" + files.map((f, i) => `${i + 1}. ${f.id}`).join("\n"), "1");
     const f = files[Number(pick) - 1]; if (!f) return;
     const id = f.id.replace(/^lenses\//, "").replace(/\.md$/, "");
-    L.catalog.push({ id, adapter: "markdown", path: "prompts/" + f.id, title: f.title, description: f.description, priority: 60, sections: [], enabled: true, options: {}, available: true, kind: id.startsWith("type_") ? "type" : "reading" });
+    L.catalog.push({ id, adapter: "markdown", path: "prompts/" + f.id, title: f.title, description: f.description, title_raw: "", description_raw: "", priority: 60, sections: [], enabled: true, options: {}, available: true, kind: id.startsWith("type_") ? "type" : "reading" });
     const i = L.catalog.length - 1;
     $("#lens-table tbody").insertAdjacentHTML("beforeend", `<tr data-lens-i="${i}"><td><b style="color:var(--ink)">${esc(f.title)}</b><br><span class="mono" style="font-size:11px;color:var(--muted)">${esc(id)} · markdown</span></td><td>${id.startsWith("type_") ? "论文类型" : "阅读 skill"}</td><td class="pri"><input type="number" data-lk="priority" min="0" max="100" value="60"></td><td class="secs"><input type="text" data-lk="sections" value=""></td><td class="ck"><input type="checkbox" data-lk="enabled" checked></td><td class="act"><button class="btn sm ghost" type="button" data-lens-del>×</button></td></tr>`);
     toast("已加入表格，记得保存并在规则里引用 " + id, "ok");

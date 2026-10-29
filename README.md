@@ -444,14 +444,14 @@ roles:
 ```
 DailyPaper/
 ├── config/            所有可调参数：pipeline / topics / llm / lenses / settings（用户主要改这里）
-├── prompts/           精读与筛选的 prompt 模板（Jinja2）和论文类型 lens
+├── prompts/           schema.yaml（笔记结构）、base/（精读与筛选的 Jinja2 模板）、lenses/（论文类型与阅读 skill lens）、defaults/（仓库默认版本，网页「恢复默认」用）
 ├── src/dailypaper/    源代码（见下）
 ├── tests/             离线测试：假模型 + 样例数据，不联网、不花钱
 ├── scripts/           本地定时运行脚本、桌面快捷方式与启动器、图标生成（Windows）
 ├── examples/          一篇完整的精读笔记示例
 ├── assets/            README 用到的图片
 ├── docs/              网站源目录；运行后的笔记、JSON、RSS 默认写在这里（可通过 DAILYPAPER_WORKSPACE 移到项目外）
-├── skills/            外部阅读 skill 的文本副本（运行 sync-skills 后生成，可选）
+├── skills/            外部阅读 skill 的文本副本（sync-skills 或网页导入后生成，默认在 .gitignore 中）
 ├── .github/workflows/ ci.yml（测试）、daily.yml（云端每日运行 + 发布网站，定时默认关闭）
 ├── mkdocs.yml         静态网站配置
 ├── pyproject.toml     包定义、依赖、可选依赖组（pdf / app / site / dev / all）
@@ -509,7 +509,10 @@ src/dailypaper/
 │
 └── app/                         本地网页
     ├── server.py                FastAPI：静态挂载、审核、Zotero、配置读写、后台运行、PDF 代理
-    ├── config_editor.py         网页「设置 → 研究方向」的读写（校验 + 保留 YAML 注释）
+    ├── config_editor.py         设置页的 topics / pipeline / llm 读写（校验 + 保留 YAML 注释）
+    ├── prompts_editor.py        提示词、lens、schema 的编辑：程序校验、LLM 审核、历史、恢复默认、预览
+    ├── lenses_editor.py         lenses.yaml 的目录与规则读写、本机 skill 导入、注入预览
+    ├── maintenance.py           目录占用、缓存清理、打开目录、导出笔记与批注
     ├── runner.py                后台子进程运行 dailypaper run / read
     ├── API.md                   前后端接口约定
     └── static/                  index.html（单页网页）、assets/（图片）
@@ -668,7 +671,7 @@ class MinAuthors(Filter):
 
 - **API key**：只放在本地 `.env` 或 GitHub Secrets 中，不要写进代码或配置文件。GitHub Secrets 加密保存，日志中会被自动遮盖；来自 fork 的 Pull Request 无法读取你的 Secrets。建议为本项目单独创建一个 key，并在服务商控制台设置花费上限。
 - **本地运行**：设置 `DAILYPAPER_WORKSPACE` 后，笔记、状态和缓存都在项目目录之外，不会被提交到任何仓库。
-- **GitHub Actions 运行**：生成的笔记会提交到你的仓库；仓库公开时笔记也是公开的，介意的话请使用私有仓库。`skills/` 中的外部 skill 文本（运行 `sync-skills` 后生成）同样会随仓库公开。从 Zotero 文库导出的 `data/zotero_index.json` 和 `data/interest_profile.json`（包含你的文库标题和关键词）默认在 `.gitignore` 中，只在本地使用。私有仓库使用 GitHub Pages 需要付费账户；也可以改用 Cloudflare Pages 等免费服务，构建命令填 `pip install mkdocs-material && mkdocs build`，输出目录填 `site`。
+- **GitHub Actions 运行**：生成的笔记会提交到你的仓库；仓库公开时笔记也是公开的，介意的话请使用私有仓库。`skills/` 中的外部 skill 文本（`sync-skills` 或网页导入后生成）默认在 `.gitignore` 中；想让 Actions 里的精读也用到它们，从 `.gitignore` 删掉 `/skills/` 再提交，此时它们会随仓库公开。从 Zotero 文库导出的 `data/zotero_index.json` 和 `data/interest_profile.json`（包含你的文库标题和关键词）默认在 `.gitignore` 中，只在本地使用。私有仓库使用 GitHub Pages 需要付费账户；也可以改用 Cloudflare Pages 等免费服务，构建命令填 `pip install mkdocs-material && mkdocs build`，输出目录填 `site`。
 - **本地网页**：只监听 `127.0.0.1`，校验 Host，写操作要求自定义请求头；不要把它暴露到公网。
 - **版权**：笔记中引用了论文摘要和少量原文内容。请遵守相应论文的许可证，以及 [arXiv 的使用条款](https://info.arxiv.org/help/api/tou.html)。
 

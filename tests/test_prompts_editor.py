@@ -121,3 +121,35 @@ def test_lenses_view_write_and_import(cfg, project, monkeypatch):
     assert sp["available"] and sp["raw"].startswith("---") and sp["injected"]
     with pytest.raises(ValueError):
         skill_preview(cfg, "ghost")
+
+
+def test_lens_titles_survive_save_and_delete_cleans_catalog(cfg):
+    view = read_lenses_view(cfg)
+    demo = next(c for c in view["catalog"] if c["id"] == "demo-skill")
+    assert demo["title_raw"] == "" and demo["title"]  # 没写 title 时显示用 skill 名，YAML 里不该被写入
+    body = {k: view[k] for k in ("budget_chars", "max_lenses", "llm_select", "rules")}
+    body["catalog"] = [{**{k: v for k, v in c.items() if k in ("id", "adapter", "path", "priority", "sections", "enabled", "options")},
+                        "title": c["title_raw"], "description": c["description_raw"]} for c in view["catalog"]]
+    body["catalog"][0]["title"] = "自定义标题"
+    write_lenses(cfg, body)
+    text = (cfg.root / "config" / "lenses.yaml").read_text(encoding="utf-8")
+    assert "自定义标题" in text and "title: demo-skill" not in text
+    # 再保存一次，自定义标题不会丢
+    view2 = read_lenses_view(cfg)
+    assert view2["catalog"][0]["title_raw"] == "自定义标题"
+    body["catalog"] = [{**{k: v for k, v in c.items() if k in ("id", "adapter", "path", "priority", "sections", "enabled", "options")},
+                        "title": c["title_raw"], "description": c["description_raw"]} for c in view2["catalog"]]
+    write_lenses(cfg, body)
+    assert cfg.lenses.catalog[0].title == "自定义标题"
+
+    # 删除 lens 文件 → 目录条目与规则引用一并清掉
+    write_prompt(cfg, "lenses/type_demo.md", "---\ntitle: demo\n---\n- 要点\n")
+    view3 = read_lenses_view(cfg)
+    body["catalog"] = [{**{k: v for k, v in c.items() if k in ("id", "adapter", "path", "priority", "sections", "enabled", "options")},
+                        "title": c["title_raw"], "description": c["description_raw"]} for c in view3["catalog"]]
+    body["catalog"].append({"id": "type_demo", "adapter": "markdown", "path": "prompts/lenses/type_demo.md", "title": "", "description": "", "priority": 60, "sections": [], "enabled": True, "options": {}})
+    body["rules"].append({"when": {"always": True}, "use": ["type_demo"]})
+    write_lenses(cfg, body)
+    msgs = delete_prompt(cfg, "lenses/type_demo.md")
+    assert any("移除 type_demo" in m for m in msgs)
+    assert all(s.id != "type_demo" for s in cfg.lenses.catalog) and all("type_demo" not in r.use for r in cfg.lenses.rules)

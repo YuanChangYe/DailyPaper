@@ -15,3 +15,10 @@ logs/
 
 # 网页里编辑提示词时的历史版本
 prompts/.history/
+
+# 本机开发工具的会话文件（浏览器预览配置等）
+.claude/
+
+# 从本机 ~/.claude/skills 导入的 skill 文本。默认不提交：skill 可能是私有的；
+# 想让 GitHub Actions 里的精读也用到它们，删掉下面这行再提交。
+/skills/
