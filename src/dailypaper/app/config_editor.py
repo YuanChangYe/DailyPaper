@@ -309,3 +309,85 @@ def write_llm_config(cfg: AppConfig, body: dict) -> list[str]:
     fresh = load_config(cfg.root)
     cfg.llm = fresh.llm
     return ["已保存 config/llm.yaml，下次运行生效"]
+
+
+# ---------------------------------------------------------------- 顶会论文池（venues.yaml）
+
+
+class VenueToggle(BaseModel):
+    id: str
+    enabled: bool = True
+
+
+class VenuesBody(BaseModel):
+    years_back: int = Field(ge=0, le=5)
+    auto_sync_days: int = Field(ge=1, le=90)
+    column: dict = Field(default_factory=dict)
+    venues: list[VenueToggle] = Field(default_factory=list)
+
+
+def read_venues_view(cfg: AppConfig) -> dict[str, Any]:
+    path = cfg.root / "config" / "venues.yaml"
+    v = cfg.venues
+    return {
+        "editable": path.exists() and os.access(path, os.W_OK),
+        "years_back": v.years_back, "auto_sync_days": v.auto_sync_days,
+        "column": v.column.model_dump(),
+        "venues": [{"id": x.id, "name": x.name, "field": x.field, "ccf": x.ccf, "core": x.core, "adapter": x.adapter, "enabled": x.enabled, "badge": x.badge} for x in v.venues],
+    }
+
+
+def write_venues_config(cfg: AppConfig, body: dict) -> list[str]:
+    """只改开关和数值参数；会议名单本身（等级、数据源）在文件里手改。"""
+    try:
+        data = VenuesBody.model_validate(body)
+    except ValidationError as e:
+        raise ValueError(friendly_errors(e)) from e
+    col = data.column
+    for k, lo, hi in (("total", 1, 20), ("arxiv_max", 0, 20), ("screen_budget", 0, 500)):
+        if k in col and not (lo <= int(col[k]) <= hi):
+            raise ValueError(f"column.{k} 应在 {lo}–{hi} 之间")
+    if "min_score" in col and not (0 <= float(col["min_score"]) <= 10):
+        raise ValueError("column.min_score 应在 0–10 之间")
+
+    from ruamel.yaml import YAML
+    from ruamel.yaml.comments import CommentedMap
+
+    yaml = YAML()
+    yaml.preserve_quotes = True
+    yaml.width = 200
+    yaml.indent(mapping=2, sequence=4, offset=2)
+    path = cfg.root / "config" / "venues.yaml"
+    doc = yaml.load(path.read_text(encoding="utf-8")) or CommentedMap()
+    doc["years_back"] = data.years_back
+    doc["auto_sync_days"] = data.auto_sync_days
+    node = doc.get("column")
+    if node is None:
+        node = doc["column"] = CommentedMap()
+    for k in ("total", "arxiv_max", "min_score", "screen_budget"):
+        if k in col:
+            node[k] = float(col[k]) if k == "min_score" else int(col[k])
+    toggles = {t.id: t.enabled for t in data.venues}
+    for item in doc.get("venues") or []:
+        if isinstance(item, dict) and str(item.get("id")) in toggles:
+            if toggles[str(item["id"])]:
+                item.pop("enabled", None)
+            else:
+                item["enabled"] = False
+    # pipeline.yaml 里 screen 的 top_k 跟 arxiv_max 保持一致
+    if "arxiv_max" in col:
+        pyaml = YAML()
+        pyaml.preserve_quotes = True
+        pyaml.width = 160
+        pyaml.indent(mapping=2, sequence=4, offset=2)
+        pipe_path = cfg.root / "config" / "pipeline.yaml"
+        pdoc = pyaml.load(pipe_path.read_text(encoding="utf-8")) or {}
+        for st in (pdoc.get("pipelines") or {}).get("daily") or []:
+            if str(st.get("use", "")) == "ranker.llm_screen":
+                st.setdefault("with", CommentedMap())["top_k"] = int(col["arxiv_max"])
+        _dump(pyaml, pdoc, pipe_path)
+    _dump(yaml, doc, path)
+    fresh = load_config(cfg.root)
+    cfg.venues = fresh.venues
+    cfg.pipeline = fresh.pipeline
+    return ["已保存 config/venues.yaml（arXiv 篇数同步写入 pipeline.yaml），下次运行生效"]

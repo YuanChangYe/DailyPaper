@@ -47,6 +47,12 @@ class RunBody(BaseModel):
     provider: str | None = None  # 例如 fake，用于不花钱试跑
 
 
+def _now_iso() -> str:
+    from datetime import datetime, timezone
+
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
 def create_app(cfg: AppConfig) -> FastAPI:
     app = FastAPI(title="DailyPaper 本地助手", docs_url=None, redoc_url=None)
     store = ReviewStore(cfg)
@@ -111,6 +117,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
             "repo_url": cfg.settings.site.repo_url,
             "schema": cfg.note_schema.to_public(),
             "version": __version__,
+            "venue_total": cfg.venues.column.total,
             "git_enabled": git_enabled,
             "workspace": str(cfg.content_dir.parent),
             "running": runner.running,
@@ -131,7 +138,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
         fm, body = read_markdown(path)
         return {"frontmatter": fm, "markdown": body}
 
-    @app.get("/api/pdf/{paper_id}")
+    @app.get("/api/pdf/{paper_id:path}")
     def pdf(paper_id: str):
         """同源提供论文 PDF（缓存在 .cache/pdf/），供网页在分栏里直接阅读。"""
         import re
@@ -141,19 +148,22 @@ def create_app(cfg: AppConfig) -> FastAPI:
         from ..core.models import Paper
         from ..integrations.site.contract import SiteContract
 
-        if not re.match(r"^\d{4}\.\d{4,5}$", paper_id):
-            raise HTTPException(400, "只支持 arXiv ID")
         entry = next((e for e in SiteContract(cfg).load_index() if e.id == paper_id), None)
+        is_arxiv = bool(re.match(r"^\d{4}\.\d{4,5}$", paper_id))
+        if not is_arxiv and not (entry and entry.url_pdf):
+            raise HTTPException(400, "只支持 arXiv ID 或索引里带 PDF 链接的论文")
         paper = Paper(id=paper_id, title="", url_pdf=(entry.url_pdf if entry else "") or f"https://arxiv.org/pdf/{paper_id}")
         path = cfg.cache_dir / "pdf" / f"{paper.slug}.pdf"
         if not path.exists():
+            from ..integrations.venues.openreview_auth import auth_headers
+
             try:
                 r = httpx.get(paper.url_pdf, timeout=120, follow_redirects=True,
-                              headers={"User-Agent": "DailyPaper/0.1 (personal research digest)"})
+                              headers={"User-Agent": "DailyPaper/0.1 (personal research digest)", **auth_headers(paper.url_pdf)})
             except httpx.HTTPError as e:
                 raise HTTPException(502, f"下载 PDF 失败: {e}") from e
             if r.status_code != 200 or not r.content.startswith(b"%PDF"):
-                raise HTTPException(502, f"arXiv 没有返回 PDF（HTTP {r.status_code}）")
+                raise HTTPException(502, f"没有拿到 PDF（HTTP {r.status_code}）")
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(r.content)
         return FileResponse(path, media_type="application/pdf",
@@ -293,6 +303,58 @@ def create_app(cfg: AppConfig) -> FastAPI:
 
         return Response(export_notes_zip(cfg), media_type="application/zip",
                         headers={"Content-Disposition": 'attachment; filename="dailypaper-notes.zip"'})
+
+    # ------------------------------------------------------------ 顶会论文池
+    venue_sync_state: dict = {"running": False, "started_at": None, "finished_at": None, "log": [], "results": None}
+
+    @app.get("/api/venues/status")
+    def venues_status():
+        from ..integrations.venues.pool import VenuePool
+
+        return {"pool": VenuePool(cfg).stats(), "sync": venue_sync_state,
+                "venues": [{"id": v.id, "name": v.name, "field": v.field, "ccf": v.ccf, "core": v.core, "adapter": v.adapter, "enabled": v.enabled, "badge": v.badge}
+                           for v in cfg.venues.venues]}
+
+    @app.post("/api/venues/sync")
+    def venues_sync(body: dict):
+        import threading
+
+        from ..integrations.venues.sync import sync_venues
+
+        if venue_sync_state["running"]:
+            raise HTTPException(409, "正在同步")
+        force = bool(body.get("force"))
+        venues = [str(v) for v in body.get("venues") or []] or None
+
+        def work():
+            venue_sync_state.update(running=True, started_at=_now_iso(), finished_at=None, log=[], results=None)
+            try:
+                res = sync_venues(cfg, venues=venues, force=force, progress=lambda m: venue_sync_state["log"].append(m))
+                venue_sync_state["results"] = res
+            except Exception as e:  # noqa: BLE001
+                venue_sync_state["log"].append(f"失败：{e}")
+            finally:
+                venue_sync_state.update(running=False, finished_at=_now_iso())
+
+        threading.Thread(target=work, daemon=True).start()
+        return {"messages": ["已开始同步，可在状态里查看进度"]}
+
+    @app.get("/api/config/venues")
+    def get_venues_config():
+        from .config_editor import read_venues_view
+
+        return read_venues_view(cfg)
+
+    @app.put("/api/config/venues")
+    def put_venues_config(body: dict):
+        from .config_editor import read_venues_view, write_venues_config
+
+        if not read_venues_view(cfg)["editable"]:
+            raise HTTPException(403, "config/venues.yaml 不可写")
+        try:
+            return {"messages": write_venues_config(cfg, body)}
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
 
     # ------------------------------------------------------------ 封面素材
     @app.get("/api/covers")

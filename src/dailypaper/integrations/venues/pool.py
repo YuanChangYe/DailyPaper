@@ -134,6 +134,10 @@ class VenuePool:
         self.db.execute("UPDATE papers SET screened = ?, score = ? WHERE key = ?", (screen.model_dump_json(), float(score), key))
         self.db.commit()
 
+    def set_arxiv(self, key: str, arxiv_id: str, url_html: str = "") -> None:
+        self.db.execute("UPDATE papers SET arxiv_id = ?, url_html = COALESCE(NULLIF(?, ''), url_html) WHERE key = ?", (arxiv_id, url_html, key))
+        self.db.commit()
+
     def mark_read(self, key: str) -> None:
         self.db.execute("UPDATE papers SET read_at = ? WHERE key = ?", (_now(), key))
         self.db.commit()
@@ -167,12 +171,12 @@ class VenuePool:
         return ScreenResult.model_validate_json(row["screened"]), row["score"]
 
     def candidates(self, venues: list[str] | None = None, years: list[int] | None = None, unread_only: bool = True, limit: int = 0) -> list[sqlite3.Row]:
-        """补足用的候选行（未读、未 seen），已筛选的在前、分数高的在前，未筛选的按加入时间倒序。"""
+        """补足用的候选行（未读、未 seen）：已筛选的在前、分数高的在前；未筛选的随机顺序，让每次筛选的样本跨会议、跨年份。"""
         where, args = self._where(venues, years)
         if unread_only:
             where.append("read_at IS NULL AND seen = 0")
         sql = "SELECT * FROM papers" + (" WHERE " + " AND ".join(where) if where else "") + \
-            " ORDER BY (screened IS NULL), score DESC, added_at DESC" + (f" LIMIT {int(limit)}" if limit else "")
+            " ORDER BY (screened IS NULL), score DESC, random()" + (f" LIMIT {int(limit)}" if limit else "")
         return list(self.db.execute(sql, args).fetchall())
 
     def _where(self, venues: list[str] | None, years: list[int] | None) -> tuple[list[str], list[Any]]:

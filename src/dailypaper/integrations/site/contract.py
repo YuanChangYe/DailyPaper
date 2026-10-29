@@ -23,7 +23,7 @@ from pydantic import BaseModel, Field
 from ... import __version__
 from ...core.config import AppConfig
 from ...core.io import read_json, write_json, write_text
-from ...core.models import Candidate
+from ...core.models import Candidate, file_id
 
 SCHEMA_VERSION = 1
 
@@ -43,11 +43,18 @@ class IndexEntry(BaseModel):
     note_path: str = ""  # 相对内容目录，正斜杠
     url_abs: str = ""
     url_pdf: str = ""
-    source: str = "arxiv"
+    source: str = "arxiv"  # arxiv | venue | zotero
+    venue: str = ""  # 来自顶会论文池时的会议 id（acl、neurips……）
+    venue_name: str = ""
+    venue_year: int = 0
+    ccf: str = ""
+    core: str = ""
+    filled_from: str = ""  # "venue" = 当天由顶会池补足
 
 
 def entry_from_candidate(c: Candidate, date: str) -> IndexEntry:
     n = c.note
+    x = c.paper.extra or {}
     return IndexEntry(
         id=c.id,
         title=c.paper.title,
@@ -64,6 +71,12 @@ def entry_from_candidate(c: Candidate, date: str) -> IndexEntry:
         url_abs=c.paper.url_abs,
         url_pdf=c.paper.url_pdf,
         source=c.paper.source,
+        venue=str(x.get("venue", "")) if c.paper.source == "venue" else "",
+        venue_name=str(x.get("venue_name", "")) if c.paper.source == "venue" else "",
+        venue_year=int(x.get("year") or 0) if c.paper.source == "venue" else 0,
+        ccf=str(x.get("ccf", "")) if c.paper.source == "venue" else "",
+        core=str(x.get("core", "")) if c.paper.source == "venue" else "",
+        filled_from=str((c.meta or {}).get("filled_from", "")),
     )
 
 
@@ -83,7 +96,7 @@ class SiteContract:
             by_id[e.id] = e
         for e in by_id.values():  # 旧索引没有摘要字段时，从单篇 JSON 补上
             if not e.abstract:
-                data = read_json(self.api / "papers" / f"{e.id.replace('/', '_')}.json", {}) or {}
+                data = read_json(self.api / "papers" / f"{file_id(e.id)}.json", {}) or {}
                 e.abstract = str(data.get("abstract", ""))[:800]
         merged = sorted(by_id.values(), key=lambda e: (e.date, e.score), reverse=True)
         write_json(
@@ -111,7 +124,7 @@ class SiteContract:
 
     def write_paper(self, entry: IndexEntry, markdown: str, extra: dict) -> None:
         write_json(
-            self.api / "papers" / f"{entry.id.replace('/', '_')}.json",
+            self.api / "papers" / f"{file_id(entry.id)}.json",
             {"schema_version": SCHEMA_VERSION, **entry.model_dump(), "markdown": markdown, **extra},
         )
 

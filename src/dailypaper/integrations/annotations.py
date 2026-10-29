@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 
 from ..core.config import AppConfig
 from ..core.io import read_json, update_frontmatter, write_json
+from ..core.models import file_id
 
 
 class Highlight(BaseModel):
@@ -33,7 +34,7 @@ class AnnotationStore:
         self.dir: Path = cfg.data_dir / "annotations"
 
     def _path(self, paper_id: str) -> Path:
-        return self.dir / f"{paper_id.replace('/', '_')}.json"
+        return self.dir / f"{file_id(paper_id)}.json"
 
     def get(self, paper_id: str) -> Annotations:
         return Annotations.model_validate(read_json(self._path(paper_id), {}) or {})

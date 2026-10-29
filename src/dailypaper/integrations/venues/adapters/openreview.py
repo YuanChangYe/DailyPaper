@@ -9,13 +9,12 @@ venues.yaml 参数 ``venueid``：例如 ``ICLR.cc/{y}/Conference``。
 
 from __future__ import annotations
 
-import os
-
 import httpx
 
 from ....core.config import VenueSpec
 from ....core.models import Paper
 from ....core.registry import register
+from .. import openreview_auth
 from .base import VenueAdapter, VenueUnavailable, log
 
 API = "https://api2.openreview.net"
@@ -48,24 +47,11 @@ def note_to_paper(note: dict, venue_id: str, year: int) -> Paper | None:
 class OpenReviewAdapter(VenueAdapter):
     name = "openreview"
 
-    _token_cache: dict[str, str | None] = {}  # 同一进程只登录一次：OpenReview 对频繁登录会 429
-
     def _token(self, client: httpx.Client) -> str | None:
-        user, pwd = (os.environ.get("OPENREVIEW_USERNAME") or "").strip().strip("\"'"), (os.environ.get("OPENREVIEW_PASSWORD") or "").strip().strip("\"'")
-        if not (user and pwd):
-            return None
-        if user in self._token_cache:
-            if self._token_cache[user] is None:
-                raise VenueUnavailable("OpenReview 登录失败（本次运行已尝试过）：检查 OPENREVIEW_USERNAME / OPENREVIEW_PASSWORD")
-            return self._token_cache[user]
-        r = client.post(f"{API}/login", json={"id": user, "password": pwd})
-        if r.status_code != 200:
-            self._token_cache[user] = None
-            hint = "账号或密码不对；用 Google 登录注册的账号没有密码，需要在 OpenReview 设置里设一个" if r.status_code == 400 else "登录请求被限流，等几分钟再试" if r.status_code == 429 else ""
-            raise VenueUnavailable(f"OpenReview 登录失败（HTTP {r.status_code}）：{hint}")
-        token = r.json().get("token")
-        self._token_cache[user] = token
-        return token
+        t = openreview_auth.token(client)
+        if t is None and openreview_auth.credentials():
+            raise VenueUnavailable(openreview_auth.login_error() or "OpenReview 登录失败")
+        return t
 
     def list_papers(self, spec: VenueSpec, year: int) -> list[Paper]:
         venueid = str(spec.param("venueid", "")).replace("{y}", str(year))

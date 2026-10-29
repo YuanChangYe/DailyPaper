@@ -42,7 +42,53 @@ class FulltextLoader(ABC):
 
 
 def _http_get(url: str, timeout: float = 60) -> httpx.Response:
-    return httpx.get(url, headers={"User-Agent": USER_AGENT}, timeout=timeout, follow_redirects=True)
+    from ...integrations.venues.openreview_auth import auth_headers
+
+    return httpx.get(url, headers={"User-Agent": USER_AGENT, **auth_headers(url)}, timeout=timeout, follow_redirects=True)
+
+
+@register("fulltext_loader", "arxiv_lookup")
+class ArxivLookupLoader(FulltextLoader):
+    """非 arXiv 来源的论文（顶会论文池、Zotero）：按标题在 arXiv 上找同名版本，找到就按 arXiv HTML 读全文，并把 arXiv id 记回论文。"""
+
+    grounding = "structure-grounded"
+
+    def load(self, paper: Paper) -> str | None:
+        if paper.source == "arxiv" or paper.url_html or not paper.title.strip():
+            return None
+        from urllib.parse import quote
+
+        from ...integrations.venues.pool import normalize_title
+        from ..sources.arxiv import API_URL, parse_atom
+
+        self.grounding = "structure-grounded"
+        title = " ".join(paper.title.split())[:200].replace('"', " ")
+        try:
+            r = _http_get(f"{API_URL}?search_query=ti:%22{quote(title)}%22&max_results=5")
+        except httpx.HTTPError:
+            return None
+        if r.status_code != 200:
+            return None
+        want = normalize_title(paper.title)
+        hit = next((p for p in parse_atom(r.text) if normalize_title(p.title) == want), None)
+        if hit is None:
+            return None
+        paper.url_html = paper.url_html or hit.url_html or f"https://arxiv.org/html/{hit.id}"
+        paper.url_pdf = paper.url_pdf or hit.url_pdf
+        paper.extra["arxiv_id"] = hit.id
+        if paper.source == "venue":
+            try:
+                from ...integrations.venues.pool import VenuePool
+
+                VenuePool(self.ctx.config).set_arxiv(paper.id, hit.id, paper.url_html)
+            except Exception:  # noqa: BLE001 - 记不回池子不影响读全文
+                pass
+        text = ArxivHtmlLoader(self.ctx).load(paper)
+        if text:
+            return text
+        # 没有 HTML 版本时退回 arXiv 的 PDF
+        self.grounding = "page-grounded"
+        return PdfLoader(self.ctx).load(Paper(id=hit.id, title=hit.title, url_pdf=hit.url_pdf))
 
 
 @register("fulltext_loader", "arxiv_html")

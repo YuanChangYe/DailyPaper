@@ -16,6 +16,7 @@ from pathlib import Path
 
 from ..core.config import AppConfig
 from ..core.io import read_json, read_markdown
+from ..core.models import file_id
 
 # kind → (说明, 相对 cache_dir 的子目录)
 CACHE_KINDS: dict[str, tuple[str, str]] = {
@@ -142,7 +143,7 @@ def export_notes_zip(cfg: AppConfig) -> bytes:
         papers_dir = cfg.content_dir / "papers"
         for md in sorted(papers_dir.rglob("*.md")) if papers_dir.exists() else []:
             fm, body = read_markdown(md)
-            pid = str(fm.get("paper_id") or md.stem).replace("/", "_")
+            pid = file_id(str(fm.get("paper_id") or md.stem))
             text = md.read_text(encoding="utf-8")
             extra = _annotation_section(annos.get(pid, {}))
             z.writestr(md.relative_to(cfg.content_dir).as_posix(), text.rstrip("\n") + "\n" + extra)

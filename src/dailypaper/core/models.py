@@ -17,6 +17,11 @@ from pydantic import BaseModel, Field
 ARXIV_ID_RE = re.compile(r"^(\d{4}\.\d{4,5})(v\d+)?$")
 
 
+def file_id(paper_id: str) -> str:
+    """把论文 id 变成可安全用作文件名的形式（斜杠、冒号等都换成下划线）。网页端有同样的规则。"""
+    return re.sub(r"[^A-Za-z0-9._-]+", "_", paper_id)
+
+
 def now_utc() -> datetime:
     return datetime.now(timezone.utc)
 
@@ -48,7 +53,7 @@ class Paper(BaseModel):
     @property
     def slug(self) -> str:
         """可安全用作文件名的 ID。"""
-        return re.sub(r"[^A-Za-z0-9._-]+", "_", self.id)
+        return file_id(self.id)
 
 
 class ScreenResult(BaseModel):

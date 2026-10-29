@@ -61,15 +61,15 @@ def test_screen_failure_keeps_papers_unseen(ctx, cfg, monkeypatch):
     from dailypaper.plugins.rankers import llm_screen
 
     calls = {"n": 0}
-    real = llm_screen.LLMScreenRanker._screen_batch
+    real = llm_screen._screen_batch
 
-    def flaky(self, llm, composer, catalog, batch):
+    def flaky(ctx, llm, composer, catalog, batch, opts):
         calls["n"] += 1
         if calls["n"] == 1:
             raise RuntimeError("batch failed")
-        return real(self, llm, composer, catalog, batch)
+        return real(ctx, llm, composer, catalog, batch, opts)
 
-    monkeypatch.setattr(llm_screen.LLMScreenRanker, "_screen_batch", flaky)
+    monkeypatch.setattr(llm_screen, "_screen_batch", flaky)
     for s in cfg.pipeline.pipelines["daily"]:
         if s.id == "screen":
             s.params["batch_size"] = 2  # 3 篇预筛结果 → 2 批，第一批失败
@@ -79,6 +79,6 @@ def test_screen_failure_keeps_papers_unseen(ctx, cfg, monkeypatch):
     seen = set(read_json(cfg.data_dir / "seen.json"))
     assert not (failed & seen) and len(seen) == 3
 
-    monkeypatch.setattr(llm_screen.LLMScreenRanker, "_screen_batch", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("x")))
+    monkeypatch.setattr(llm_screen, "_screen_batch", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("x")))
     with pytest.raises(PipelineError, match="全部失败"):
         Pipeline.from_config(ctx).run()

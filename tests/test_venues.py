@@ -107,3 +107,60 @@ def test_adapters_registered(name):
     from dailypaper.core import registry
 
     assert name in registry.available()["venue_adapter"]
+
+
+def test_openreview_auth_headers(monkeypatch):
+    from dailypaper.integrations.venues import openreview_auth as oa
+
+    oa.reset()
+    monkeypatch.delenv("OPENREVIEW_USERNAME", raising=False)
+    monkeypatch.delenv("OPENREVIEW_PASSWORD", raising=False)
+    assert oa.auth_headers("https://openreview.net/pdf?id=x") == {} and oa.credentials() is None
+    monkeypatch.setenv("OPENREVIEW_USERNAME", "u@x.org")
+    monkeypatch.setenv("OPENREVIEW_PASSWORD", "p")
+    import httpx
+
+    calls = {"n": 0}
+
+    class R:
+        status_code = 200
+        def json(self): return {"token": "tok"}
+    monkeypatch.setattr(httpx, "post", lambda *a, **k: calls.__setitem__("n", calls["n"] + 1) or R())
+    assert oa.auth_headers("https://openreview.net/pdf?id=x") == {"Authorization": "Bearer tok"}
+    assert oa.auth_headers("https://arxiv.org/pdf/1") == {}
+    oa.auth_headers("https://api2.openreview.net/notes")
+    assert calls["n"] == 1  # 只登录一次
+    oa.reset()
+
+
+def test_arxiv_lookup_loader(cfg, monkeypatch):
+    from datetime import date
+
+    from dailypaper.core.context import RunContext
+    from dailypaper.plugins.fulltext import loaders
+
+    atom = """<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><entry><id>http://arxiv.org/abs/2501.00001v1</id>
+      <title>Conformal Prediction for LLM Agents</title><summary>abs</summary><published>2025-01-01T00:00:00Z</published>
+      <link href="http://arxiv.org/pdf/2501.00001v1" title="pdf"/></entry></feed>"""
+
+    class R:
+        def __init__(self, text, status=200): self.text, self.status_code = text, status
+    urls = []
+
+    def fake_get(url, timeout=60):
+        urls.append(url)
+        if "export.arxiv.org" in url:
+            return R(atom)
+        return R("<html><div class='ltx_document'><p>Full text here.</p></div></html>")
+    monkeypatch.setattr(loaders, "_http_get", fake_get)
+    ctx = RunContext(config=cfg, run_date=date(2026, 10, 29), provider_override="fake")
+    pool = VenuePool(cfg)
+    p = Paper(id="k", source="venue", title="Conformal Prediction for LLM Agents")
+    pool.upsert([p], "acl", 2025)
+    p = pool.get(paper_key(p))
+    text = loaders.ArxivLookupLoader(ctx).load(p)
+    assert text and "Full text" in text and p.extra["arxiv_id"] == "2501.00001" and "arxiv.org/html/2501.00001" in p.url_html
+    assert pool.get(p.id).extra["arxiv_id"] == "2501.00001"
+    assert loaders.ArxivLookupLoader(ctx).load(Paper(id="2501.00001", source="arxiv", title="x")) is None  # arXiv 来源不查
+    p2 = Paper(id="k2", source="venue", title="A Completely Different Title")
+    assert loaders.ArxivLookupLoader(ctx).load(p2) is None  # 标题对不上不冒认

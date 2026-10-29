@@ -320,6 +320,15 @@ dailypaper read <arXiv ID> --prompt-only                           # 只生成 p
 
 ---
 
+## 顶会专栏
+
+除了 arXiv 每天的新论文，DailyPaper 还会从 AI 顶会的录用论文里挑论文精读。会议名单在 [config/venues.yaml](config/venues.yaml)（入选规则：CCF 推荐目录 A/B 或 CORE A*/A，满足其一；默认 ACL、EMNLP、NAACL、COLING、EACL、NeurIPS、ICML、ICLR，可增删和停用），数据来自官方源：ACL Anthology（按卷 BibTeX）、OpenReview（需要免费账号，`.env` 里填 `OPENREVIEW_USERNAME` / `OPENREVIEW_PASSWORD`）、OpenAlex（兜底）。
+
+- `dailypaper venues sync` 把近两年的标题和摘要同步到本地 `data/venues.sqlite`（几万篇，不进 git）；每天的任务在超过 `auto_sync_days` 没同步时会自动补一次。
+- `daily` 流水线里的 `ranker.venue_fill` 在 arXiv 入选不足 `column.total` 篇时从池里补足：先用研究方向的关键词预筛，再用筛选模型打分（结果缓存在池里，不重复花钱），取分数最高的几篇，之后和 arXiv 论文一样精读。arXiv 当天没有公告时全部来自池子。
+- 网页「顶会」页显示论文池状态和来自池子的精读；卡片和详情页带「ACL 2026 · CCF-A」徽章；文库可按来源筛选；「设置 → 研究方向 → 顶会论文池」改会议开关和篇数。
+- `dailypaper read venue:<池子里的 key>` 可以单独精读池里的某一篇（key 在「顶会」页或 `venues status` 里看）。
+
 ## 网页
 
 `dailypaper app` 打开的是一个单页网页，同一份文件也会随每日运行复制到内容目录，发布为静态网站后以只读方式展示。
@@ -666,6 +675,7 @@ class MinAuthors(Filter):
 | `dailypaper sync-skills [--only NAME ...]` | 同步外部 skill |
 | `dailypaper covers [--force]` | 扫描首页封面素材目录，生成尺寸与清单 |
 | `dailypaper venues sync [--venue id] [--year Y] [--force]` / `venues status` | 顶会论文池：同步近两年录用论文的标题与摘要到本地 SQLite / 查看各会篇数 |
+| `dailypaper read venue:<key>` | 精读顶会论文池里的某一篇 |
 | `dailypaper list-plugins` / `list-lenses` | 列出插件 / lens |
 | `mkdocs serve` / `mkdocs build` | 预览 / 构建静态网站 |
 
