@@ -19,4 +19,4 @@ $lnk.WindowStyle = 7
 $lnk.Save()
 
 Write-Host "已创建快捷方式：$(Join-Path $Desktop 'DailyPaper.lnk')"
-Write-Host "双击即可启动（约 3 秒后自动打开 http://127.0.0.1:$Port）。退出请在网页的「搜索设置 → 本地助手」中操作。"
+Write-Host "双击即可启动（约 3 秒后自动打开 http://127.0.0.1:$Port）。退出请在网页的「设置 → 研究方向 → 本地助手」中操作。"

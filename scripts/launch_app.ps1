@@ -1,5 +1,5 @@
 ﻿# 桌面图标调用的启动器：后台启动本地助手（没有终端窗口），然后打开浏览器。
-# 已在运行时只打开浏览器。退出：网页「搜索设置 → 本地助手 → 退出本地助手」。
+# 已在运行时只打开浏览器。退出：网页「设置 → 研究方向 → 本地助手 → 退出本地助手」。
 param([int]$Port = 8765)
 $root = Split-Path -Parent $PSScriptRoot
 $exe = Join-Path $root ".venv\Scripts\dailypaper.exe"

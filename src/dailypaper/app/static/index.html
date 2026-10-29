@@ -62,7 +62,7 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{scroll-behavior:smooth;scroll-padding-top:96px}
-body{margin:0;background:var(--bg);color:var(--body);font:15px/1.7 var(--sans);overflow-x:clip;-webkit-font-smoothing:antialiased;
+body{margin:0;background:var(--bg);color:var(--body);font:var(--fs,15px)/var(--lh,1.7) var(--sans);overflow-x:clip;-webkit-font-smoothing:antialiased;
   background-image:radial-gradient(1200px 600px at 85% -10%,rgba(169,220,225,.10),transparent 60%),radial-gradient(900px 500px at -10% 40%,rgba(120,170,185,.08),transparent 60%);background-attachment:fixed}
 a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:8px}
@@ -264,7 +264,7 @@ select.input{padding-right:30px}
 .paper-head h1{font-size:clamp(24px,3vw,34px);line-height:1.3;letter-spacing:-.015em;margin:10px 0 12px}
 .meta-line{display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--body)}
 .paper-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
-.prose{max-width:none;color:var(--body);font-size:16px;line-height:1.85;padding-top:10px}
+.prose{max-width:none;color:var(--body);font-size:var(--prose-fs,16px);line-height:calc(var(--lh,1.7) + .15);padding-top:10px}
 .prose h1{display:none}
 .prose h2{font-size:22px;margin:38px 0 12px;padding-top:6px;letter-spacing:-.01em}
 .prose h3{font-size:17px;margin:24px 0 8px}
@@ -460,6 +460,56 @@ footer a{border-bottom:1px solid var(--line-2)}
   *,*:before,*:after{animation:none!important;transition:none!important}
   html{scroll-behavior:auto}
 }
+/* ---------- 偏好（设置 → 外观 / 阅读；存在浏览器 localStorage dp.prefs） ---------- */
+:root[data-font="system"]{--sans:system-ui,-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
+:root[data-font="serif"]{--sans:'Noto Serif SC','Source Han Serif SC',Georgia,'Songti SC','SimSun',serif}
+:root[data-font="legible"]{--sans:'Atkinson Hyperlegible','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif}
+:root[data-motion="off"] *,:root[data-motion="off"] *:before,:root[data-motion="off"] *:after{animation:none!important;transition:none!important}
+:root[data-motion="off"] html{scroll-behavior:auto}
+:root[data-motion="off"] .tilt{transform:none!important}
+:root[data-motion="off"] .reveal{opacity:1!important;transform:none!important}
+:root[data-density="compact"] .prow{padding:12px 16px;gap:14px;grid-template-columns:minmax(0,1fr) 120px}
+:root[data-density="compact"] .prow-main{gap:4px}:root[data-density="compact"] .prow-tldr{-webkit-line-clamp:2}:root[data-density="compact"] .prow .insight{display:none}
+:root[data-density="compact"] .pcard{padding:14px;gap:6px}:root[data-density="compact"] .pcard .insight{display:none}
+:root[data-prose-width="comfy"] .prose{max-width:76ch}
+:root[data-src-marks="dim"] .src{opacity:.45}:root[data-src-marks="hide"] .src{display:none}
+.settings-shell{display:grid;grid-template-columns:230px minmax(0,1fr);gap:36px;align-items:start;padding-top:8px}
+.sgroups{position:sticky;top:100px;display:flex;flex-direction:column;gap:2px}
+.sgroups a{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:12px;color:var(--muted);font-size:14px}
+.sgroups a:hover{color:var(--ink);background:var(--glass)}.sgroups a[aria-current="true"]{color:var(--ink);background:var(--glass-2);font-weight:600}
+.sgroups a.soon{opacity:.45;cursor:default}.sgroups a.soon:hover{background:none;color:var(--muted)}
+.sgroups a small{margin-left:auto;font-size:11px;color:var(--muted)}
+.sgroups .sg-sep{margin:10px 14px 4px;font-size:11px;letter-spacing:.08em;color:var(--muted)}
+.spanel{min-width:0}
+.spanel .page-head{padding-top:0}
+.store-tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);padding:3px 10px;border-radius:999px;border:1px solid var(--line);margin-top:10px}
+.store-tag i{width:6px;height:6px;border-radius:50%;background:var(--accent)}.store-tag.cfg i{background:var(--warn)}
+.opts{margin-top:18px;border-top:1px solid var(--line)}
+.opt{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:16px 0;border-bottom:1px solid var(--line)}
+.opt .ot{min-width:0}.opt .ot b{display:block;color:var(--ink);font-size:15px;font-weight:600}.opt .ot span{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.opt .oc{flex-shrink:0;display:flex;align-items:center;gap:10px}
+.seg{display:inline-flex;padding:3px;border-radius:999px;border:1px solid var(--line-2);background:rgba(9,30,38,.35)}
+.seg button{border:0;background:none;color:var(--muted);padding:5px 13px;border-radius:999px;font-size:13px;font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--mist);color:#0C232B;font-weight:600}
+:root[data-theme="light"] .seg{background:#fff}:root[data-theme="light"] .seg button[aria-pressed="true"]{background:#10272E;color:#fff}
+.opt select,.opt input[type=text]{min-height:36px;padding:6px 12px;border-radius:10px;border:1px solid var(--line-2);background:rgba(9,30,38,.35);outline:0}
+.opt select:focus,.opt input:focus{border-color:var(--accent)}
+.opt .range{width:220px}.opt .range output{min-width:4ch;font-size:13px}
+.swatches{display:flex;gap:8px}.swatches button{width:26px;height:26px;border-radius:50%;border:2px solid transparent;padding:0;cursor:pointer}
+.swatches button[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 2px var(--bg)}
+.sw-yellow{background:#FFD666}.sw-green{background:#78DCA0}.sw-pink{background:#FF96AA}.sw-blue{background:#82BEFF}
+.about-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:18px}
+.kbd{display:inline-block;min-width:22px;padding:1px 7px;border-radius:6px;border:1px solid var(--line-2);background:var(--glass);font-family:var(--mono);font-size:12px;color:var(--ink);text-align:center}
+.about-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-size:14px}
+.about-list li{display:flex;justify-content:space-between;gap:12px}
+@media (max-width:1000px){
+  .settings-shell{grid-template-columns:1fr;gap:18px}
+  .sgroups{position:static;flex-direction:row;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}.sgroups::-webkit-scrollbar{display:none}
+  .sgroups a{white-space:nowrap}.sgroups .sg-sep{display:none}.sgroups a small{display:none}
+}
+@media (max-width:700px){
+  .opt{flex-direction:column;align-items:stretch}.opt .oc{justify-content:flex-start;flex-wrap:wrap}.opt .range{width:100%}
+}
 </style>
 </head>
 <body>
@@ -476,7 +526,7 @@ footer a{border-bottom:1px solid var(--line-2)}
       <a href="#/review" data-nav="review">审核台<span class="badge" id="pending-badge" hidden></span></a>
       <a href="#/zlib" data-nav="zlib">文献库</a>
       <a href="#/trends" data-nav="trends">趋势</a>
-      <a href="#/settings" data-nav="settings">搜索设置</a>
+      <a href="#/settings" data-nav="settings">设置</a>
     </nav>
     <div class="nav-end">
       <button class="btn sm ghost icon" id="theme-toggle" type="button" title="切换白天 / 夜间" aria-label="切换主题"><span class="sun">☀</span><span class="moon">☾</span></button>
@@ -679,7 +729,49 @@ const S = {
 };
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+/* ---------- 偏好：外观与阅读设置，存在浏览器里（localStorage dp.prefs） ---------- */
+const PREF_DEFAULTS = { theme: "system", font: "default", customFont: "", fontSize: 15, proseSize: 16, lineHeight: "normal", motion: "system", density: "comfy",
+  paperDefault: "note", splitPct: 50, proseWidth: "full", hlColor: "yellow", srcMarks: "normal", confirmRun: false };
+let PREFS = null;
+function prefs() {
+  if (PREFS) return PREFS;
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem("dp.prefs") || "{}") || {}; } catch { saved = {}; }
+  if (saved.theme === undefined) { try { const t = localStorage.getItem("dp.theme"); if (t) saved.theme = t; } catch { /* 忽略 */ } }  // 旧版主题设置
+  PREFS = { ...PREF_DEFAULTS, ...saved };
+  return PREFS;
+}
+function setPref(key, value) {
+  prefs()[key] = value;
+  try { localStorage.setItem("dp.prefs", JSON.stringify(PREFS)); } catch { /* 忽略 */ }
+  applyPrefs();
+}
+const sysDark = matchMedia("(prefers-color-scheme: dark)");
+const sysReduced = matchMedia("(prefers-reduced-motion: reduce)");
+const isLight = () => document.documentElement.dataset.theme === "light";
+const reducedMotion = () => prefs().motion === "off" || (prefs().motion === "system" && sysReduced.matches);
+const FONT_LINKS = { serif: "https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap",
+  legible: "https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" };
+function applyPrefs() {
+  const P = prefs(), h = document.documentElement;
+  const light = P.theme === "light" || (P.theme === "system" && !sysDark.matches);
+  if (light) h.dataset.theme = "light"; else delete h.dataset.theme;
+  h.dataset.font = P.font === "custom" && !P.customFont.trim() ? "default" : P.font;
+  if (P.font === "custom" && P.customFont.trim()) h.style.setProperty("--sans", `"${P.customFont.trim().replace(/"/g, "")}",Manrope,'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif`);
+  else h.style.removeProperty("--sans");
+  if (FONT_LINKS[P.font] && !document.querySelector(`link[data-font="${P.font}"]`)) {
+    const l = document.createElement("link"); l.rel = "stylesheet"; l.href = FONT_LINKS[P.font]; l.dataset.font = P.font; document.head.append(l);
+  }
+  h.style.setProperty("--fs", P.fontSize + "px");
+  h.style.setProperty("--prose-fs", P.proseSize + "px");
+  h.style.setProperty("--lh", { compact: 1.5, normal: 1.7, relaxed: 1.95 }[P.lineHeight] || 1.7);
+  h.dataset.motion = reducedMotion() ? "off" : "on";
+  h.dataset.density = P.density;
+  h.dataset.proseWidth = P.proseWidth;
+  h.dataset.srcMarks = P.srcMarks;
+}
+applyPrefs();
+sysDark.addEventListener("change", applyPrefs); sysReduced.addEventListener("change", applyPrefs);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const tname = (id) => (S.topics.find((t) => t.id === id)?.name) || TOPIC_LABELS[id] || id;
 const tshort = (id) => TOPIC_LABELS[id] || tname(id);
@@ -852,13 +944,13 @@ function paperRow(p, { rank } = {}) {
 }
 
 function revealAll(root = document) {
-  if (reduced) return;
+  if (reducedMotion()) return;
   const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("play"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -6% 0px" });
   $$(".reveal:not(.play)", root).forEach((el, i) => { el.style.animationDelay = (i % 4) * 70 + "ms"; io.observe(el); });
 }
 function countUp(el, n) {
   n = Number(n) || 0;
-  if (reduced) { el.textContent = n.toLocaleString(); return; }
+  if (reducedMotion()) { el.textContent = n.toLocaleString(); return; }
   const t0 = performance.now();
   const tick = (t) => { const p = Math.min((t - t0) / 1100, 1); el.textContent = Math.round(n * (1 - Math.pow(1 - p, 3))).toLocaleString(); if (p < 1) requestAnimationFrame(tick); };
   requestAnimationFrame(tick);
@@ -916,6 +1008,7 @@ async function refreshBadge() {
 /* ---------- 运行 ---------- */
 let runTimer = null;
 async function startRun(pipeline, ids = []) {
+  if (prefs().confirmRun && !confirm(pipeline === "daily" ? "现在运行今日任务？会调用模型并产生费用。" : `精读 ${ids.join(", ")}？会调用模型并产生费用。`)) return;
   if (!isLocal()) { toast(S.mode === "demo" ? `示例：会在本地助手里执行 dailypaper ${pipeline === "read" ? "read " + ids.join(" ") : "run"}` : "请在电脑上运行 dailypaper app 后再触发", S.mode === "demo" ? "" : "err"); return; }
   // 会真实调用模型，先确认并给出费用量级（按 Sonnet 精读约 $0.14 / 篇估算）
   const n = pipeline === "read" ? ids.length : Number(S.config?.daily?.top_k || DEMO_CONFIG.daily.top_k);
@@ -994,14 +1087,14 @@ VIEWS.home = async () => {
     <div class="stat reveal"><b data-count="${today.length}">0</b><span>${esc(fmtDate(latest || ""))} 精读</span></div>
     <div class="stat reveal"><b data-count="${S.index.length}">0</b><span>累计笔记</span></div>
     <div class="stat reveal"><b data-count="${imported}">0</b><span>已入库 Zotero</span></div>
-    ${isLocal() ? `<a class="stat reveal" href="#/settings" title="查看运行日志"><b class="stat-text">${esc(lastRunLabel())}</b><span>上次运行 · 点击看日志</span></a>`
+    ${isLocal() ? `<a class="stat reveal" href="#/settings?g=topics" title="查看运行日志"><b class="stat-text">${esc(lastRunLabel())}</b><span>上次运行 · 点击看日志</span></a>`
                 : `<div class="stat reveal"><b data-count="${S.topics.length}">0</b><span>研究方向</span></div>`}
   </div>
   ${!S.index.length ? `<section class="section"><div class="onboard">
     <h2>还没有精读笔记</h2>
     <p>${isLocal() ? "本地助手已连接。按下面三步开始：" : S.mode === "static" ? "这个网站还没有发布过内容，等每日任务运行后会自动出现。" : "当前显示的是示例数据。连接本地助手后，这里会变成你的笔记。"}</p>
     ${isLocal() ? `<ol>
-      <li>在 <a href="#/settings">搜索设置</a> 里确认研究方向和关键词（也可以先用默认的试试）。</li>
+      <li>在 <a href="#/settings?g=topics">设置 → 研究方向</a> 里确认研究方向和关键词（也可以先用默认的试试）。</li>
       <li>点右上角的 <b>立即运行</b>，或者在终端运行 <code>dailypaper run</code>；首次精读 5 篇大约 5 分钟。</li>
       <li>跑完后回到这里，或者去 <a href="#/review">审核台</a> 决定哪些进 Zotero。</li>
     </ol>
@@ -1014,7 +1107,7 @@ VIEWS.home = async () => {
   </section>
 
   <section class="section">
-    <div class="section-head"><div><h2>研究方向</h2><p>方向、关键词和镜头问题都可以在"搜索设置"里改。</p></div><a class="btn sm" href="#/settings">调整方向 →</a></div>
+    <div class="section-head"><div><h2>研究方向</h2><p>方向、关键词和镜头问题都可以在"设置 → 研究方向"里改。</p></div><a class="btn sm" href="#/settings?g=topics">调整方向 →</a></div>
     <div class="topics">${S.topics.map((t) => `<a class="topic reveal" href="#/library?topic=${encodeURIComponent(t.id)}"><span class="count">${counts[t.id] || 0}</span><b>${esc(tshort(t.id))}</b><span>${esc(t.name)}</span></a>`).join("")}</div>
   </section>`;
 };
@@ -1022,7 +1115,7 @@ VIEWS.home.after = () => {
   $$("[data-count]").forEach((el) => countUp(el, el.dataset.count));
   // 动态玻璃：光斑跟随鼠标，首选卡片随鼠标轻微倾斜
   const stage = $(".hero-stage"), card = $("#float-card");
-  if (stage && !reduced && matchMedia("(hover:hover)").matches) {
+  if (stage && !reducedMotion() && matchMedia("(hover:hover)").matches) {
     stage.addEventListener("pointermove", (e) => {
       const r = stage.getBoundingClientRect();
       stage.style.setProperty("--mx", `${((e.clientX - r.left) / r.width * 100).toFixed(1)}%`);
@@ -1218,7 +1311,8 @@ function setupSplit(p) {
     };
     handle.addEventListener("pointermove", move); handle.addEventListener("pointerup", up); handle.addEventListener("pointercancel", up);
   });
-  let remembered = false; try { remembered = sessionStorage.getItem("dp.pdf") === "1"; } catch { /* 忽略 */ }
+  if (!saved) split.style.setProperty("--split", prefs().splitPct + "%");
+  let remembered = prefs().paperDefault === "split"; try { if (sessionStorage.getItem("dp.pdf") === "1") remembered = true; } catch { /* 忽略 */ }
   if (remembered && matchMedia("(min-width:1000px)").matches) setSplit(true);
 }
 VIEWS.paper.after = async (id) => {
@@ -1244,7 +1338,7 @@ VIEWS.paper.after = async (id) => {
   const firstDeep = hs.find((h) => deepTitles.has(stripNum(h.textContent)));
   if (firstDeep) { const sep = document.createElement("div"); sep.className = "deep-sep"; sep.textContent = "以下为深入阅读 · 只想快速理解可以到此为止"; firstDeep.before(sep); }
   toc.innerHTML = hs.map((h) => `${h === firstDeep ? `<span class="toc-sep">深入阅读</span>` : ""}<a href="#/paper/${encodeURIComponent(id)}" data-sec="${h.id}">${esc(h.textContent)}</a>`).join("");
-  $$("[data-sec]", toc).forEach((a) => a.addEventListener("click", (e) => { e.preventDefault(); document.getElementById(a.dataset.sec).scrollIntoView({ behavior: reduced ? "auto" : "smooth" }); }));
+  $$("[data-sec]", toc).forEach((a) => a.addEventListener("click", (e) => { e.preventDefault(); document.getElementById(a.dataset.sec).scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth" }); }));
   const spy = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) $$("[data-sec]", toc).forEach((a) => a.classList.toggle("on", a.dataset.sec === e.target.id)); }), { rootMargin: "-20% 0px -70% 0px" });
   hs.forEach((h) => spy.observe(h));
   setupAnnotations(id);
@@ -1298,7 +1392,7 @@ function setupAnnotations(id) {
   noteEl.addEventListener("input", () => { data.note = noteEl.value; persist(); });
   list.addEventListener("click", (e) => {
     const li = e.target.closest("[data-goto]"); if (!li) return;
-    prose.querySelector(`mark[data-hl="${li.dataset.goto}"]`)?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+    prose.querySelector(`mark[data-hl="${li.dataset.goto}"]`)?.scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth", block: "center" });
   });
   const closePop = () => { pop?.remove(); pop = null; };
   const showPop = (x, y, html) => {
@@ -1316,7 +1410,7 @@ function setupAnnotations(id) {
     const sel = getSelection(); const text = sel?.toString().trim();
     if (!text || text.length < 2 || text.length > 2000 || !prose.contains(sel.anchorNode) || sel.anchorNode.parentElement?.closest("mark.hl")) return;
     const r = sel.getRangeAt(0).getBoundingClientRect(); const section = sectionOf(sel.anchorNode);
-    showPop(r.left + r.width / 2, r.top, ["yellow", "green", "pink", "blue"].map((c) => `<button type="button" class="c-${c}" data-c="${c}" title="高亮"></button>`).join("") + `<button type="button" class="note-btn" data-c="yellow" data-note="1">高亮并批注</button>`);
+    showPop(r.left + r.width / 2, r.top, ["yellow", "green", "pink", "blue"].map((c) => `<button type="button" class="c-${c}" data-c="${c}" title="高亮"></button>`).join("") + `<button type="button" class="note-btn" data-c="${esc(prefs().hlColor)}" data-note="1">高亮并批注</button>`);
     pop.addEventListener("click", (e) => {
       const b = e.target.closest("button"); if (!b) return;
       const h = { id: uid(), text, color: b.dataset.c, comment: "", section };
@@ -1539,13 +1633,95 @@ function topicCard(t, i) {
       <div><button class="btn sm bad" type="button" data-del-topic="${i}">删除这个方向</button></div>
     </div></details>`;
 }
-VIEWS.settings = async () => {
+/* ======================================================================
+   设置中心：左侧分组，右侧选项。外观 / 阅读 存在浏览器；研究方向 写入项目配置。
+   ====================================================================== */
+const SETTINGS_GROUPS = [
+  { id: "appearance", name: "外观", icon: "◐" },
+  { id: "reading", name: "阅读", icon: "☰" },
+  { id: "topics", name: "研究方向", icon: "⌖", cfg: true },
+  { id: "run", name: "运行与费用", icon: "◷", cfg: true, soon: true },
+  { id: "data", name: "数据与隐私", icon: "⛁", soon: true },
+  { id: "prompts", name: "提示词与 Skill", icon: "✎", cfg: true, soon: true },
+  { id: "about", name: "关于", icon: "ⓘ" },
+];
+const seg = (key, options) => `<div class="seg" data-pref="${key}" role="group">${options.map(([v, t]) => `<button type="button" data-v="${esc(v)}" aria-pressed="${String(prefs()[key]) === String(v)}">${esc(t)}</button>`).join("")}</div>`;
+const opt = (title, desc, control) => `<div class="opt"><div class="ot"><b>${title}</b>${desc ? `<span>${desc}</span>` : ""}</div><div class="oc">${control}</div></div>`;
+const rangeCtl = (key, min, max, step, unit) => `<div class="range"><input type="range" data-pref="${key}" min="${min}" max="${max}" step="${step}" value="${esc(prefs()[key])}"><output>${esc(prefs()[key])}${unit}</output></div>`;
+const groupHead = (g, desc) => `<div class="page-head"><h1>${esc(g.name)}</h1><p>${desc}</p><span class="store-tag ${g.cfg ? "cfg" : ""}"><i></i>${g.cfg ? "写入项目配置（config/*.yaml）" : "保存在这台浏览器里，改动即时生效"}</span></div>`;
+
+const SETTINGS = {};
+SETTINGS.appearance = () => `${groupHead(SETTINGS_GROUPS[0], "主题、字体和动态效果。")}
+  <div class="opts">
+    ${opt("主题", "跟随系统时随操作系统的白天 / 夜间切换；顶栏的 ☀ / ☾ 按钮是快捷开关。", seg("theme", [["system", "跟随系统"], ["light", "白天"], ["dark", "夜间"]]))}
+    ${opt("字体", "默认为 Manrope + 思源黑体；衬线和易读体会从 Google Fonts 加载。", `<select data-pref="font">${[["default", "默认（Manrope + Noto Sans SC）"], ["system", "系统字体"], ["serif", "衬线（Noto Serif SC）"], ["legible", "易读体（Atkinson Hyperlegible）"], ["custom", "自定义…"]].map(([v, t]) => `<option value="${v}" ${prefs().font === v ? "selected" : ""}>${t}</option>`).join("")}</select>`)}
+    <div class="opt" id="custom-font-row" ${prefs().font === "custom" ? "" : "hidden"}><div class="ot"><b>自定义字体名</b><span>填本机已安装的字体名，例如 LXGW WenKai、Source Han Sans。</span></div><div class="oc"><input type="text" data-pref="customFont" value="${esc(prefs().customFont)}" placeholder="字体名"></div></div>
+    ${opt("界面字号", "导航、卡片和列表的基准字号，全站按比例缩放。", rangeCtl("fontSize", 13, 20, 1, "px"))}
+    ${opt("正文字号", "论文页精读笔记的字号。", rangeCtl("proseSize", 14, 22, 1, "px"))}
+    ${opt("行距", "", seg("lineHeight", [["compact", "紧凑"], ["normal", "标准"], ["relaxed", "宽松"]]))}
+    ${opt("动态效果", "封面照片的缓慢缩放与雾气、卡片倾斜、进入动画。关闭后更省电，也适合晕动的人。", seg("motion", [["system", "跟随系统"], ["on", "开"], ["off", "关"]]))}
+    ${opt("列表密度", "紧凑模式下列表只显示标题和一句话总结，不显示缩略图。", seg("density", [["comfy", "舒适"], ["compact", "紧凑"]]))}
+  </div>`;
+SETTINGS.reading = () => `${groupHead(SETTINGS_GROUPS[1], "论文页的默认布局、正文宽度和高亮。")}
+  <div class="opts">
+    ${opt("打开论文时", "分栏会在右侧同时打开 PDF（需要本地助手和足够宽的窗口）。", seg("paperDefault", [["note", "只看笔记"], ["split", "自动分栏 PDF"]]))}
+    ${opt("分栏默认比例", "笔记占的宽度；拖动分隔条后会记住实际像素值。", rangeCtl("splitPct", 30, 70, 5, "%"))}
+    ${opt("正文宽度", "舒适宽度把每行限制在约 76 个字符，长段落更好读。", seg("proseWidth", [["full", "全宽"], ["comfy", "舒适"]]))}
+    ${opt("默认高亮颜色", "选中文字后点「高亮并批注」用的颜色。", `<div class="swatches" data-pref="hlColor">${["yellow", "green", "pink", "blue"].map((c) => `<button type="button" class="sw-${c}" data-v="${c}" aria-pressed="${prefs().hlColor === c}" title="${c}"></button>`).join("")}</div>`)}
+    ${opt("原文出处标记", "笔记里的【§3.2】【Table 2】这类标记。", seg("srcMarks", [["normal", "正常"], ["dim", "淡化"], ["hide", "隐藏"]]))}
+    ${opt("运行前确认", "点「立即运行」或「精读这篇」前弹出确认，避免误触产生费用。", seg("confirmRun", [[false, "不用"], [true, "确认"]]))}
+  </div>`;
+SETTINGS.about = () => {
+  const version = S.meta?.version || S.siteInfo?.version || "";
+  const repo = S.meta?.repo_url || S.siteInfo?.repo_url || DEFAULT_REPO;
+  return `${groupHead(SETTINGS_GROUPS[6], "版本、快捷键和数据来源。").replace(/<span class="store-tag.*?<\/span>/, "")}
+  <div class="about-grid">
+    <div class="panel"><h3>版本</h3>
+      <ul class="about-list">
+        <li><span>DailyPaper</span><b class="mono" id="about-version">${version ? "v" + esc(version) : "—"}</b></li>
+        <li><span>最新发布</span><b class="mono" id="about-latest">检查中…</b></li>
+        <li><span>运行位置</span><b>${{ local: "本地助手", static: "静态网站", demo: "示例模式" }[S.mode]}</b></li>
+        ${isLocal() && S.meta?.workspace ? `<li><span>输出目录</span><b class="mono" style="font-size:12px;word-break:break-all;text-align:right">${esc(S.meta.workspace)}</b></li>` : ""}
+      </ul>
+      <p style="margin:14px 0 0"><a class="btn sm" href="${esc(repo)}" target="_blank" rel="noopener noreferrer">GitHub 仓库 ↗</a> <a class="btn sm ghost" href="${esc(repo)}/releases" target="_blank" rel="noopener noreferrer">更新说明</a></p>
+    </div>
+    <div class="panel"><h3>快捷键</h3>
+      <ul class="about-list">
+        <li><span>聚焦搜索框（首页）</span><span class="kbd">/</span></li>
+        <li><span>上一篇 / 下一篇（论文页）</span><span><span class="kbd">←</span> <span class="kbd">→</span></span></li>
+        <li><span>添加关键词（研究方向）</span><span class="kbd">Enter</span></li>
+      </ul>
+    </div>
+    <div class="panel"><h3>数据来源</h3>
+      <ul class="about-list">
+        <li><span>论文</span><b>arXiv RSS / API</b></li>
+        <li><span>筛选与精读</span><b>config/llm.yaml 里的模型</b></li>
+        <li><span>文献库</span><b>本机 Zotero</b></li>
+        <li><span>高亮与批注</span><b>${isLocal() ? "data/annotations/" : "这台浏览器"}</b></li>
+      </ul>
+      <p style="font-size:13px;color:var(--muted);margin:12px 0 0">所有数据都在你自己的电脑或仓库里；网页本身不向第三方发送任何内容（字体除外）。</p>
+    </div>
+  </div>`;
+};
+SETTINGS.soon = (g) => `${groupHead(g, "这一组在下一轮迭代中加入。")}<div class="notice info">「${esc(g.name)}」还没有做。目前相关设置请直接编辑 config/ 目录下的 YAML 文件。</div>`;
+
+VIEWS.settings = async (_, params) => {
+  const gid = params.get("g") || "appearance";
+  const g = SETTINGS_GROUPS.find((x) => x.id === gid) || SETTINGS_GROUPS[0];
+  const side = `<nav class="sgroups" aria-label="设置分组">${SETTINGS_GROUPS.map((x, i) => `${i === 2 ? `<span class="sg-sep">项目</span>` : i === 6 ? `<span class="sg-sep"></span>` : ""}<a href="#/settings?g=${x.id}" ${x.id === g.id ? 'aria-current="true"' : ""} class="${x.soon ? "soon" : ""}"><span>${x.icon}</span>${esc(x.name)}${x.soon ? "<small>即将推出</small>" : ""}</a>`).join("")}</nav>`;
+  let body;
+  if (g.id === "topics") body = await SETTINGS.topics();
+  else if (g.soon) body = SETTINGS.soon(g);
+  else body = SETTINGS[g.id]();
+  return `<div class="settings-shell">${side}<div class="spanel" data-group="${g.id}">${body}</div></div>`;
+};
+SETTINGS.topics = async () => {
   await loadConfig();
   const c = S.config, d = c.daily;
   const canSave = S.configSource === "api" && c.editable !== false;
   const notice = { missing: "本地助手还没有提供 <code>/api/config</code>（见 src/dailypaper/app/API.md 2.2）。下面是项目 topics.yaml 的副本，可以编辑后导出 YAML 手动替换。", error: "读取配置失败，显示的是默认副本。", static: "这是只读网站。可以在这里编辑后导出 YAML，提交到仓库的 config/ 目录。", demo: "示例模式：编辑后可以导出 YAML。连接本地助手后可直接保存。" }[S.configSource];
   return `
-  <div class="page-head"><h1>搜索设置</h1><p>决定每天抓什么、怎么筛、精读时问什么问题。保存后下一次运行生效。</p></div>
+  ${groupHead(SETTINGS_GROUPS[2], "决定每天抓什么、怎么筛、精读时问什么问题。保存后下一次运行生效。")}
   ${notice ? `<div class="notice">${notice}</div>` : canSave ? "" : `<div class="notice">后端标记配置为不可写（editable: false），只能导出 YAML。</div>`}
   <div class="settings-layout">
     <div>
@@ -1601,7 +1777,32 @@ function toYAML(c) {
   y += `# pipeline.yaml → pipelines.daily 中对应的参数：\n#   categories: ${list(c.daily.categories)}\n#   max_candidates: ${c.daily.max_candidates}\n#   top_k: ${c.daily.top_k}\n#   min_score: ${c.daily.min_score}\n`;
   return y;
 }
-VIEWS.settings.after = () => {
+VIEWS.settings.after = (_, params) => {
+  const gid = params.get("g") || "appearance";
+  const panel = $(".spanel");
+  if (gid !== "topics") {
+    panel.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-pref] button[data-v]"); if (!b) return;
+      const box = b.closest("[data-pref]"); let v = b.dataset.v; if (v === "true") v = true; else if (v === "false") v = false;
+      setPref(box.dataset.pref, v);
+      $$("button", box).forEach((x) => x.setAttribute("aria-pressed", x === b));
+    });
+    panel.addEventListener("input", (e) => {
+      const el = e.target.closest("input[data-pref], select[data-pref]"); if (!el) return;
+      const v = el.type === "range" ? Number(el.value) : el.value;
+      setPref(el.dataset.pref, v);
+      if (el.type === "range") el.nextElementSibling.value = v + (el.dataset.pref === "splitPct" ? "%" : "px");
+      if (el.dataset.pref === "font") $("#custom-font-row").hidden = v !== "custom";
+    });
+    if (gid === "about") {
+      const repo = (S.meta?.repo_url || S.siteInfo?.repo_url || DEFAULT_REPO).match(/github\.com\/([^/]+\/[^/#?]+)/);
+      const out = $("#about-latest");
+      if (repo && out) fetch(`https://api.github.com/repos/${repo[1]}/tags?per_page=1`).then((r) => r.ok ? r.json() : Promise.reject())
+        .then((tags) => { const t = tags[0]?.name || ""; out.textContent = t || "—"; const cur = S.meta?.version || S.siteInfo?.version || ""; if (t && cur && t.replace(/^v/, "") !== cur) out.textContent += "（有新版本）"; })
+        .catch(() => { out.textContent = "无法检查"; });
+    }
+    return;
+  }
   const list = $("#topic-list");
   const bindRanges = (root) => $$('input[type="range"]', root).forEach((r) => r.addEventListener("input", () => (r.nextElementSibling.value = Number(r.value).toFixed(1))));
   bindRanges(document);
@@ -1683,7 +1884,7 @@ async function route(force = false) {
     if (!force) window.scrollTo({ top: 0, behavior: "auto" });
     await VIEWS[view].after?.(arg, params);
     revealAll(root); syncSelection();
-    document.title = { home: "DailyPaper", daily: "今日 · DailyPaper", library: "文库 · DailyPaper", paper: "论文 · DailyPaper", review: "审核台 · DailyPaper", settings: "搜索设置 · DailyPaper", zlib: "文献库 · DailyPaper", trends: "趋势 · DailyPaper" }[view];
+    document.title = { home: "DailyPaper", daily: "今日 · DailyPaper", library: "文库 · DailyPaper", paper: "论文 · DailyPaper", review: "审核台 · DailyPaper", settings: "设置 · DailyPaper", zlib: "文献库 · DailyPaper", trends: "趋势 · DailyPaper" }[view];
   } catch (e) {
     root.innerHTML = `<div class="view"><div class="page-head"><h1>出错了</h1><p>${esc(e.message)}</p></div><a class="btn" href="#/">回到首页</a></div>`;
   }
@@ -1698,16 +1899,11 @@ document.addEventListener("change", (e) => {
 $$("[data-bulk]").forEach((b) => b.addEventListener("click", () => decide([...S.selected], b.dataset.bulk, $("#sel-collection").value)));
 $("#sel-clear").addEventListener("click", () => { S.selected.clear(); syncSelection(); });
 $("#run-now").addEventListener("click", () => startRun("daily"));
-// 主题：默认夜间，可切换白天；记住选择
-(() => {
-  let t = ""; try { t = localStorage.getItem("dp.theme") || ""; } catch { /* 忽略 */ }
-  if (t) document.documentElement.dataset.theme = t;
-  $("#theme-toggle").addEventListener("click", () => {
-    const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
-    document.documentElement.dataset.theme = next;
-    try { localStorage.setItem("dp.theme", next); } catch { /* 忽略 */ }
-  });
-})();
+// 顶栏主题按钮：白天 / 夜间快捷切换（与 设置 → 外观 同一个偏好）
+$("#theme-toggle").addEventListener("click", () => {
+  setPref("theme", isLight() ? "dark" : "light");
+  if (location.hash.startsWith("#/settings")) route(true);
+});
 // 键盘：首页 / 聚焦搜索；论文页 ← → 切换上一篇 / 下一篇
 document.addEventListener("keydown", (e) => {
   if (e.target.closest("input, textarea, select, [contenteditable]") || e.metaKey || e.ctrlKey || e.altKey) return;

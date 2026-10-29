@@ -22,6 +22,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from .. import __version__
 from ..core.config import AppConfig
 from ..core.io import read_markdown
 from ..integrations.review import ReviewStore
@@ -108,6 +109,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
             "site_title": cfg.settings.site.title,
             "repo_url": cfg.settings.site.repo_url,
             "schema": cfg.note_schema.to_public(),
+            "version": __version__,
             "git_enabled": git_enabled,
             "workspace": str(cfg.content_dir.parent),
             "running": runner.running,

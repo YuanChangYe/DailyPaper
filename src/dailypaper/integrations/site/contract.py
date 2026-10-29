@@ -20,6 +20,7 @@ from xml.sax.saxutils import escape
 
 from pydantic import BaseModel, Field
 
+from ... import __version__
 from ...core.config import AppConfig
 from ...core.io import read_json, write_json, write_text
 from ...core.models import Candidate
@@ -95,6 +96,7 @@ class SiteContract:
                     "base_url": self.cfg.settings.site.base_url,
                     "repo_url": self.cfg.settings.site.repo_url,
                     "schema": self.cfg.note_schema.to_public(),
+                    "version": __version__,
                 },
                 "papers": [e.model_dump() for e in merged],
             },

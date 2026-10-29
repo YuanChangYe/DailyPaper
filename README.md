@@ -119,7 +119,7 @@ dailypaper read 2610.35877
 
 ### 第 5 步：设定你的研究方向
 
-编辑 `config/topics.yaml`（见[配置研究方向](#配置研究方向)），或在网页的"搜索设置"里直接改。仓库自带的方向只是示例。
+编辑 `config/topics.yaml`（见[配置研究方向](#配置研究方向)），或在网页的「设置 → 研究方向」里直接改。仓库自带的方向只是示例。
 
 验证：`dailypaper run` 跑一次完整的每日流程（每天精读 5 篇约 $0.7），日报里的论文符合你的方向。
 
@@ -136,9 +136,9 @@ dailypaper read 2610.35877
 dailypaper app      # 打开 http://127.0.0.1:8765
 ```
 
-浏览每日精读、搜索文库、左右分栏对照 PDF 阅读笔记、在审核台决定哪些入库、在搜索设置里调整方向，或者直接点"立即运行"。
+浏览每日精读、搜索文库、左右分栏对照 PDF 阅读笔记、在审核台决定哪些入库、在设置里调整方向和外观，或者直接点"立即运行"。
 
-**不想开终端？** Windows 上运行一次下面的命令，桌面会出现一个 DailyPaper 图标，双击即在后台启动助手并打开网页；退出在网页的「搜索设置 → 本地助手」里：
+**不想开终端？** Windows 上运行一次下面的命令，桌面会出现一个 DailyPaper 图标，双击即在后台启动助手并打开网页；退出在网页的「设置 → 研究方向 → 本地助手」里：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\create_shortcut.ps1
@@ -257,7 +257,7 @@ topics:
       - exchangeability 假设在该场景下是否成立？
 ```
 
-关键词不区分大小写，空格也能匹配连字符，`*` 是通配符（例如 `calibrat*`）。网页的"搜索设置"可以直接编辑这些内容并保存，保存前会校验，文件中的注释会保留。
+关键词不区分大小写，空格也能匹配连字符，`*` 是通配符（例如 `calibrat*`）。网页的「设置 → 研究方向」可以直接编辑这些内容并保存，保存前会校验，文件中的注释会保留。
 
 YAML 中可以用 `${ENV}` 或 `${ENV:-默认值}` 引用环境变量。API key 只从环境变量读取，不要写进配置文件。
 
@@ -331,9 +331,9 @@ dailypaper read <arXiv ID> --prompt-only                           # 只生成 p
 | 审核台 | 待审核队列：加入 Zotero / 稍后 / 不要，批量操作，Obsidian 同步，兴趣画像 |
 | 文献库 | 直接浏览 Zotero 的分类和条目；已精读的显示评分并可打开笔记，其余可一键精读 |
 | 趋势 | 近 7 / 14 / 30 / 90 天的每日篇数、方向分布、论文类型、最值得回看的论文；一键生成 **AI 阅读总结**（用筛选模型，约 $0.02，结果缓存） |
-| 搜索设置 | 直接编辑研究方向、关键词、镜头问题、arXiv 分类、Top K、阈值；立即运行今日任务或精读指定论文；退出本地助手 |
+| 设置 | 外观（主题、字体、字号、行距、动态效果、列表密度）和阅读偏好（默认分栏、正文宽度、高亮颜色、出处标记）保存在浏览器里；研究方向（方向、关键词、镜头问题、arXiv 分类、Top K、阈值）写入项目配置；立即运行或精读指定论文；关于页显示版本并检查更新 |
 
-顶栏的 ☀ / ☾ 切换白天和夜间模式。网页根据环境自动切换模式：连接到本地助手时可读写；部署为静态网站时只读（设置页可导出 `topics.yaml`）；没有数据时显示示例。本地助手只监听 `127.0.0.1`，写操作要求自定义请求头，其他网站无法通过你的浏览器调用它。前后端接口约定见 [src/dailypaper/app/API.md](src/dailypaper/app/API.md)。
+顶栏的 ☀ / ☾ 切换白天和夜间模式（默认跟随系统）。网页根据环境自动切换模式：连接到本地助手时可读写；部署为静态网站时只读（设置页可导出 `topics.yaml`）；没有数据时显示示例。本地助手只监听 `127.0.0.1`，写操作要求自定义请求头，其他网站无法通过你的浏览器调用它。前后端接口约定见 [src/dailypaper/app/API.md](src/dailypaper/app/API.md)。
 
 ---
 
@@ -507,7 +507,7 @@ src/dailypaper/
 │
 └── app/                         本地网页
     ├── server.py                FastAPI：静态挂载、审核、Zotero、配置读写、后台运行、PDF 代理
-    ├── config_editor.py         网页"搜索设置"的读写（校验 + 保留 YAML 注释）
+    ├── config_editor.py         网页「设置 → 研究方向」的读写（校验 + 保留 YAML 注释）
     ├── runner.py                后台子进程运行 dailypaper run / read
     ├── API.md                   前后端接口约定
     └── static/                  index.html（单页网页）、assets/（图片）
@@ -577,7 +577,7 @@ src/dailypaper/
 
 | 想做的事 | 在哪里改 | 怎么验证 |
 |---|---|---|
-| 调整研究方向、关键词 | `config/topics.yaml` 或网页"搜索设置" | `dailypaper run --provider fake --until prefilter` 看预筛数量 |
+| 调整研究方向、关键词 | `config/topics.yaml` 或网页「设置 → 研究方向」 | `dailypaper run --provider fake --until prefilter` 看预筛数量 |
 | 换模型 | `config/llm.yaml` 的 `roles` + `.env` | `dailypaper check` |
 | 改精读框架或 lens | `prompts/base/*.j2`、`prompts/lenses/*.md`、`config/lenses.yaml` | `dailypaper read <id> --prompt-only` 看组装结果，再真实精读一篇 |
 | 增删流水线步骤 | `config/pipeline.yaml` | `dailypaper run --provider fake --dry-run` |
