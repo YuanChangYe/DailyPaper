@@ -42,6 +42,19 @@ def slugify(name: str) -> str:
     return f"{s}-{h}" if s else h
 
 
+_PEXELS_RE = re.compile(r"^pexels-(.+?)-\d+(?:-\d+)?$", re.I)
+
+
+def default_credit(name: str) -> str:
+    """页脚署名的默认值：Pexels 下载的文件名（pexels-作者-编号.jpg）转成「作者 · Pexels」，其余用文件名。"""
+    stem = Path(name).stem
+    m = _PEXELS_RE.match(stem)
+    if m:
+        author = " ".join(w.capitalize() for w in re.split(r"[-_]+", m.group(1)) if w and not w.isdigit())
+        return f"{author} · Pexels" if author and author.lower() != "pexels user" else "Pexels"
+    return stem
+
+
 def list_sources(cfg: AppConfig) -> list[Path]:
     d = source_dir(cfg)
     if not d.exists():
@@ -94,7 +107,8 @@ def build_covers(cfg: AppConfig, force: bool = False) -> dict:
                 continue
         covers.append({
             "id": slug, "source": src.name,
-            "credit": prev.get("credit") or src.stem,
+            # 用户没改过署名（还是文件名）时用默认规则，改过的保留
+            "credit": prev["credit"] if prev.get("credit") and prev["credit"] != Path(prev.get("source", "")).stem else default_credit(src.name),
             "position": prev.get("position") or "center 50%",
             "width": width, "height": height,
             "files": files,
