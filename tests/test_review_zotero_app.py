@@ -128,7 +128,7 @@ def test_app_endpoints_and_guard(ran):
     items = client.get("/api/items", params={"status": "pending"}).json()
     assert len(items) == 2
     pid = items[0]["entry"]["id"]
-    assert "## 0. TL;DR" in client.get(f"/api/note/{pid}").json()["markdown"]
+    assert "## 1. 摘要翻译" in client.get(f"/api/note/{pid}").json()["markdown"]
     assert client.post("/api/decide", json={"ids": [pid], "action": "reject"}).status_code == 403  # 缺请求头
     r = client.post("/api/decide", json={"ids": [pid], "action": "reject"}, headers={"X-DailyPaper": "1"})
     assert r.status_code == 200

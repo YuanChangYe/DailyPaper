@@ -94,6 +94,8 @@ class LLMRole(BaseModel):
     max_tokens: int = 4000
     effort: str | None = None  # Claude: low / medium / high / xhigh / max
     json_mode: bool = False
+    web_search: bool = False  # Claude: 允许模型用服务端联网搜索（精读的"后续研究调研"用）
+    web_search_max_uses: int = 8
     options: dict = Field(default_factory=dict)
 
 
@@ -118,6 +120,7 @@ class LensSpec(BaseModel):
     description: str = ""
     priority: int = 50
     sections: list[int] = Field(default_factory=list)  # 作用于 base 框架的哪几节
+    enabled: bool = True  # false 时规则里引用它也不会注入
     options: dict = Field(default_factory=dict)
 
 
@@ -137,6 +140,66 @@ class LensConfig(BaseModel):
     llm_select: LLMSelectConfig = Field(default_factory=LLMSelectConfig)
     catalog: list[LensSpec] = Field(default_factory=list)
     rules: list[LensRule] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------- note schema
+
+
+class MetaField(BaseModel):
+    """笔记开头 JSON 块里的一个字段。key 是程序依赖的字段名，label 是显示标签。"""
+
+    key: str
+    label: str
+    aliases: list[str] = Field(default_factory=list)  # 旧版标签，网页用来识别老笔记
+    type: Literal["str", "int"] = "str"
+    min: int | None = None
+    max: int | None = None
+    required: bool = True
+    hint: str = ""
+
+
+class NoteSection(BaseModel):
+    """正文的一个二级标题。"""
+
+    id: str
+    title: str
+    hint: str = ""
+    required: bool = True
+    deep: bool = False  # 深入阅读部分：目录里有分隔线；低分论文可省略
+
+
+class NoteSchema(BaseModel):
+    """精读笔记的结构（prompts/schema.yaml）。提示词、校验、渲染、网页都从这里读。"""
+
+    version: int = 1
+    meta: list[MetaField] = Field(default_factory=list)
+    sections: list[NoteSection] = Field(default_factory=list)
+    legacy: dict = Field(default_factory=dict)
+
+    def numbered(self, include_deep: bool = True) -> list[tuple[int, NoteSection]]:
+        """(编号, 节) 列表；编号从 1 开始，去掉 deep 节时编号仍连续。"""
+        picked = [s for s in self.sections if include_deep or not s.deep]
+        return list(enumerate(picked, 1))
+
+    def labels(self) -> dict[str, str]:
+        return {m.key: m.label for m in self.meta}
+
+    def label(self, key: str) -> str:
+        return self.labels().get(key, key)
+
+    def to_public(self) -> dict:
+        """给网页用的精简版本（显示标签、别名、各节标题）。"""
+        return {
+            "version": self.version,
+            "meta": [{"key": m.key, "label": m.label, "aliases": m.aliases} for m in self.meta],
+            "sections": [{"id": s.id, "title": s.title, "deep": s.deep} for s in self.sections],
+            "legacy_section_titles": list(self.legacy.get("section_titles", [])),
+        }
+
+
+def load_schema(root: Path) -> NoteSchema:
+    data = read_yaml(root / "prompts" / "schema.yaml")
+    return NoteSchema.model_validate(data) if data else NoteSchema()
 
 
 # ---------------------------------------------------------------- settings
@@ -202,6 +265,7 @@ class AppConfig(BaseModel):
     topics: list[Topic] = Field(default_factory=list)
     llm: LLMConfig = Field(default_factory=LLMConfig)
     lenses: LensConfig = Field(default_factory=LensConfig)
+    note_schema: NoteSchema = Field(default_factory=NoteSchema)
 
     # 便捷路径
     def path(self, rel: str | Path) -> Path:
@@ -252,4 +316,5 @@ def load_config(root: Path | str | None = None) -> AppConfig:
         topics=[Topic.model_validate(t) for t in topics_raw.get("topics", [])],
         llm=LLMConfig.model_validate(read_yaml(cfg_dir / "llm.yaml")),
         lenses=LensConfig.model_validate(read_yaml(cfg_dir / "lenses.yaml")),
+        note_schema=load_schema(root),
     )

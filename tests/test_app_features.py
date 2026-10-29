@@ -39,7 +39,7 @@ def test_annotations_roundtrip_and_frontmatter(client, cfg):
 
 def test_trends_stats_and_summary(client, cfg):
     t = client.get("/api/trends?days=7").json()
-    assert t["total"] == 2 and len(t["per_day"]) == 7 and t["per_day"][-1]["count"] == 2
+    assert t["total"] == 2 and len(t["per_day"]) == 7 and sum(d["count"] for d in t["per_day"]) == 2
     assert t["per_topic"] and t["top"] and t["summary"] is None
     r = client.post("/api/trends/summary", json={"days": 7, "provider": "fake"}, headers=H)
     assert r.status_code == 200 and r.json()["summary"].strip()

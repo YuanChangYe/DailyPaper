@@ -35,8 +35,10 @@ roles:
   read:
     provider: claude
     model: claude-sonnet-5-5
-    max_tokens: 16000
+    max_tokens: 20000
     effort: high
+    web_search: true         # 允许精读时联网核实后续研究（只有 Claude 支持；每篇多约 $0.05–0.1，关掉则写"未联网检索"）
+    web_search_max_uses: 8
 
   # 备选示例（取消注释并替换上面的角色即可）：
   # screen: {provider: deepseek, model: deepseek-chat, max_tokens: 8000, temperature: 0.1, json_mode: true}

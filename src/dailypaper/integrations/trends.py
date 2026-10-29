@@ -58,7 +58,7 @@ def cached_summary(cfg: AppConfig, days: int = 7, end: date | None = None) -> st
     return p.read_text(encoding="utf-8") if p.exists() else None
 
 
-SYSTEM = """你是研究者的阅读助理。根据一段时间内精读过的论文列表（标题、方向、价值评分、TL;DR、核心 insight），写一份简短的阅读趋势总结，
+SYSTEM = """你是研究者的阅读助理。根据一段时间内精读过的论文列表（标题、方向、价值评分、一句话总结、核心直觉），写一份简短的阅读趋势总结，
 用中文，Markdown 格式，300–500 字，分四个小标题：
 ## 这段时间读了什么（按方向归纳，不要逐篇罗列）
 ## 共同的趋势与分歧（方法、问题设定、评测上的共性，以及互相矛盾的结论）

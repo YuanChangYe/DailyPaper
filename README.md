@@ -150,13 +150,13 @@ powershell -ExecutionPolicy Bypass -File scripts\create_shortcut.ps1
 
 每篇精读笔记都按同一个框架输出，完整示例见 [examples/paper-note.md](examples/paper-note.md)。下面摘录其中几段：
 
-> **Core insight**：策略干预只改变 X 的边缘分布而不改变 P(Y|X) → 联合似然比只依赖 X，可以用无标签的 source/target 协变量学出 → 校准误差由 ratio 的 TV/L1 误差直接决定，预测器无需重训。
+> **核心直觉**：策略干预只改变 $X$ 的边缘分布而不改变 $P(Y\mid X)$，所以联合似然比只依赖 $X$，可以用无标签的 source/target 协变量学出；校准误差由 ratio 的 TV 误差直接决定，预测器无需重训。
 >
-> **Novelty delta**：（与 4–5 篇最相近前作的对比表）……判断：偏增量。主要贡献是整合与干净的误差传递……
+> **作者的思考路径**：从"换策略后世界模型要重新校准"这个常规做法出发，注意到转移核不变、变的只是查询分布……〔分析〕
 >
-> **Red flags**：校准与评估都从同一个 192 点的样本池中抽样……没有真实的策略切换……
+> **最脆弱的假设**：$P(Y\mid X)=Q(Y\mid X)$。一旦干预改变了环境动力学而不只是动作分布……
 >
-> **Research hooks**：① 自我改进 agent 的门控 ratio 重校准……（改变的假设 → 最小验证实验 → 风险）
+> **Follow-up idea**：自我改进 agent 每轮更新后，用无标签的新轨迹重估 ratio 并重校准置信度门控……（驱动需求 → 可借用的工具 → 第一个实验 → 可能失败的原因）
 
 此外还会生成每日日报、按研究方向整理的索引页、JSON 数据和 RSS。
 
@@ -269,22 +269,29 @@ YAML 中可以用 `${ENV}` 或 `${ENV:-默认值}` 引用环境变量。API key 
 
 ### base 框架
 
-模板在 `prompts/base/deep_read.system.md.j2`，每篇笔记固定输出 10 节：
+笔记的结构定义在 **`prompts/schema.yaml`**：开头的 JSON 元信息字段（一句话总结、核心直觉、价值 1–5、要不要深入）和正文的 13 节。提示词模板 `prompts/base/deep_read.system.md.j2` 按它生成各节标题和要求，输出后再按它校验标题是否齐全、顺序是否正确（结果写进笔记 frontmatter 的 `schema_ok`），网页、日报、离线假模型也都从它读取标签。改结构只改这一个文件。
+
+13 节的设计参考 [PaperForge](https://github.com/FeijiangHan/PaperForge) 的阅读法：先重建作者的思路，再看方法和证据，最后站到审稿人和后来者的位置上。
 
 | 节 | 内容 |
 |---|---|
-| 0. TL;DR | 做了什么、最重要的结果（带数字）、对哪个方向有用 |
-| 1. Problem formulation | 形式化设定、访问假设（black / grey / white-box）、数据假设、不确定性的粒度 |
-| 2. Core insight | 用"现有方法默认 X → 实际上 Y → 所以作者做了 Z"概括 |
-| 3. Novelty delta | 与最相近前作的对比表，判断是实质创新还是增量改进 |
-| 4. Mechanism | 步骤拆解、关键公式、每个组件为什么有效 |
-| 5. Guarantees & assumptions | 理论保证的类型、成立前提、在多步或多 agent 场景下是否会失效 |
-| 6. Claim ↔ Evidence | 主要结论与实验证据的对照表，以及证据强度 |
-| 7. Red flags | 作者没有充分讨论的问题，区分"作者已承认"和"〔分析〕" |
-| 8. Research hooks | 2–3 条可以接着做的研究想法：改变了哪个假设、最小验证实验、主要风险 |
-| 9. 是否值得读原文 | 必读 / 选读 / 跳过，以及最该看的章节 |
+| 1. 摘要翻译 | 完整准确的中文翻译，术语保留英文 |
+| 2. 研究问题与价值 | 论文的 setting：解决什么问题、为什么重要、解决了能带来什么 |
+| 3. 已有工作与不足 | 之前怎么做的、为什么不够，也就是本文 insight 的来源 |
+| 4. 作者的思考路径与核心直觉 | 只用论文之前的知识重建作者是怎么想到的，最后用几句白话讲出核心 idea |
+| 5. 方法与完整流程 | 结合一个具体例子，输入 → 处理 → 输出的完整 pipeline，关键公式逐个解释 |
+| 6. 核心数学推导 | 从零讲理论，补充背景；没有推导的论文说明并跳过 |
+| 7. 实验设计与结论 | 提出什么问题 → 设计什么实验 → 得到什么答案，附证据强度 |
+| 8. Take-aways | 5 句 → 3 句 → 1 句。只想快速理解的读者读到这里即可 |
+| 9. 最脆弱的假设 | 哪一个假设不成立，核心贡献就站不住 |
+| 10. 一周最小复现 | 一周能做的最小实验验证哪一点，什么结果算支持 / 推翻 |
+| 11. 审稿人的反例设计 | 如果反对这篇论文，会设计什么实验、论证或场景 |
+| 12. 后续研究调研 | 之后的扩展、反驳与新认知（Claude 可联网搜索；其他模型注明"未联网检索"） |
+| 13. Follow-up idea | 从 limitation 和真实需求出发的非增量研究方向：需求、可借用的工具、第一个实验、失败原因 |
 
-框架要求每个判断都标注原文出处（如【§3.2】【Table 2】），找不到依据时写"原文未说明"。修改这个模板就能改变所有笔记的结构，不需要改代码。
+第 9–13 节标记为"深入阅读"，网页目录在第 8 节后显示分隔线；`pipeline.yaml` 中 `reader.deep_read` 的 `deep_min_score` 可以让低分论文只生成前 8 节。全局规则要求区分四类陈述（论文明确说的 / 文献已知的 / 〔分析〕推断的 / 〔猜测〕），标注原文出处（如【§3.2】【Table 2】），不编造相关工作。
+
+联网搜索在 `llm.yaml` 的 `read` 角色上用 `web_search: true` 开关（只有 Claude 支持，每篇多约 $0.05–0.1）。
 
 ### lens
 
@@ -294,7 +301,8 @@ lens 只补充分析要点和检查清单，**不改变输出结构**。有三�
 |---|---|
 | 研究方向 | `topics.yaml` 中每个方向的 `lens_questions`，论文属于该方向时自动加入 |
 | 论文类型 | `prompts/lenses/type_*.md`：method / theory / benchmark / empirical / survey / position，按筛选阶段判断的类型选择 |
-| 外部阅读 skill | 把现有的 Claude skill（`SKILL.md` 格式）接入为 lens，只抽取其中的分析方法 |
+| 阅读 skill（内置） | `prompts/lenses/evidence_discipline.md`（证据纪律与研究 idea 门槛，提炼自 nature-paper-card）和 `idea_review.md`（idea 评审标准，提炼自 ccf-idea-reviewer），默认对所有论文启用 |
+| 外部阅读 skill | 把现有的 Claude skill（`SKILL.md` 格式）接入为 lens，只抽取其中的分析方法；`catalog` 项用 `enabled: false` 可整体停用 |
 
 每篇论文用哪些 lens 由三步决定：`lenses.yaml` 中的规则（总是使用 / 属于某方向 / 排序分 ≥ 7 / 论文类型为 theory 等）→ 筛选阶段模型的建议 → 按优先级和字符预算裁剪。实际用到的 lens 记录在每篇笔记的 frontmatter 中。
 

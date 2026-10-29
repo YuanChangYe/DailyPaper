@@ -65,6 +65,8 @@ class MarkdownRenderer(Renderer):
             "lenses": n.lenses,
             "model": n.model,
             "grounding": n.grounding,
+            "schema_version": n.schema_version,
+            "schema_ok": n.schema_ok,
             "url_abs": p.url_abs,
             "url_pdf": p.url_pdf,
             "status": "unread",
@@ -80,12 +82,13 @@ class MarkdownRenderer(Renderer):
             f"**类型** {s.paper_type if s else '—'}",
             f"**价值** {stars(n.value_score)}",
         ]
+        L = self.config.note_schema.label
         body = [
             f"# {p.title}",
             "> " + " · ".join(meta_bits),
-            f"> **TL;DR** {n.tldr}" if n.tldr else "",
-            f"> **Core insight** {n.core_insight}" if n.core_insight else "",
-            f"> **读不读** {n.worth_reading}" if n.worth_reading else "",
+            f"> **{L('tldr')}** {n.tldr}" if n.tldr else "",
+            f"> **{L('core_insight')}** {n.core_insight}" if n.core_insight else "",
+            f"> **{L('worth_reading')}** {n.worth_reading}" if n.worth_reading else "",
             n.markdown,
             "---",
             f"<details><summary>原文摘要</summary>\n\n{p.abstract}\n\n</details>",
@@ -124,6 +127,7 @@ class MarkdownRenderer(Renderer):
         ]
         if not read:
             lines.append("今天没有达到精读阈值的论文。")
+        L = self.config.note_schema.label
         for i, c in enumerate(read, 1):
             n = c.note
             link = rel_link(rel, c.note_path)
@@ -131,9 +135,9 @@ class MarkdownRenderer(Renderer):
                 f"### {i}. [{c.paper.title}]({link})",
                 f"{stars(n.value_score)} · {' / '.join(self.topic_names(c.main_topics()))} · "
                 f"{c.screen.paper_type if c.screen else ''} · 排序分 {c.score}",
-                f"- **TL;DR** {n.tldr}",
-                f"- **Core insight** {n.core_insight}",
-                f"- **读不读** {n.worth_reading}",
+                f"- **{L('tldr')}** {n.tldr}",
+                f"- **{L('core_insight')}** {n.core_insight}",
+                f"- **{L('worth_reading')}** {n.worth_reading}",
             ]
         if also:
             lines += ["## 也值得关注", "| 分数 | 论文 | 方向 | 理由 |", "|---:|---|---|---|"]

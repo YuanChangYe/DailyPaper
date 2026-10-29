@@ -64,7 +64,7 @@ class SiteIndexRenderer(Renderer):
                 by_topic[t].append(e)
         for topic in self.config.topics:
             rel = f"{TOPIC_PAGE_DIR}/{topic.id}.md"
-            rows = ["| 日期 | 价值 | 论文 | TL;DR |", "|---|---|---|---|"]
+            rows = [f"| 日期 | 价值 | 论文 | {self.config.note_schema.label('tldr')} |", "|---|---|---|---|"]
             for e in by_topic.get(topic.id, []):
                 rows.append(
                     f"| {e.date} | {stars(e.value_score)} | [{e.title.replace('|', '/')}]({rel_link(rel, e.note_path)}) | "

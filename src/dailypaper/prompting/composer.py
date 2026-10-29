@@ -66,6 +66,9 @@ class PromptComposer:
 
     def compose(self, name: str, lenses: list[Lens], **variables) -> ComposedPrompt:
         kept, dropped = self.fit_budget(lenses, self.cfg.lenses.budget_chars)
+        variables.setdefault("schema", self.cfg.note_schema)
+        variables.setdefault("include_deep", True)
+        variables.setdefault("web_search", False)
         system, user = self.render(
             name,
             lenses=kept,

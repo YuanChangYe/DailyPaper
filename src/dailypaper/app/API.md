@@ -14,7 +14,7 @@
 
 | 方法 | 路径 | 网页用途 |
 |---|---|---|
-| GET | `/api/meta` | 判断本地模式；研究方向名称；各审核状态数量 |
+| GET | `/api/meta` | 判断本地模式；研究方向名称；各审核状态数量；`schema`（笔记结构：元信息标签、各节标题，来自 prompts/schema.yaml） |
 | GET | `/api/items?status=` | 审核台列表（`{entry: QueueEntry, decision: Decision}[]`） |
 | GET | `/api/note/{id}` | 论文详情的备用来源（`/site/api/papers/{id}.json` 不可用时） |
 | GET | `/api/zotero/status` | Zotero 连接状态、分类列表、默认分类 |

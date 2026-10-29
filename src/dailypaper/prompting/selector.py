@@ -39,10 +39,13 @@ class LensCatalog:
             tid = f"topic:{t.id}"
             if tid not in declared:
                 specs.append(
-                    LensSpec(id=tid, adapter="topic", priority=TOPIC_PRIORITY, sections=[1, 5, 8], options={"topic": t.id})
+                    LensSpec(id=tid, adapter="topic", priority=TOPIC_PRIORITY, sections=[2, 6, 13], options={"topic": t.id})
                 )
         self.adapters: dict[str, LensAdapter] = {}
+        self.disabled: set[str] = {s.id for s in specs if not s.enabled}
         for spec in specs:
+            if not spec.enabled:
+                continue
             try:
                 cls = registry.get("lens_adapter", spec.adapter)
             except KeyError as e:
@@ -109,7 +112,7 @@ def select_lenses(catalog: LensCatalog, cand: Candidate) -> list[Lens]:
         seen.add(lid)
         adapter = catalog.adapters.get(lid)
         if adapter is None or not adapter.available():
-            if not lid.startswith("type_"):
+            if not lid.startswith("type_") and lid not in catalog.disabled:
                 log.debug("lens %s 不存在或不可用，跳过", lid)
             continue
         lens = adapter.build(lctx)

@@ -258,6 +258,8 @@ select.input{padding-right:30px}
 .toc{position:sticky;top:100px;font-size:13px;display:flex;flex-direction:column;gap:2px;border-left:1px solid var(--line);padding-left:4px}
 .toc a{padding:5px 12px;border-radius:8px;color:var(--muted);border-left:2px solid transparent;margin-left:-5px}
 .toc a:hover{color:var(--ink)}.toc a.on{color:var(--ink);border-left-color:var(--accent);background:var(--glass)}
+.toc .toc-sep{margin:10px 0 4px 12px;font-size:11px;letter-spacing:.08em;color:var(--muted)}
+.prose .deep-sep{margin:40px 0 8px;padding-top:14px;border-top:1px dashed var(--line);font-size:12px;letter-spacing:.08em;color:var(--muted)}
 .paper-head{padding:28px;border-radius:var(--r-lg);border:1px solid var(--line);background:linear-gradient(160deg,rgba(23,65,80,.72),rgba(12,35,43,.62)),url(assets/hero-sunrise-1200.jpg) center 62%/cover;background-blend-mode:normal,soft-light}
 .paper-head h1{font-size:clamp(24px,3vw,34px);line-height:1.3;letter-spacing:-.015em;margin:10px 0 12px}
 .meta-line{display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--body)}
@@ -757,6 +759,21 @@ async function boot() {
   fillCollections();
   route();
 }
+/* 笔记结构（prompts/schema.yaml）：本地模式来自 /api/meta，静态模式来自 api/index.json 的 site.schema；旧笔记用 aliases 识别 */
+const DEFAULT_SCHEMA = { meta: [
+  { key: "tldr", label: "一句话总结", aliases: ["TL;DR"] },
+  { key: "core_insight", label: "核心直觉", aliases: ["Core insight"] },
+  { key: "worth_reading", label: "要不要深入", aliases: ["读不读"] }], sections: [] };
+const noteSchema = () => S.meta?.schema || S.siteInfo?.schema || DEFAULT_SCHEMA;
+const label = (key) => (noteSchema().meta || []).find((m) => m.key === key)?.label || DEFAULT_SCHEMA.meta.find((m) => m.key === key)?.label || key;
+const META_CLASS = { tldr: "c-tldr", core_insight: "c-insight", worth_reading: "c-read" };
+function quoteClass(text) {
+  for (const m of [...(noteSchema().meta || []), ...DEFAULT_SCHEMA.meta]) {
+    if ([m.label, ...(m.aliases || [])].some((l) => l && text.startsWith(l))) return META_CLASS[m.key] || "c";
+  }
+  return text.startsWith("作者") ? "c-meta" : "c";
+}
+const stripNum = (t) => t.replace(/^\s*\d+\s*[.、．)]\s*/, "").replace(/\s+/g, "").toLowerCase();
 const lastRunLabel = () => {
   const r = S.run; if (!r) return "—";
   if (r.running) return "运行中";
@@ -811,7 +828,7 @@ function paperCard(p, { rank, insight = true } = {}) {
     <h3><a href="#/paper/${encodeURIComponent(p.id)}">${esc(p.title)}</a></h3>
     <div class="chips">${(p.topics || []).map(chip).join("")}</div>
     <p class="tldr">${mdInline(p.tldr)}</p>
-    ${insight && p.core_insight ? `<p class="insight"><b>CORE INSIGHT</b>${mdInline(p.core_insight)}</p>` : ""}
+    ${insight && p.core_insight ? `<p class="insight"><b>${esc(label("core_insight"))}</b>${mdInline(p.core_insight)}</p>` : ""}
     <div class="pcard-foot">${stars(p.value_score)}<span class="mono">${p.score ? Number(p.score).toFixed(1) : ""}</span><span class="grow"></span><a href="#/paper/${encodeURIComponent(p.id)}">阅读笔记 →</a></div>
   </article>`;
 }
@@ -827,7 +844,7 @@ function paperRow(p, { rank } = {}) {
       <h3><a href="${href}">${rank ? `<span class="rank">${rank}</span>` : ""}${esc(p.title)}</a></h3>
       ${authors.length ? `<div class="prow-authors">${esc(authors.slice(0, 4).join(", "))}${authors.length > 4 ? ` 等 ${authors.length} 人` : ""}</div>` : ""}
       <p class="prow-tldr">${mdInline(p.tldr)}</p>
-      ${p.core_insight ? `<p class="insight"><b>CORE INSIGHT</b>${mdInline(p.core_insight)}</p>` : ""}
+      ${p.core_insight ? `<p class="insight"><b>${esc(label("core_insight"))}</b>${mdInline(p.core_insight)}</p>` : ""}
       <div class="prow-foot">${stars(p.value_score)}<span class="mono">${esc(p.id)}</span><span>${esc(fmtDate(p.date))}</span>${p.paper_type ? `<span>${esc(p.paper_type)}</span>` : ""}${(p.topics || []).map(chip).join("")}${statusPill(p.id)}<span class="grow"></span><a href="${href}">阅读笔记 →</a></div>
     </div>
     <a class="prow-thumb" href="${href}" tabindex="-1" aria-hidden="true"><img src="${thumb}" alt="" loading="lazy" onerror="this.parentElement.classList.add('nothumb')"><span class="ph">${esc(p.id)}</span></a>
@@ -1062,7 +1079,7 @@ VIEWS.daily.after = () => $$("[data-readone]").forEach((b) => b.addEventListener
 VIEWS.library = async (_, params) => {
   const q = params.get("q") || "", topic = params.get("topic") || "", minv = params.get("v") || "", sort = params.get("sort") || "date";
   return `
-  <div class="page-head"><h1>文库</h1><p>所有精读过的论文。按方向、价值筛选，或搜索标题、TL;DR、作者、ID。</p></div>
+  <div class="page-head"><h1>文库</h1><p>所有精读过的论文。按方向、价值筛选，或搜索标题、总结、作者、ID。</p></div>
   <div class="toolbar">
     <label class="sr" for="lib-q">搜索</label><input class="input" id="lib-q" placeholder="搜索标题、摘要、insight、作者、方向或 arXiv ID" value="${esc(q)}">
     <span id="lib-count" style="font-size:13px;color:var(--muted);white-space:nowrap"></span>
@@ -1100,7 +1117,7 @@ VIEWS.library.after = (_, params) => {
 /* ---------- 论文详情 ---------- */
 async function loadPaper(id) {
   const base = S.index.find((p) => p.id === id) || {};
-  if (S.mode === "demo") return { ...base, markdown: id === "2610.35877" ? $("#demo-note").textContent : `# ${base.title}\n\n> **TL;DR** ${base.tldr}\n\n> **Core insight** ${base.core_insight}\n\n这是界面演示用的示例条目，没有完整精读笔记。` };
+  if (S.mode === "demo") return { ...base, markdown: id === "2610.35877" ? $("#demo-note").textContent : `# ${base.title}\n\n> **${label("tldr")}** ${base.tldr}\n\n> **${label("core_insight")}** ${base.core_insight}\n\n这是界面演示用的示例条目，没有完整精读笔记。` };
   try { return { ...base, ...(await getJSON(`${S.site}api/papers/${encodeURIComponent(id.replace(/\//g, "_"))}.json`)) }; } catch { /* 继续 */ }
   if (isLocal()) { const n = await getJSON(`/api/note/${encodeURIComponent(id)}`); return { ...base, ...n.frontmatter, markdown: n.markdown }; }
   throw new Error("找不到这篇论文的笔记");
@@ -1218,12 +1235,15 @@ VIEWS.paper.after = async (id) => {
   prose.innerHTML = renderMarkdown(p.markdown);
   $$("blockquote", prose).forEach((b) => {
     const t = b.textContent.trim();
-    b.classList.add(t.startsWith("TL;DR") ? "c-tldr" : t.startsWith("Core insight") ? "c-insight" : t.startsWith("读不读") ? "c-read" : t.startsWith("作者") ? "c-meta" : "c");
+    b.classList.add(quoteClass(t));
   });
   $$("table", prose).forEach((t) => { const w = document.createElement("div"); w.className = "table-wrap"; t.replaceWith(w); w.append(t); });
   const hs = $$("h2", prose); const toc = $("#toc");
   hs.forEach((h, i) => (h.id = "s" + i));
-  toc.innerHTML = hs.map((h) => `<a href="#/paper/${encodeURIComponent(id)}" data-sec="${h.id}">${esc(h.textContent)}</a>`).join("");
+  const deepTitles = new Set((noteSchema().sections || []).filter((x) => x.deep).map((x) => stripNum(x.title)));
+  const firstDeep = hs.find((h) => deepTitles.has(stripNum(h.textContent)));
+  if (firstDeep) { const sep = document.createElement("div"); sep.className = "deep-sep"; sep.textContent = "以下为深入阅读 · 只想快速理解可以到此为止"; firstDeep.before(sep); }
+  toc.innerHTML = hs.map((h) => `${h === firstDeep ? `<span class="toc-sep">深入阅读</span>` : ""}<a href="#/paper/${encodeURIComponent(id)}" data-sec="${h.id}">${esc(h.textContent)}</a>`).join("");
   $$("[data-sec]", toc).forEach((a) => a.addEventListener("click", (e) => { e.preventDefault(); document.getElementById(a.dataset.sec).scrollIntoView({ behavior: reduced ? "auto" : "smooth" }); }));
   const spy = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) $$("[data-sec]", toc).forEach((a) => a.classList.toggle("on", a.dataset.sec === e.target.id)); }), { rootMargin: "-20% 0px -70% 0px" });
   hs.forEach((h) => spy.observe(h));
@@ -1405,7 +1425,7 @@ VIEWS.trends = async (_, params) => {
       <h3 style="margin-top:18px">论文类型</h3><div style="display:flex;gap:6px;flex-wrap:wrap">${t.per_type.map((x) => `<span class="chip">${esc(TYPE_ZH[x.type] || x.type)} ${x.count}</span>`).join("") || `<span style="color:var(--muted)">暂无</span>`}</div></div>
   </div>
   <div class="summary-box">
-    <div class="section-head" style="margin-bottom:8px"><div><h2 style="font-size:20px">AI 阅读总结</h2><p>基于这段时间所有精读笔记的 TL;DR、insight 和结论生成；用筛选模型（Haiku），一次约 $0.02，结果会缓存。</p></div>
+    <div class="section-head" style="margin-bottom:8px"><div><h2 style="font-size:20px">AI 阅读总结</h2><p>基于这段时间所有精读笔记的一句话总结、核心直觉和结论生成；用筛选模型（Haiku），一次约 $0.02，结果会缓存。</p></div>
       ${isLocal() ? `<button class="btn primary sm" type="button" id="gen-summary">${t.summary ? "重新生成" : "生成总结"}</button>` : ""}</div>
     <div class="prose" id="trend-summary"><p style="color:var(--muted)">${t.summary ? "正在渲染…" : isLocal() ? "还没有生成。" : "只读网站不生成总结。"}</p></div>
   </div>
@@ -1448,7 +1468,7 @@ VIEWS.review = async (_, params) => {
           <h3><a href="#/paper/${encodeURIComponent(p.id)}">${esc(p.title)}</a></h3>
           <div class="meta-line"><span>${esc(fmtDate(p.date))}</span><span class="mono">${esc(p.id)}</span>${stars(p.value_score)}<span class="status s-${esc(d.status)}">${statusLabel[d.status] || esc(d.status)}</span>${(p.topics || []).map(chip).join("")}</div>
           <p>${mdInline(p.tldr)}</p>
-          ${p.core_insight ? `<p class="insight"><b>CORE INSIGHT</b>${mdInline(p.core_insight)}</p>` : ""}
+          ${p.core_insight ? `<p class="insight"><b>${esc(label("core_insight"))}</b>${mdInline(p.core_insight)}</p>` : ""}
           ${d.error ? `<p class="err">入库失败：${esc(d.error)}</p>` : ""}
           ${d.status === "imported" ? `<p style="font-size:13px;color:var(--ok)">已入库 ${esc(d.collection || "")} ${d.citekey ? `· <span class="mono">${esc(d.citekey)}</span>` : ""}</p>` : ""}
           <div class="acts">

@@ -1,5 +1,8 @@
 """全文精读：base 框架 + 自适应 lens → LLM → ReadingNote。
 
+笔记结构来自 prompts/schema.yaml（``cfg.note_schema``）：提示词按它生成各节标题，模型输出后再按它校验
+标题是否齐全、顺序是否正确、JSON 元信息是否完整；问题记入 ``Candidate.errors`` 并写进笔记 frontmatter。
+
 ``ctx.inputs["prompt_only"]`` 为真时只把组装好的 prompt 写到 .cache/prompts/，不调用模型
 （``dailypaper read <id> --prompt-only``，用于调 prompt 和 lens）。
 """
@@ -8,10 +11,12 @@ from __future__ import annotations
 
 import re
 from concurrent.futures import ThreadPoolExecutor
+from difflib import SequenceMatcher
 from pathlib import Path
 
 from pydantic import BaseModel
 
+from ...core.config import NoteSchema
 from ...core.interfaces import Reader
 from ...core.io import write_text
 from ...core.models import Candidate, ReadingNote
@@ -22,6 +27,8 @@ from ...prompting.composer import PromptComposer
 from ...prompting.selector import LensCatalog, select_lenses
 
 _META_RE = re.compile(r"^\s*```json\s*(\{.*?\})\s*```\s*", re.S)
+_H2_RE = re.compile(r"^##\s+(.+?)\s*$", re.M)
+_NUM_PREFIX_RE = re.compile(r"^\s*\d+\s*[.、．)]\s*")
 
 
 def parse_note(text: str) -> tuple[dict, str]:
@@ -38,15 +45,66 @@ def parse_note(text: str) -> tuple[dict, str]:
         return {}, text.strip()
 
 
+def _norm_title(s: str) -> str:
+    return re.sub(r"\s+", "", _NUM_PREFIX_RE.sub("", s)).lower()
+
+
+def _same_title(a: str, b: str) -> bool:
+    """标题是否一致：允许个别字符差异（模型偶尔写繁体字或漏一个字）。"""
+    return a == b or SequenceMatcher(None, a, b).ratio() >= 0.8
+
+
+def note_headings(markdown: str) -> list[str]:
+    """正文里的二级标题（去掉编号）。"""
+    return [_NUM_PREFIX_RE.sub("", h).strip() for h in _H2_RE.findall(markdown)]
+
+
+def validate_note(markdown: str, meta: dict, schema: NoteSchema, include_deep: bool = True) -> list[str]:
+    """按 schema 检查笔记：必需标题齐全且顺序正确、必需元信息字段存在且类型合法。返回问题列表（空 = 合格）。"""
+    problems: list[str] = []
+    for m in schema.meta:
+        if not m.required:
+            continue
+        v = meta.get(m.key)
+        if v in (None, ""):
+            problems.append(f"元信息缺少 {m.key}（{m.label}）")
+        elif m.type == "int":
+            try:
+                iv = int(v)
+            except (TypeError, ValueError):
+                problems.append(f"元信息 {m.key} 不是整数：{v!r}")
+            else:
+                if (m.min is not None and iv < m.min) or (m.max is not None and iv > m.max):
+                    problems.append(f"元信息 {m.key} 超出范围 {m.min}–{m.max}：{iv}")
+    found = [_norm_title(h) for h in note_headings(markdown)]
+    expected = [(n, s) for n, s in schema.numbered(include_deep) if s.required]
+    positions: list[int] = []
+    for n, s in expected:
+        key = _norm_title(s.title)
+        idx = next((i for i, h in enumerate(found) if _same_title(h, key)), -1)
+        if idx < 0:
+            problems.append(f"缺少第 {n} 节「{s.title}」")
+        else:
+            positions.append(idx)
+    if positions != sorted(positions):
+        problems.append("小节顺序与框架不一致")
+    return problems
+
+
 @register("reader", "deep_read")
 class DeepReader(Reader):
     class Params(BaseModel):
         template: str = "deep_read"
         workers: int = 2
+        deep_min_score: float = 0.0  # 排序分低于此值的论文只生成非 deep 的小节（省钱）；0 = 全部生成
 
     def _read_one(self, c: Candidate, composer: PromptComposer, catalog: LensCatalog, llm) -> None:
         fulltext = Path(c.fulltext.path).read_text(encoding="utf-8") if c.fulltext else f"[Abstract]\n{c.paper.abstract}"
         lenses = select_lenses(catalog, c)
+        include_deep = not self.p.deep_min_score or c.score >= self.p.deep_min_score
+        role = self.config.llm.roles.get("read")
+        provider = self.config.llm.providers.get(role.provider) if role else None
+        web_search = bool(role and role.web_search and provider and provider.type == "anthropic") and not self.ctx.provider_override
         prompt = composer.compose(
             self.p.template,
             lenses,
@@ -56,6 +114,8 @@ class DeepReader(Reader):
             fulltext=fulltext,
             fulltext_loader=c.fulltext.loader if c.fulltext else "abstract",
             grounding=c.fulltext.grounding if c.fulltext else "source-limited",
+            include_deep=include_deep,
+            web_search=web_search,
         )
         if self.ctx.inputs.get("prompt_only"):
             path = self.config.cache_dir / "prompts" / f"{c.paper.slug}.md"
@@ -64,6 +124,8 @@ class DeepReader(Reader):
             return
         resp = llm.complete(prompt.system, prompt.user, tag="read")
         meta, body = parse_note(resp.text)
+        schema = self.config.note_schema
+        problems = validate_note(body, meta, schema, include_deep)
         try:
             value = int(meta.get("value_score") or 0)
         except (TypeError, ValueError):
@@ -77,9 +139,15 @@ class DeepReader(Reader):
             lenses=prompt.lenses,
             model=llm.model,
             grounding=c.fulltext.grounding if c.fulltext else "source-limited",
+            schema_version=schema.version,
+            schema_ok=not problems,
+            sections=note_headings(body),
         )
         if resp.stop_reason in ("max_tokens", "length"):
             c.errors.append("deep_read: 输出达到 max_tokens 上限，笔记可能不完整")
+        for p in problems:
+            self.log.warning("精读 %s 结构不合格: %s", c.id, p)
+            c.errors.append(f"deep_read: {p}")
 
     def run(self, items: list[Candidate]) -> list[Candidate]:
         todo = self.selected(items)

@@ -20,7 +20,7 @@ class FakeProvider(LLMProvider):
         if tag == "screen":
             text = self._screen(user)
         elif tag == "read":
-            text = self._read(user)
+            text = self._read(system, user)
         else:
             text = json.dumps({"ok": True}) if json_mode else "（fake 输出）"
         return LLMResponse(text=text, model="fake", input_tokens=len(system + user) // 4, output_tokens=len(text) // 4)
@@ -55,25 +55,22 @@ class FakeProvider(LLMProvider):
             )
         return json.dumps({"results": results}, ensure_ascii=False)
 
-    def _read(self, user: str) -> str:
+    # 系统提示里"输出格式"之后的 "## N. 标题" 就是框架要求的各节；假模型照着输出，所以不依赖 schema 的具体内容
+    _SECTION_RE = re.compile(r"^## (\d+\. .+?)\s*$", re.M)
+    _FILLERS = ["原文未说明（fake）。", "$$s(x, y) = 1 - \\hat p(y \\mid x)$$", "| A | B |\n|---|---|\n| 1 | 原文未说明 |", "1. （fake）"]
+
+    def _read(self, system: str, user: str) -> str:
         m = re.search(r"^标题[:：]\s*(.+)$", user, re.M)
         title = m.group(1).strip() if m else "Unknown"
         meta = {
             "tldr": f"（fake）{title} 的一句话总结。",
-            "core_insight": "（fake）现有方法假设 X → 实际上 Y → 所以作者做了 Z。",
+            "core_insight": "（fake）现有方法假设 X，实际上 Y，所以作者做了 Z。",
             "value_score": 3 + _jitter(title, 3),
-            "worth_reading": "（fake）值得读第 3 节。",
+            "worth_reading": "（fake）快速了解即可。",
         }
-        sections = [
-            "## 0. TL;DR", meta["tldr"],
-            "## 1. Problem formulation", "原文未说明（fake）。",
-            "## 2. Core insight", meta["core_insight"],
-            "## 3. Novelty delta", "| 前作 | 差异 |\n|---|---|\n| A | 原文未说明 |",
-            "## 4. Mechanism", "$$s(x, y) = 1 - \\hat p(y \\mid x)$$",
-            "## 5. Guarantees", "原文未说明（fake）。",
-            "## 6. Claim ↔ Evidence", "| Claim | Evidence | 强度 |\n|---|---|---|\n| C1 | Table 1 | 弱 |",
-            "## 7. Red flags & limitations", "- （fake）",
-            "## 8. Research hooks", "1. （fake）",
-            "## 9. 是否值得读原文", meta["worth_reading"],
-        ]
-        return "```json\n" + json.dumps(meta, ensure_ascii=False) + "\n```\n\n" + "\n\n".join(sections)
+        body = system.split("## 输出格式", 1)[-1].split("# 补充分析指引", 1)[0]
+        titles = self._SECTION_RE.findall(body) or ["1. 摘要翻译", "2. Take-aways"]
+        parts = []
+        for i, t in enumerate(titles):
+            parts += [f"## {t}", self._FILLERS[i % len(self._FILLERS)]]
+        return "```json\n" + json.dumps(meta, ensure_ascii=False) + "\n```\n\n" + "\n\n".join(parts)

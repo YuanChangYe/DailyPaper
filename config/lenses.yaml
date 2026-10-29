@@ -1,5 +1,6 @@
 # 精读 lens：叠加在 base 框架（prompts/base/deep_read.*）上的补充分析指引。
-# lens 只增加分析要点和检查清单，不改变 base 框架的 10 节输出结构。
+# lens 只增加分析要点和检查清单，不改变 base 框架的输出结构（各节见 prompts/schema.yaml）。
+# 节号对照：1 摘要翻译 2 研究问题 3 已有工作 4 思考路径 5 方法 6 数学 7 实验 8 Take-aways 9 脆弱假设 10 最小复现 11 反例 12 后续调研 13 Follow-up idea
 #
 # catalog: 可用的 lens。adapter 决定内容从哪里来：
 #   markdown        prompts/lenses/ 下的 md 文件
@@ -10,6 +11,7 @@
 #
 # rules: 什么时候用哪些 lens（when 中的条件同时满足才生效）：
 #   always: true | topic: [...] | paper_type: [...] | min_score: 7 | min_novelty: 2 | source: [...]
+#   catalog 项加 enabled: false 可以整体停用一个 lens（规则里引用也不注入）。
 #   use 中的 "topic:*" = 该论文主要方向的 topic lens，"type:*" = type_<paper_type>
 
 budget_chars: 24000      # 所有 lens 内容的字符上限，超出时按 priority 截断或丢弃
@@ -20,21 +22,26 @@ llm_select:
 
 catalog:
   # ---- 论文类型（自写，轻量）
-  - {id: type_method,    adapter: markdown, path: prompts/lenses/type_method.md,    priority: 60, sections: [3, 4, 6]}
-  - {id: type_theory,    adapter: markdown, path: prompts/lenses/type_theory.md,    priority: 60, sections: [1, 5]}
-  - {id: type_benchmark, adapter: markdown, path: prompts/lenses/type_benchmark.md, priority: 60, sections: [3, 6]}
-  - {id: type_empirical, adapter: markdown, path: prompts/lenses/type_empirical.md, priority: 60, sections: [2, 6]}
-  - {id: type_survey,    adapter: markdown, path: prompts/lenses/type_survey.md,    priority: 60, sections: [2, 3, 4, 8]}
-  - {id: type_position,  adapter: markdown, path: prompts/lenses/type_position.md,  priority: 60, sections: [2, 7, 8]}
+  - {id: type_method,    adapter: markdown, path: prompts/lenses/type_method.md,    priority: 60, sections: [4, 5, 7]}
+  - {id: type_theory,    adapter: markdown, path: prompts/lenses/type_theory.md,    priority: 60, sections: [2, 6]}
+  - {id: type_benchmark, adapter: markdown, path: prompts/lenses/type_benchmark.md, priority: 60, sections: [3, 7]}
+  - {id: type_empirical, adapter: markdown, path: prompts/lenses/type_empirical.md, priority: 60, sections: [4, 7]}
+  - {id: type_survey,    adapter: markdown, path: prompts/lenses/type_survey.md,    priority: 60, sections: [3, 4, 5, 13]}
+  - {id: type_position,  adapter: markdown, path: prompts/lenses/type_position.md,  priority: 60, sections: [4, 9, 13]}
 
-  # ---- 外部 skill：nature-paper-card（证据纪律 + 按论文类型的拆解要点 + 研究 idea 的门槛）
+  # ---- 阅读 skill（默认启用）：从 nature-paper-card 与 ccf-idea-reviewer 提炼的精简版
+  - {id: evidence_discipline, adapter: markdown, path: prompts/lenses/evidence_discipline.md, priority: 55, sections: [7, 9, 10, 13]}
+  - {id: idea_review,         adapter: markdown, path: prompts/lenses/idea_review.md,         priority: 45, sections: [3, 4, 9, 11, 13]}
+
+  # ---- 外部 skill 原文（默认停用；想用完整 skill 时把 enabled 改为 true，并先 `dailypaper sync-skills`）
   - id: nature-paper-card
     adapter: skill_manifest
+    enabled: false
     path: skills/nature-paper-card
     title: "Skill · nature-paper-card（证据链与研究 idea 门槛）"
     description: 证据溯源纪律、按论文类型的方法拆解检查、研究 idea 的可证伪性与验证门槛
     priority: 50
-    sections: [4, 6, 7, 8]
+    sections: [5, 7, 9, 13]
     options:
       include_always_load: true
       exclude: [static/core/workflow.md, static/core/output-contract.md]
@@ -46,11 +53,12 @@ catalog:
   # ---- 外部 skill：ccf-idea-reviewer（判断 insight / novelty 的评审标准）
   - id: ccf-idea-reviewer
     adapter: skill_markdown
+    enabled: false
     path: skills/ccf-idea-reviewer
     title: "Skill · ccf-idea-reviewer（novelty 与 insight 评审标准）"
     description: 从问题重要性、相对最近工作的新颖性、概念洞察、机制自洽性等维度审视论文的核心思想
     priority: 40
-    sections: [2, 3, 8]
+    sections: [3, 4, 11, 13]
     options:
       sections: ["Core Rule"]
       references: [references/rubric.md]
@@ -58,10 +66,10 @@ catalog:
 
 rules:
   - when: {always: true}
-    use: ["topic:*", "type:*"]
+    use: ["topic:*", "type:*", evidence_discipline, idea_review]
   - when: {always: true}
-    use: [nature-paper-card]
+    use: [nature-paper-card]           # 已停用，启用后对所有论文生效
   - when: {min_score: 7}
-    use: [ccf-idea-reviewer]
+    use: [ccf-idea-reviewer]           # 已停用
   - when: {min_novelty: 2}
     use: [ccf-idea-reviewer]

@@ -34,7 +34,7 @@ def test_daily_end_to_end_with_fake_llm(ctx, cfg):
     for c in read:
         fm, body = read_markdown(cfg.content_dir / c.note_path)
         assert fm["paper_id"] == c.id and fm["status"] == "unread"
-        assert "## 2. Core insight" in body
+        assert "## 4. 作者的思考路径与核心直觉" in body and "## 13. Follow-up idea" in body
         assert "demo-skill" in fm["lenses"]
     assert (cfg.content_dir / "daily" / "2026-10-28.md").exists()
     index = read_json(cfg.content_dir / "api" / "index.json")

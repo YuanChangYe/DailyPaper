@@ -94,5 +94,5 @@ def test_deep_read_prompt_contains_framework_and_lenses(cfg):
     p = PromptComposer(cfg).compose("deep_read", lenses, paper=_cand().paper, screen=_cand().screen,
                                     topics_hit=["conformal_selective"], fulltext="BODY",
                                     fulltext_loader="abstract", grounding="source-limited")
-    assert "## 8. Research hooks" in p.system and "Lens：" in p.system
+    assert "## 13. Follow-up idea" in p.system and "## 8. Take-aways" in p.system and "Lens：" in p.system
     assert "<paper>\nBODY\n</paper>" in p.user and "仅有摘要" in p.user

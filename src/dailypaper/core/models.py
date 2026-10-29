@@ -83,6 +83,9 @@ class ReadingNote(BaseModel):
     lenses: list[str] = Field(default_factory=list)  # 实际使用的 lens
     model: str = ""
     grounding: str = ""
+    schema_version: int = 0  # 生成时用的 prompts/schema.yaml 版本；0 = 旧笔记
+    schema_ok: bool = True  # 标题、元信息是否通过 schema 校验
+    sections: list[str] = Field(default_factory=list)  # 正文实际出现的二级标题（去编号）
     created_at: datetime = Field(default_factory=now_utc)
 
 

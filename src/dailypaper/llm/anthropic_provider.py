@@ -5,6 +5,8 @@
 - system prompt 打上 cache_control：同一批筛选请求共享系统提示，命中缓存可省钱。
 - 默认开启服务端 refusal fallback（``fallbacks: "default"``），可在 llm.yaml 的 provider options 关闭。
 - 用流式请求 + get_final_message()，避免长输出触发 HTTP 超时。
+- 角色设置 ``web_search: true`` 时附带服务端联网搜索工具（精读的"后续研究调研"用）；
+  搜索结果块不进入正文，只保留模型最终写出的文字。
 """
 
 from __future__ import annotations
@@ -17,6 +19,8 @@ from ..core.registry import register
 from .base import LLMError, LLMProvider, LLMResponse
 
 FALLBACK_BETA = "server-side-fallback-2026-07-01"
+WEB_SEARCH_TOOL = "web_search_20260209"
+MAX_CONTINUATIONS = 3  # 服务端工具可能返回 pause_turn，最多续写几次
 
 
 @register("llm", "anthropic")
@@ -35,41 +39,54 @@ class AnthropicProvider(LLMProvider):
         # Haiku 没有服务端 fallback，只对其他模型开启
         self.use_fallbacks = bool(spec.options.get("fallbacks", True)) and "haiku" not in role.model
 
+    def _request(self, params: dict):
+        if self.use_fallbacks:
+            with self.client.beta.messages.stream(betas=[FALLBACK_BETA], fallbacks="default", **params) as stream:
+                return stream.get_final_message()
+        with self.client.messages.stream(**params) as stream:
+            return stream.get_final_message()
+
     def complete(self, system: str, user: str, *, tag: str = "", json_mode: bool = False) -> LLMResponse:
         if json_mode:
             system += "\n\n只输出一个合法的 JSON 对象，不要输出任何其他文字。"
+        messages: list[dict] = [{"role": "user", "content": user}]
         params: dict = {
             "model": self.role.model,
             "max_tokens": self.role.max_tokens,
             "system": [{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
-            "messages": [{"role": "user", "content": user}],
+            "messages": messages,
         }
         if self.role.effort:
             params["output_config"] = {"effort": self.role.effort}
+        if self.role.web_search and not json_mode:
+            params["tools"] = [{"type": WEB_SEARCH_TOOL, "name": "web_search", "max_uses": self.role.web_search_max_uses}]
         params.update(self.role.options)
+
+        text_parts: list[str] = []
+        input_tokens = output_tokens = 0
         try:
-            if self.use_fallbacks:
-                with self.client.beta.messages.stream(
-                    betas=[FALLBACK_BETA], fallbacks="default", **params
-                ) as stream:
-                    msg = stream.get_final_message()
-            else:
-                with self.client.messages.stream(**params) as stream:
-                    msg = stream.get_final_message()
+            for _ in range(MAX_CONTINUATIONS + 1):
+                msg = self._request(params)
+                input_tokens += msg.usage.input_tokens
+                output_tokens += msg.usage.output_tokens
+                if msg.stop_reason == "refusal":
+                    raise LLMError(f"Claude 拒绝了这个请求（{tag}）")
+                text_parts += [b.text for b in msg.content if b.type == "text"]
+                if msg.stop_reason != "pause_turn":
+                    break
+                # 服务端工具中途暂停：把已有内容作为 assistant 回合续上，再请求一次
+                messages.append({"role": "assistant", "content": msg.content})
         except (anthropic.AuthenticationError, anthropic.PermissionDeniedError) as e:
             raise LLMError(f"Claude API 认证失败，请检查 {self.spec.api_key_env}: {e}") from e
         except (anthropic.BadRequestError, anthropic.NotFoundError) as e:
             raise LLMError(f"Claude API 请求无效（模型名或参数）: {e}") from e
         # RateLimitError / 5xx / 连接错误交给 LLMClient 重试（见 is_transient）
 
-        if msg.stop_reason == "refusal":
-            raise LLMError(f"Claude 拒绝了这个请求（{tag}）")
-        text = "".join(b.text for b in msg.content if b.type == "text")
         return LLMResponse(
-            text=text,
+            text="".join(text_parts),
             model=msg.model,
-            input_tokens=msg.usage.input_tokens,
-            output_tokens=msg.usage.output_tokens,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
             stop_reason=msg.stop_reason or "",
         )
 

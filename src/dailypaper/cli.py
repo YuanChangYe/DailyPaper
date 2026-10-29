@@ -145,6 +145,10 @@ def cmd_check(cfg: AppConfig, args) -> int:
         for part in ("system", "user"):
             if not (cfg.path("prompts") / "base" / f"{name}.{part}.md.j2").exists():
                 problems.append(f"缺少模板 prompts/base/{name}.{part}.md.j2")
+    if not cfg.note_schema.sections:
+        problems.append("prompts/schema.yaml 缺失或没有 sections，精读提示词无法生成")
+    else:
+        print(f"✓ 笔记结构 v{cfg.note_schema.version}：{len(cfg.note_schema.sections)} 节")
     cat = LensCatalog(cfg)
     ids = cat.available_ids()
     missing = [i for i in cat.adapters if i not in ids]

@@ -30,7 +30,7 @@ def test_static_mounts(client, cfg):
     assert len(idx["papers"]) == 2
     pid = idx["papers"][0]["id"]
     paper = client.get(f"/site/api/papers/{pid}.json").json()
-    assert "## 0. TL;DR" in paper["markdown"] and paper["lenses"]
+    assert "## 1. 摘要翻译" in paper["markdown"] and paper["lenses"]
     assert client.get("/site/api/daily/2026-10-28.json").json()["papers"]
     assert client.get("/assets/hero-sunrise-640.jpg").status_code == 200
     # 网页本身也被复制进了内容目录（GitHub Pages 用）

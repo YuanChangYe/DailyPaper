@@ -107,6 +107,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
             "counts": counts,
             "site_title": cfg.settings.site.title,
             "repo_url": cfg.settings.site.repo_url,
+            "schema": cfg.note_schema.to_public(),
             "git_enabled": git_enabled,
             "workspace": str(cfg.content_dir.parent),
             "running": runner.running,
