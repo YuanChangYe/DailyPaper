@@ -177,6 +177,30 @@ def cmd_covers(cfg: AppConfig, args) -> int:
     return 0
 
 
+def cmd_venues(cfg: AppConfig, args) -> int:
+    """顶会论文池：sync 同步 / status 状态。"""
+    from .integrations.venues.pool import VenuePool
+    from .integrations.venues.sync import sync_venues
+
+    pool = VenuePool(cfg)
+    if args.action == "status":
+        st = pool.stats()
+        print(f"论文池 {st['path']}：共 {st['total']} 篇，已筛选 {st['screened']}，已精读 {st['read']}，上次同步 {st['last_sync'] or '从未'}")
+        for v in cfg.venues.venues:
+            rows = st["venues"].get(v.id, [])
+            flag = "" if v.enabled else "（已停用）"
+            desc = "、".join(f"{r['year']}: {r['count']} 篇" for r in rows) or "未同步"
+            print(f"  {v.badge:34s} {desc}{flag}")
+        return 0
+    results = sync_venues(cfg, venues=args.venue or None, years=args.year or None, force=args.force, pool=pool, progress=lambda m: print("  " + m))
+    done = [r for r in results if not r.get("skipped")]
+    failed = [r for r in done if not r["ok"]]
+    print(f"同步完成：{len(done)} 项，新增 {sum(r['new'] for r in done)} 篇，跳过 {len(results) - len(done)} 项（最近同步过），失败 {len(failed)} 项")
+    for r in failed:
+        print(f"  ! {r['venue']} {r['year']}: {r.get('error', '')}")
+    return 1 if failed and not done[len(failed):] else 0
+
+
 def cmd_list_plugins(cfg: AppConfig, args) -> int:
     for kind, names in registry.available().items():
         print(f"{kind:16s} {', '.join(names)}")
@@ -319,6 +343,12 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--provider", help="按该 provider 检查（例如 fake）")
     sp.set_defaults(func=cmd_check)
 
+    sp = sub.add_parser("venues", help="顶会论文池：sync 同步近两年录用论文，status 查看")
+    sp.add_argument("action", choices=["sync", "status"])
+    sp.add_argument("--venue", action="append", help="只同步这些会议 id（可重复）")
+    sp.add_argument("--year", action="append", type=int, help="只同步这些年份（可重复）")
+    sp.add_argument("--force", action="store_true", help="忽略 auto_sync_days，全部重新拉取")
+    sp.set_defaults(func=cmd_venues)
     sp = sub.add_parser("covers", help="扫描首页封面素材目录（输出目录旁的 covers/），生成尺寸与清单")
     sp.add_argument("--force", action="store_true", help="全部重新生成")
     sp.set_defaults(func=cmd_covers)

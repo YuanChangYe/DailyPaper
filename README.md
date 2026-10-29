@@ -443,7 +443,7 @@ roles:
 
 ```
 DailyPaper/
-├── config/            所有可调参数：pipeline / topics / llm / lenses / settings（用户主要改这里）
+├── config/            所有可调参数：pipeline / topics / llm / lenses / venues / settings（用户主要改这里）
 ├── prompts/           schema.yaml（笔记结构）、base/（精读与筛选的 Jinja2 模板）、lenses/（论文类型与阅读 skill lens）、defaults/（仓库默认版本，网页「恢复默认」用）
 ├── src/dailypaper/    源代码（见下）
 ├── tests/             离线测试：假模型 + 样例数据，不联网、不花钱
@@ -504,6 +504,7 @@ src/dailypaper/
 │   ├── annotations.py           网页高亮与批注（data/annotations/，自由笔记写回 frontmatter）
 │   ├── trends.py                阅读趋势统计与 AI 总结（data/trends/）
 │   ├── covers.py                首页封面素材库：生成尺寸与清单（covers/ → docs/assets/covers/）
+│   ├── venues/                  顶会论文池：pool（SQLite + FTS5）、sync（同步编排）、adapters/（openreview、acl_anthology、openalex）
 │   ├── zotero/                  base（接口）、http_api（读）、connector / web_api（写）、citekey、profile、service
 │   ├── site/                    contract（站点数据契约）、adapters（mkdocs / hugo / jekyll / generic_repo）
 │   └── obsidian/feedback.py     从笔记评分和审核决定计算排序反馈
@@ -664,6 +665,7 @@ class MinAuthors(Filter):
 | `dailypaper zotero-check` / `zotero-sync` / `zotero-profile` | Zotero 诊断 / 同步 / 导出兴趣画像 |
 | `dailypaper sync-skills [--only NAME ...]` | 同步外部 skill |
 | `dailypaper covers [--force]` | 扫描首页封面素材目录，生成尺寸与清单 |
+| `dailypaper venues sync [--venue id] [--year Y] [--force]` / `venues status` | 顶会论文池：同步近两年录用论文的标题与摘要到本地 SQLite / 查看各会篇数 |
 | `dailypaper list-plugins` / `list-lenses` | 列出插件 / lens |
 | `mkdocs serve` / `mkdocs build` | 预览 / 构建静态网站 |
 

@@ -7,6 +7,7 @@
 - ``llm.yaml``       LLM provider 与按角色（screen / read）的模型
 - ``lenses.yaml``    精读 lens 目录与选择规则
 - ``settings.yaml``  路径、语言、Zotero / Obsidian / 网站 / 本地助手
+- ``venues.yaml``    顶会论文池：会议名单、同步与专栏参数
 
 YAML 字符串中可以写 ``${ENV}`` 或 ``${ENV:-默认值}`` 引用环境变量。
 API key 只从环境变量读取，不写进配置文件。
@@ -142,6 +143,54 @@ class LensConfig(BaseModel):
     rules: list[LensRule] = Field(default_factory=list)
 
 
+# ---------------------------------------------------------------- venues（顶会论文池）
+
+
+class VenueSpec(BaseModel):
+    model_config = ConfigDict(extra="allow")  # 适配器自己的参数（venueid、volumes、source_id……）放在 extra 里
+
+    id: str
+    name: str
+    field: str = ""  # nlp / ml / ai / cv / dm
+    ccf: str = ""  # A / B / C / ""（不在目录里）
+    core: str = ""  # A* / A / B / ""
+    adapter: str = "openalex"
+    enabled: bool = True
+
+    def param(self, key: str, default: Any = None) -> Any:
+        return (self.model_extra or {}).get(key, default)
+
+    @property
+    def badge(self) -> str:
+        bits = [self.name]
+        if self.ccf:
+            bits.append(f"CCF-{self.ccf}")
+        if self.core:
+            bits.append(f"CORE {self.core}")
+        return " · ".join(bits)
+
+
+class VenueColumn(BaseModel):
+    total: int = 6
+    arxiv_max: int = 3
+    min_score: float = 6.5
+    screen_budget: int = 60
+
+
+class VenuesConfig(BaseModel):
+    years_back: int = 1
+    auto_sync_days: int = 7
+    timeout: float = 120
+    column: VenueColumn = Field(default_factory=VenueColumn)
+    venues: list[VenueSpec] = Field(default_factory=list)
+
+    def enabled(self) -> list[VenueSpec]:
+        return [v for v in self.venues if v.enabled]
+
+    def get(self, venue_id: str) -> VenueSpec | None:
+        return next((v for v in self.venues if v.id == venue_id), None)
+
+
 # ---------------------------------------------------------------- note schema
 
 
@@ -266,6 +315,7 @@ class AppConfig(BaseModel):
     llm: LLMConfig = Field(default_factory=LLMConfig)
     lenses: LensConfig = Field(default_factory=LensConfig)
     note_schema: NoteSchema = Field(default_factory=NoteSchema)
+    venues: VenuesConfig = Field(default_factory=VenuesConfig)
 
     # 便捷路径
     def path(self, rel: str | Path) -> Path:
@@ -317,4 +367,5 @@ def load_config(root: Path | str | None = None) -> AppConfig:
         llm=LLMConfig.model_validate(read_yaml(cfg_dir / "llm.yaml")),
         lenses=LensConfig.model_validate(read_yaml(cfg_dir / "lenses.yaml")),
         note_schema=load_schema(root),
+        venues=VenuesConfig.model_validate(read_yaml(cfg_dir / "venues.yaml")),
     )

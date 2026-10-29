@@ -25,3 +25,6 @@ prompts/.history/
 
 # 首页封面的原图（没有设置 DAILYPAPER_WORKSPACE 时放在项目里）
 /covers/
+
+# 顶会论文池（几万篇标题摘要，本地数据）
+data/venues.sqlite*
