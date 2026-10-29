@@ -499,6 +499,21 @@ footer a{border-bottom:1px solid var(--line-2)}
 .swatches button[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 2px var(--bg)}
 .sw-yellow{background:#FFD666}.sw-green{background:#78DCA0}.sw-pink{background:#FF96AA}.sw-blue{background:#82BEFF}
 .about-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:18px}
+.usage-big{font-size:34px;font-weight:700;color:var(--ink);letter-spacing:-.02em;line-height:1.1}.usage-big small{font-size:14px;color:var(--muted);font-weight:500;margin-left:6px}
+.bar{height:8px;border-radius:999px;background:var(--glass-2);overflow:hidden;margin:10px 0 6px}.bar i{display:block;height:100%;background:var(--accent);border-radius:999px}
+.bar i.warn{background:var(--warn)}.bar i.bad{background:var(--bad)}
+.mini-bars{display:flex;gap:8px;align-items:flex-end;height:72px;margin-top:14px}.mini-bars div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;font-size:10px;color:var(--muted);height:100%}
+.mini-bars i{width:100%;border-radius:4px 4px 0 0;background:var(--accent);opacity:.65;min-height:2px}.mini-bars b{font-size:10px;color:var(--ink)}
+.ptable{width:100%;border-collapse:collapse;font-size:13px}.ptable td,.ptable th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}.ptable th{font-weight:600;color:var(--muted);font-size:12px}
+.ptable input{width:100%;min-height:32px;padding:4px 8px;border-radius:8px;border:1px solid var(--line-2);background:rgba(9,30,38,.35);outline:0}.ptable input:focus{border-color:var(--accent)}
+.ptable td.num{width:110px}.ptable td.act{width:36px;text-align:right}
+.store-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:12px 0;border-bottom:1px solid var(--line)}.store-row .grow{flex:1 1 220px;min-width:0}
+@media (max-width:1260px){.spanel .settings-layout{grid-template-columns:1fr}}.store-row b{display:block;color:var(--ink);font-size:14px}.store-row span{font-size:12px;color:var(--muted)}
+.store-row .sz{font-family:var(--mono);font-size:13px;color:var(--ink);white-space:nowrap}
+.key-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted);margin-right:5px}.key-dot.on{background:var(--ok)}
+.role-box{padding:16px 18px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--glass);margin-bottom:12px}.role-box h4{margin:0 0 12px;color:var(--ink);font-size:15px}
+.field select{width:100%;min-height:42px;padding:8px 12px;border-radius:var(--r-sm);border:1px solid var(--line-2);background:rgba(9,30,38,.35);outline:0}.field select:focus{border-color:var(--accent)}
+:root[data-theme="light"] .ptable input,:root[data-theme="light"] .field select{background:#fff}
 .kbd{display:inline-block;min-width:22px;padding:1px 7px;border-radius:6px;border:1px solid var(--line-2);background:var(--glass);font-family:var(--mono);font-size:12px;color:var(--ink);text-align:center}
 .about-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-size:14px}
 .about-list li{display:flex;justify-content:space-between;gap:12px}
@@ -1087,7 +1102,7 @@ VIEWS.home = async () => {
     <div class="stat reveal"><b data-count="${today.length}">0</b><span>${esc(fmtDate(latest || ""))} 精读</span></div>
     <div class="stat reveal"><b data-count="${S.index.length}">0</b><span>累计笔记</span></div>
     <div class="stat reveal"><b data-count="${imported}">0</b><span>已入库 Zotero</span></div>
-    ${isLocal() ? `<a class="stat reveal" href="#/settings?g=topics" title="查看运行日志"><b class="stat-text">${esc(lastRunLabel())}</b><span>上次运行 · 点击看日志</span></a>`
+    ${isLocal() ? `<a class="stat reveal" href="#/settings?g=run" title="查看运行日志"><b class="stat-text">${esc(lastRunLabel())}</b><span>上次运行 · 点击看日志</span></a>`
                 : `<div class="stat reveal"><b data-count="${S.topics.length}">0</b><span>研究方向</span></div>`}
   </div>
   ${!S.index.length ? `<section class="section"><div class="onboard">
@@ -1640,8 +1655,8 @@ const SETTINGS_GROUPS = [
   { id: "appearance", name: "外观", icon: "◐" },
   { id: "reading", name: "阅读", icon: "☰" },
   { id: "topics", name: "研究方向", icon: "⌖", cfg: true },
-  { id: "run", name: "运行与费用", icon: "◷", cfg: true, soon: true },
-  { id: "data", name: "数据与隐私", icon: "⛁", soon: true },
+  { id: "run", name: "运行与费用", icon: "◷", cfg: true },
+  { id: "data", name: "数据与隐私", icon: "⛁" },
   { id: "prompts", name: "提示词与 Skill", icon: "✎", cfg: true, soon: true },
   { id: "about", name: "关于", icon: "ⓘ" },
 ];
@@ -1712,12 +1727,12 @@ VIEWS.settings = async (_, params) => {
   let body;
   if (g.id === "topics") body = await SETTINGS.topics();
   else if (g.soon) body = SETTINGS.soon(g);
-  else body = SETTINGS[g.id]();
+  else body = await SETTINGS[g.id]();
   return `<div class="settings-shell">${side}<div class="spanel" data-group="${g.id}">${body}</div></div>`;
 };
 SETTINGS.topics = async () => {
   await loadConfig();
-  const c = S.config, d = c.daily;
+  const c = S.config;
   const canSave = S.configSource === "api" && c.editable !== false;
   const notice = { missing: "本地助手还没有提供 <code>/api/config</code>（见 src/dailypaper/app/API.md 2.2）。下面是项目 topics.yaml 的副本，可以编辑后导出 YAML 手动替换。", error: "读取配置失败，显示的是默认副本。", static: "这是只读网站。可以在这里编辑后导出 YAML，提交到仓库的 config/ 目录。", demo: "示例模式：编辑后可以导出 YAML。连接本地助手后可直接保存。" }[S.configSource];
   return `
@@ -1729,6 +1744,76 @@ SETTINGS.topics = async () => {
       <div id="topic-list">${c.topics.map(topicCard).join("")}</div>
     </div>
     <aside>
+      <div class="panel"><h3>保存</h3>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 12px">写入 config/topics.yaml，注释会保留。每天精读几篇、阈值和 arXiv 分类在「运行与费用」里。</p>
+        <button class="btn primary" type="button" id="save-config" ${canSave ? "" : "hidden"}>保存研究方向</button>
+        <button class="btn" type="button" id="export-yaml">导出 topics.yaml</button>
+      </div>
+    </aside>
+  </div>`;
+};
+
+/* ---------- 运行与费用：模型、预算、每日任务参数、立即运行 ---------- */
+const fmtUSD = (x) => "$" + Number(x || 0).toFixed(2);
+const fmtTok = (n) => n >= 1e6 ? (n / 1e6).toFixed(2) + "M" : n >= 1e3 ? (n / 1e3).toFixed(0) + "k" : String(n);
+SETTINGS.run = async () => {
+  await loadConfig();
+  let L = null, U = null;
+  if (isLocal()) {
+    try { L = await getJSON("/api/config/llm"); } catch { /* 旧版本地助手 */ }
+    try { U = await getJSON("/api/usage"); } catch { /* 忽略 */ }
+  }
+  S.llm = L;
+  const c = S.config, d = c.daily;
+  S.dailyLoaded = JSON.stringify(d);
+  const canSave = S.configSource === "api" && c.editable !== false && !!L?.editable;
+  const ratio = U?.budget ? U.usd / U.budget : 0;
+  const maxM = Math.max(0.01, ...(U?.months || []).map((m) => m.usd));
+  const roleBox = (name, label, hint) => {
+    const r = L.roles[name] || { provider: "", model: "", effort: "", max_tokens: 8000, web_search: false, web_search_max_uses: 8 };
+    return `<div class="role-box" data-role="${name}"><h4>${label} <span style="font-weight:400;color:var(--muted);font-size:13px">${hint}</span></h4>
+      <div class="two">
+        <div class="field"><label>模型服务</label><select data-k="provider">${L.providers.map((pv) => `<option value="${esc(pv.name)}" ${pv.name === r.provider ? "selected" : ""}>${esc(pv.name)}（${esc(pv.type)}${pv.key_set === null ? "" : pv.key_set ? "，已配置 key" : "，缺少 " + pv.key_env}）</option>`).join("")}</select></div>
+        <div class="field"><label>模型名</label><input type="text" data-k="model" value="${esc(r.model)}" placeholder="claude-sonnet-5-5"></div>
+      </div>
+      <div class="two" style="margin-top:12px">
+        <div class="field"><label>思考深度 effort（仅 Claude）</label><select data-k="effort"><option value="">默认</option>${L.efforts.map((e) => `<option value="${e}" ${e === r.effort ? "selected" : ""}>${e}</option>`).join("")}</select></div>
+        <div class="field"><label>输出上限 max_tokens</label><input type="number" data-k="max_tokens" min="256" max="200000" step="1000" value="${esc(r.max_tokens)}"></div>
+      </div>
+      ${name === "read" ? `<div class="two" style="margin-top:12px">
+        <div class="field"><label>联网搜索（仅 Claude；后续研究调研用）</label><select data-k="web_search"><option value="true" ${r.web_search ? "selected" : ""}>开（每篇多约 $0.05–0.1）</option><option value="false" ${r.web_search ? "" : "selected"}>关</option></select></div>
+        <div class="field"><label>每篇最多搜索次数</label><input type="number" data-k="web_search_max_uses" min="1" max="30" value="${esc(r.web_search_max_uses)}"></div>
+      </div>` : ""}
+    </div>`;
+  };
+  return `${groupHead(SETTINGS_GROUPS[3], "用哪个模型、花多少钱、每天精读几篇。")}
+  ${!isLocal() ? `<div class="notice">只读网站看不到用量，也不能改模型设置；连接本地助手后可用。</div>` : !L ? `<div class="notice">本地助手版本过旧，没有 <code>/api/config/llm</code>。请重启本地助手。</div>` : canSave ? "" : `<div class="notice">config/llm.yaml 不可写，只能查看。</div>`}
+  <div class="settings-layout">
+    <div>
+      ${U ? `<div class="panel"><h3>本月花费 · ${esc(U.month)}</h3>
+        <div class="usage-big">${fmtUSD(U.usd)}<small>${U.budget ? `/ 预算 ${fmtUSD(U.budget)} · ${(ratio * 100).toFixed(0)}%` : "未设预算"} · ${U.calls} 次调用</small></div>
+        ${U.budget ? `<div class="bar"><i class="${ratio >= 1 ? "bad" : ratio >= U.warn_ratio ? "warn" : ""}" style="width:${Math.min(100, ratio * 100).toFixed(1)}%"></i></div>` : ""}
+        <div class="mini-bars">${U.months.map((m) => `<div title="${esc(m.month)} ${fmtUSD(m.usd)} · ${m.calls} 次"><b>${m.usd ? fmtUSD(m.usd) : ""}</b><i style="height:${Math.max(2, m.usd / maxM * 48)}px"></i><span>${esc(m.month.slice(5))}月</span></div>`).join("")}</div>
+        ${Object.keys(U.models).length ? `<table class="ptable" style="margin-top:14px"><thead><tr><th>模型</th><th>输入 token</th><th>输出 token</th><th>花费</th></tr></thead><tbody>${Object.entries(U.models).map(([m, v]) => `<tr><td class="mono">${esc(m)}</td><td>${fmtTok(v.in)}</td><td>${fmtTok(v.out)}</td><td>${fmtUSD(v.usd)}</td></tr>`).join("")}</tbody></table>` : `<p style="font-size:13px;color:var(--muted);margin:12px 0 0">本月还没有调用记录。命中缓存的调用不计费。</p>`}
+      </div>` : ""}
+      ${L ? `
+      <div class="section-head" style="margin:8px 0 12px"><div><h2 style="font-size:22px">模型</h2><p>API key 只从环境变量读取（本地 .env），这里只显示是否已配置。</p></div></div>
+      ${roleBox("screen", "筛选", "量大、任务简单，用便宜的模型")}
+      ${roleBox("read", "精读", "全文阅读，用推理更强的模型")}
+      <div class="panel"><h3>预算与价格</h3>
+        <div class="two">
+          <div class="field"><label for="b-month">月度预算（美元，留空不限）</label><input type="number" id="b-month" min="0" step="5" value="${L.monthly_budget_usd ?? ""}" placeholder="100"></div>
+          <div class="field"><label for="b-warn">用到多少比例时提醒</label><div class="range"><input type="range" id="b-warn" min="0.1" max="1" step="0.05" value="${esc(L.budget_warn_ratio)}"><output>${Math.round(L.budget_warn_ratio * 100)}%</output></div></div>
+        </div>
+        <p style="font-size:13px;color:var(--muted);margin:14px 0 6px">价格表：美元 / 百万 token。没有价格的模型只记 token 不记金额。</p>
+        <table class="ptable" id="price-table"><thead><tr><th>模型名</th><th>输入</th><th>输出</th><th></th></tr></thead><tbody>
+          ${Object.entries(L.pricing).map(([m, [i, o]]) => `<tr data-price-row><td><input type="text" data-pm value="${esc(m)}"></td><td class="num"><input type="number" data-pi min="0" step="0.01" value="${i}"></td><td class="num"><input type="number" data-po min="0" step="0.01" value="${o}"></td><td class="act"><button class="btn sm ghost" type="button" data-price-del title="删除">×</button></td></tr>`).join("")}
+        </tbody></table>
+        <button class="btn sm" type="button" id="price-add" style="margin-top:10px">＋ 添加模型价格</button>
+        <div class="field" style="margin-top:14px"><label>模型调用缓存</label><select id="l-cache"><option value="true" ${L.cache ? "selected" : ""}>开（相同 prompt 不重复花钱）</option><option value="false" ${L.cache ? "" : "selected"}>关</option></select></div>
+      </div>` : ""}
+    </div>
+    <aside>
       <div class="panel"><h3>每日任务</h3>
         <div class="field"><span class="lab">arXiv 分类</span>${tagEditor("daily.categories", d.categories, "例如 cs.CV")}</div>
         <div class="two" style="margin-top:12px">
@@ -1736,8 +1821,8 @@ SETTINGS.topics = async () => {
           <div class="field"><label for="d-max">预筛上限</label><input type="number" id="d-max" min="10" max="300" step="10" value="${esc(d.max_candidates)}"></div>
         </div>
         <div class="field" style="margin-top:12px"><label for="d-min">精读最低分（0–10）</label><div class="range"><input type="range" id="d-min" min="0" max="10" step="0.5" value="${esc(d.min_score)}"><output>${Number(d.min_score).toFixed(1)}</output></div></div>
-        <button class="btn primary" type="button" id="save-config" ${canSave ? "" : "hidden"}>保存设置</button>
-        <button class="btn" type="button" id="export-yaml">导出 topics.yaml</button>
+        <p style="font-size:12px;color:var(--muted);margin:12px 0">估算：每篇精读约 $0.15–0.3（Sonnet，含联网搜索），筛选每天约 $0.02。</p>
+        <button class="btn primary" type="button" id="save-run" ${canSave ? "" : "hidden"}>保存运行设置</button>
       </div>
       <div class="panel"><h3>运行</h3>
         <p id="run-state">—</p>
@@ -1753,6 +1838,112 @@ SETTINGS.topics = async () => {
     </aside>
   </div>`;
 };
+function readRunForm() {
+  const L = S.llm; if (!L) return null;
+  const roles = {};
+  $$("[data-role]").forEach((box) => {
+    const r = {};
+    $$("[data-k]", box).forEach((el) => {
+      const k = el.dataset.k;
+      r[k] = k === "max_tokens" || k === "web_search_max_uses" ? Number(el.value) : k === "web_search" ? el.value === "true" : el.value;
+    });
+    roles[box.dataset.role] = { ...L.roles[box.dataset.role], ...r };
+  });
+  const pricing = {};
+  $$("[data-price-row]").forEach((tr) => { const m = $("[data-pm]", tr).value.trim(); if (m) pricing[m] = [Number($("[data-pi]", tr).value), Number($("[data-po]", tr).value)]; });
+  const budget = $("#b-month").value.trim();
+  return { roles, monthly_budget_usd: budget === "" ? null : Number(budget), budget_warn_ratio: Number($("#b-warn").value), pricing, cache: $("#l-cache").value === "true" };
+}
+function afterRunGroup() {
+  $$('input[type="range"]').forEach((r) => r.addEventListener("input", () => (r.nextElementSibling.value = r.id === "b-warn" ? Math.round(r.value * 100) + "%" : Number(r.value).toFixed(1))));
+  document.addEventListener("keydown", tagKeys);
+  $("#view").addEventListener("click", tagClicks);
+  $("#price-add")?.addEventListener("click", () => {
+    $("#price-table tbody").insertAdjacentHTML("beforeend", `<tr data-price-row><td><input type="text" data-pm placeholder="模型名"></td><td class="num"><input type="number" data-pi min="0" step="0.01" value="0"></td><td class="num"><input type="number" data-po min="0" step="0.01" value="0"></td><td class="act"><button class="btn sm ghost" type="button" data-price-del title="删除">×</button></td></tr>`);
+    $("#price-table tbody tr:last-child input").focus();
+  });
+  $("#price-table")?.addEventListener("click", (e) => { const b = e.target.closest("[data-price-del]"); if (b) b.closest("tr").remove(); });
+  $("#save-run")?.addEventListener("click", async (e) => {
+    const btn = e.currentTarget; readSettingsForm(); const body = readRunForm(); btn.disabled = true;
+    try {
+      const { editable, ...cfgBody } = S.config;
+      const dailyChanged = JSON.stringify(cfgBody.daily) !== S.dailyLoaded;
+      const r1 = dailyChanged ? await send("/api/config", cfgBody, "PUT") : { messages: [] };
+      S.dailyLoaded = JSON.stringify(cfgBody.daily);
+      const r2 = body ? await send("/api/config/llm", body, "PUT") : { messages: [] };
+      [...(r1.messages || []), ...(r2.messages || [])].forEach((m) => toast(m, "ok"));
+      void editable;
+    } catch (err) { toast("保存失败：" + err.message, "err"); } finally { btn.disabled = false; }
+  });
+  $("#app-quit")?.addEventListener("click", async () => {
+    if (!confirm("退出本地助手？")) return;
+    try { (await send("/api/shutdown")).messages.forEach((m) => toast(m, "ok")); } catch (err) { toast(err.message, "err"); }
+  });
+  $("#run-daily").addEventListener("click", () => startRun("daily"));
+  $("#run-read").addEventListener("click", () => {
+    const ids = $("#read-ids").value.split(/[\s,]+/).map((x) => x.match(ARXIV_ID)?.[1]).filter(Boolean);
+    ids.length ? startRun("read", ids) : toast("请输入 arXiv ID，例如 2610.35877", "err");
+  });
+  paintRun();
+}
+
+/* ---------- 数据与隐私：目录、缓存、导出 ---------- */
+const fmtBytes = (b) => b >= 1e9 ? (b / 1e9).toFixed(2) + " GB" : b >= 1e6 ? (b / 1e6).toFixed(1) + " MB" : (b / 1e3).toFixed(0) + " KB";
+SETTINGS.data = async () => {
+  let st = null;
+  if (isLocal()) { try { st = await getJSON("/api/storage"); } catch { /* 旧版本地助手 */ } }
+  const openBtn = (which, label) => `<button class="btn sm" type="button" data-open="${which}">${label}</button>`;
+  return `${groupHead(SETTINGS_GROUPS[4], "数据都在你的电脑上。这里看占用、清缓存、导出。").replace(/<span class="store-tag.*?<\/span>/, "")}
+  <div class="settings-layout">
+    <div>
+      ${st ? `<div class="panel"><h3>目录</h3>
+        <ul class="about-list" style="margin-bottom:14px">
+          <li><span>输出目录</span><b class="mono" style="font-size:12px;word-break:break-all;text-align:right">${esc(st.workspace)}</b></li>
+          <li><span>精读笔记</span><b>${st.notes.files} 篇 · ${fmtBytes(st.notes.bytes)}</b></li>
+          <li><span>高亮与批注</span><b>${st.annotations.files} 篇 · ${fmtBytes(st.annotations.bytes)}</b></li>
+        </ul>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">${openBtn("content", "打开笔记目录")}${openBtn("data", "打开数据目录")}${openBtn("config", "打开配置目录")}${openBtn("cache", "打开缓存目录")}</div>
+      </div>
+      <div class="panel"><h3>缓存占用</h3>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 4px">清除只影响缓存，不会动笔记、审核结果和批注。</p>
+        ${st.cache.map((c) => `<div class="store-row"><div class="grow"><b>${esc(c.kind)}</b><span>${esc(c.label)}</span></div><span class="sz">${fmtBytes(c.bytes)} · ${c.files} 个文件</span><button class="btn sm" type="button" data-clear="${esc(c.kind)}" ${c.files ? "" : "disabled"}>清除</button></div>`).join("")}
+      </div>` : `<div class="notice">${isLocal() ? "本地助手版本过旧，没有 <code>/api/storage</code>。请重启本地助手。" : "只读网站没有本机目录和缓存；连接本地助手后可用。"}</div>`}
+      <div class="panel"><h3>隐私</h3>
+        <ul class="about-list">
+          <li><span>发送到模型服务的内容</span><b>论文标题、摘要、全文和你的研究方向</b></li>
+          <li><span>留在本机的内容</span><b>笔记、审核结果、高亮批注、用量记录</b></li>
+          <li><span>网页向外请求</span><b>字体（Google Fonts）、关于页的 GitHub 版本检查</b></li>
+          <li><span>API key</span><b>只在 .env / 环境变量里，网页不读取也不显示</b></li>
+        </ul>
+      </div>
+    </div>
+    <aside>
+      <div class="panel"><h3>导出</h3>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 12px">笔记本身就是 Markdown 文件，随时可以直接复制；这里把高亮和批注一起打包。</p>
+        ${isLocal() ? `<a class="btn primary" href="/api/export/notes.zip" download>笔记 + 批注（zip）</a>
+        <a class="btn" href="/api/export/annotations.json" download style="margin-top:8px">只要批注（JSON）</a>` : `<p style="font-size:13px;color:var(--muted)">只读网站不能导出。</p>`}
+      </div>
+      <div class="panel"><h3>这台浏览器</h3>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 12px">外观和阅读偏好、分栏宽度存在浏览器里。清除后恢复默认。</p>
+        <button class="btn" type="button" id="clear-prefs">清除浏览器偏好</button>
+      </div>
+    </aside>
+  </div>`;
+};
+function afterDataGroup() {
+  $$("[data-open]").forEach((b) => b.addEventListener("click", async () => {
+    try { await send("/api/open-folder", { which: b.dataset.open }); } catch (err) { toast(err.message, "err"); }
+  }));
+  $$("[data-clear]").forEach((b) => b.addEventListener("click", async () => {
+    if (!confirm(`清除 ${b.dataset.clear} 缓存？`)) return;
+    try { (await send("/api/storage/clear", { kind: b.dataset.clear })).messages.forEach((m) => toast(m, "ok")); route(true); } catch (err) { toast(err.message, "err"); }
+  }));
+  $("#clear-prefs").addEventListener("click", () => {
+    if (!confirm("清除这台浏览器里的外观与阅读偏好？")) return;
+    try { ["dp.prefs", "dp.theme", "dp.split"].forEach((k) => localStorage.removeItem(k)); sessionStorage.removeItem("dp.pdf"); } catch { /* 忽略 */ }
+    PREFS = null; applyPrefs(); toast("已恢复默认", "ok");
+  });
+}
 function readSettingsForm() {
   const c = S.config;
   $$("[data-topic-i]").forEach((card) => {
@@ -1762,7 +1953,7 @@ function readSettingsForm() {
       t[f] = f === "weight" ? Number(el.value) : f === "lens_questions" ? el.value.split("\n").map((s) => s.trim()).filter(Boolean) : el.value;
     });
   });
-  c.daily.top_k = Number($("#d-k").value); c.daily.max_candidates = Number($("#d-max").value); c.daily.min_score = Number($("#d-min").value);
+  if ($("#d-k")) { c.daily.top_k = Number($("#d-k").value); c.daily.max_candidates = Number($("#d-max").value); c.daily.min_score = Number($("#d-min").value); }
 }
 function getPath(path) { const [a, b] = path.split("."); return a === "daily" ? S.config.daily[b] : S.config.topics[+a][b]; }
 function toYAML(c) {
@@ -1780,6 +1971,8 @@ function toYAML(c) {
 VIEWS.settings.after = (_, params) => {
   const gid = params.get("g") || "appearance";
   const panel = $(".spanel");
+  if (gid === "run") { afterRunGroup(); return; }
+  if (gid === "data") { afterDataGroup(); return; }
   if (gid !== "topics") {
     panel.addEventListener("click", (e) => {
       const b = e.target.closest("[data-pref] button[data-v]"); if (!b) return;
@@ -1827,20 +2020,10 @@ VIEWS.settings.after = (_, params) => {
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   });
   $("#save-config")?.addEventListener("click", async (e) => {
-    readSettingsForm(); e.currentTarget.disabled = true;
-    try { const { editable, ...body } = S.config; const r = await send("/api/config", body, "PUT"); (r.messages || ["已保存"]).forEach((m) => toast(m, "ok")); }
-    catch (err) { toast("保存失败：" + err.message, "err"); } finally { e.currentTarget.disabled = false; }
+    const btn = e.currentTarget; readSettingsForm(); btn.disabled = true;
+    try { const { editable, ...body } = S.config; const r = await send("/api/config", body, "PUT"); (r.messages || ["已保存"]).forEach((m) => toast(m, "ok")); void editable; }
+    catch (err) { toast("保存失败：" + err.message, "err"); } finally { btn.disabled = false; }
   });
-  $("#app-quit")?.addEventListener("click", async () => {
-    if (!confirm("退出本地助手？")) return;
-    try { (await send("/api/shutdown")).messages.forEach((m) => toast(m, "ok")); } catch (e) { toast(e.message, "err"); }
-  });
-  $("#run-daily").addEventListener("click", () => startRun("daily"));
-  $("#run-read").addEventListener("click", () => {
-    const ids = $("#read-ids").value.split(/[\s,]+/).map((s) => s.match(ARXIV_ID)?.[1]).filter(Boolean);
-    ids.length ? startRun("read", ids) : toast("请输入 arXiv ID，例如 2610.35877", "err");
-  });
-  paintRun();
 };
 function tagKeys(e) {
   const input = e.target.closest?.(".tags input"); if (!input || !(e.key === "Enter" || e.key === ",")) return;

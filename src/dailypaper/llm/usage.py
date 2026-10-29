@@ -70,3 +70,37 @@ def budget_line(cfg: AppConfig) -> str:
             log.warning("本月 LLM 花费已达预算的 %.0f%%（$%.2f / $%.0f），可在 llm.yaml 调低精读篇数或换模型",
                         ratio * 100, s["usd"], budget)
     return line
+
+
+def history(cfg: AppConfig, months: int = 6) -> dict:
+    """最近几个月的花费（云端 + 本地合并），以及本月按模型的明细。网页「运行与费用」用。"""
+    from datetime import timedelta
+
+    merged: dict[str, dict] = {}
+    for name in ("usage.json", "usage.local.json"):
+        for month, m in (read_json(cfg.data_dir / name, {}) or {}).items():
+            t = merged.setdefault(month, {"usd": 0.0, "calls": 0, "models": {}})
+            t["usd"] += m.get("usd", 0.0)
+            t["calls"] += m.get("calls", 0)
+            for model, mm in m.get("models", {}).items():
+                x = t["models"].setdefault(model, {"in": 0, "out": 0, "usd": 0.0})
+                x["in"] += mm.get("in", 0)
+                x["out"] += mm.get("out", 0)
+                x["usd"] += mm.get("usd", 0.0)
+    today = date.today().replace(day=1)
+    keys = []
+    d = today
+    for _ in range(months):
+        keys.append(d.strftime("%Y-%m"))
+        d = (d - timedelta(days=1)).replace(day=1)
+    keys.reverse()
+    cur = merged.get(keys[-1], {"usd": 0.0, "calls": 0, "models": {}})
+    return {
+        "month": keys[-1],
+        "usd": round(cur["usd"], 4),
+        "calls": cur["calls"],
+        "budget": cfg.llm.monthly_budget_usd,
+        "warn_ratio": cfg.llm.budget_warn_ratio,
+        "models": {k: {**v, "usd": round(v["usd"], 4)} for k, v in sorted(cur["models"].items(), key=lambda kv: -kv[1]["usd"])},
+        "months": [{"month": k, "usd": round(merged.get(k, {}).get("usd", 0.0), 4), "calls": merged.get(k, {}).get("calls", 0)} for k in keys],
+    }

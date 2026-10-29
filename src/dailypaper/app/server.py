@@ -226,6 +226,73 @@ def create_app(cfg: AppConfig) -> FastAPI:
         except ValueError as e:
             raise HTTPException(400, str(e)) from e
 
+    # ------------------------------------------------------------ 运行与费用（llm.yaml、用量）
+    @app.get("/api/config/llm")
+    def get_llm_config():
+        from .config_editor import read_llm_view
+
+        return read_llm_view(cfg)
+
+    @app.put("/api/config/llm")
+    def put_llm_config(body: dict):
+        from .config_editor import read_llm_view, write_llm_config
+
+        if not read_llm_view(cfg)["editable"]:
+            raise HTTPException(403, "config/llm.yaml 不可写")
+        try:
+            return {"messages": write_llm_config(cfg, body)}
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
+
+    @app.get("/api/usage")
+    def usage(months: int = 6):
+        from ..llm.usage import history
+
+        return history(cfg, max(1, min(months, 24)))
+
+    # ------------------------------------------------------------ 数据与隐私（目录、缓存、导出）
+    @app.get("/api/storage")
+    def storage():
+        from .maintenance import storage_view
+
+        return storage_view(cfg)
+
+    @app.post("/api/storage/clear")
+    def storage_clear(body: dict):
+        from .maintenance import clear_cache
+
+        try:
+            r = clear_cache(cfg, str(body.get("kind", "")))
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
+        return {**r, "messages": [f"已清除 {r['files']} 个文件，释放 {r['freed'] / 1e6:.1f} MB"]}
+
+    @app.post("/api/open-folder")
+    def open_folder_ep(body: dict):
+        from .maintenance import open_folder
+
+        try:
+            return {"path": open_folder(cfg, str(body.get("which", "workspace")))}
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
+        except OSError as e:
+            raise HTTPException(500, f"打开目录失败: {e}") from e
+
+    @app.get("/api/export/annotations.json")
+    def export_annotations_ep():
+        from .maintenance import export_annotations
+
+        return JSONResponse(export_annotations(cfg), headers={"Content-Disposition": 'attachment; filename="dailypaper-annotations.json"'})
+
+    @app.get("/api/export/notes.zip")
+    def export_notes_ep():
+        from fastapi.responses import Response
+
+        from .maintenance import export_notes_zip
+
+        return Response(export_notes_zip(cfg), media_type="application/zip",
+                        headers={"Content-Disposition": 'attachment; filename="dailypaper-notes.zip"'})
+
     # ------------------------------------------------------------ 我的文献库（Zotero 分类）
     @app.get("/api/zotero/library")
     def zotero_library():

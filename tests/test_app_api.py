@@ -92,3 +92,53 @@ def test_run_endpoint_runs_pipeline_in_background(client, cfg):
     assert not s["running"] and s["ok"] is True, "\n".join(s["log_tail"])
     assert any("完成" in line for line in s["log_tail"])
     assert s["pipeline"] == "daily" and s["started_at"] and s["finished_at"]
+
+
+def test_llm_config_roundtrip_keeps_comments(client, cfg):
+    view = client.get("/api/config/llm").json()
+    assert view["editable"] and "screen" in view["roles"] and "read" in view["roles"]
+    assert all("key_set" in p for p in view["providers"])  # 只报告是否存在，不回显 key
+    body = {k: view[k] for k in ("roles", "monthly_budget_usd", "budget_warn_ratio", "pricing", "cache")}
+    body["roles"]["read"]["model"] = "claude-opus-5-5"
+    body["roles"]["read"]["effort"] = "max"
+    body["roles"]["read"]["web_search"] = False
+    body["monthly_budget_usd"] = 42
+    body["pricing"]["my-model"] = [1, 2]
+    r = client.put("/api/config/llm", json=body, headers=H)
+    assert r.status_code == 200, r.text
+    text = (cfg.root / "config" / "llm.yaml").read_text(encoding="utf-8")
+    assert "# LLM 配置" in text and "claude-opus-5-5" in text and "my-model" in text
+    assert cfg.llm.roles["read"].model == "claude-opus-5-5" and cfg.llm.monthly_budget_usd == 42
+    assert cfg.llm.roles["read"].web_search is False
+    body["roles"]["read"]["effort"] = "ultra"
+    assert client.put("/api/config/llm", json=body, headers=H).status_code == 400
+    body["roles"]["read"]["effort"] = None
+    body["roles"]["read"]["provider"] = "nope"
+    assert "不存在" in client.put("/api/config/llm", json=body, headers=H).json()["detail"]
+
+
+def test_usage_storage_and_export(client, cfg):
+    u = client.get("/api/usage").json()
+    assert len(u["months"]) == 6 and u["months"][-1]["month"] == u["month"] and "models" in u
+
+    (cfg.cache_dir / "prompts").mkdir(parents=True, exist_ok=True)
+    (cfg.cache_dir / "prompts" / "x.md").write_text("hello", encoding="utf-8")
+    st = client.get("/api/storage").json()
+    pr = next(c for c in st["cache"] if c["kind"] == "prompts")
+    assert pr["files"] == 1 and pr["bytes"] == 5 and st["notes"]["files"] == 2
+    r = client.post("/api/storage/clear", json={"kind": "prompts"}, headers=H).json()
+    assert r["files"] == 1 and not any((cfg.cache_dir / "prompts").iterdir())
+    assert client.post("/api/storage/clear", json={"kind": "data"}, headers=H).status_code == 400
+
+    pid = client.get("/site/api/index.json").json()["papers"][0]["id"]
+    client.put(f"/api/annotations/{pid}", json={"highlights": [{"id": "h1", "text": "重点", "color": "green", "comment": "好"}], "note": "想法"}, headers=H)
+    ex = client.get("/api/export/annotations.json").json()
+    assert ex["papers"][0]["id"] == pid and ex["papers"][0]["title"] and ex["papers"][0]["highlights"][0]["text"] == "重点"
+    import io
+    import zipfile
+
+    z = zipfile.ZipFile(io.BytesIO(client.get("/api/export/notes.zip").content))
+    names = z.namelist()
+    assert "annotations.json" in names and sum(n.endswith(".md") for n in names) == 2
+    md = next(n for n in names if n.endswith(f"{pid}.md"))
+    assert "## 我的高亮与批注" in z.read(md).decode("utf-8")

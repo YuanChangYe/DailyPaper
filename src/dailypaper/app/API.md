@@ -32,6 +32,12 @@
 | POST | `/api/shutdown` | 退出本地助手（桌面图标启动时使用） |
 | GET/PUT | `/api/config` | 搜索设置（见第 2.2 节，已实现） |
 | POST/GET | `/api/run`、`/api/run/status` | 触发运行与轮询（见第 2.3 节，已实现） |
+| GET/PUT | `/api/config/llm` | 运行与费用：provider 列表（只报告 key 是否存在）、screen / read 角色的模型、effort、max_tokens、联网搜索；预算、价格表、缓存开关。写回 `config/llm.yaml` 并保留注释 |
+| GET | `/api/usage?months=6` | 本月花费、调用次数、按模型明细，近几个月汇总（云端 + 本地两份记录合并） |
+| GET | `/api/storage` | 输出目录、笔记与批注占用、各类缓存（llm / fulltext / pdf / runs / prompts）的大小与文件数 |
+| POST | `/api/storage/clear` `{kind}` | 清空一类缓存目录，不动 data/ 与笔记 |
+| POST | `/api/open-folder` `{which}` | 在资源管理器中打开 workspace / content / data / cache / config 目录（仅本机） |
+| GET | `/api/export/annotations.json`、`/api/export/notes.zip` | 导出全部高亮与批注；或把所有精读笔记打包，带批注的在末尾附上高亮与批注 |
 
 ## 2. 需要主会话新增的接口
 
