@@ -62,9 +62,23 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{scroll-behavior:smooth;scroll-padding-top:96px}
-.page-bg{position:fixed;inset:-24px;z-index:-5;background:var(--bg-img) center/cover no-repeat;opacity:var(--bg-opacity,0);filter:blur(var(--bg-blur,0px)) saturate(.9);pointer-events:none;transition:opacity .6s}
-.page-bg:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(12,35,43,.35),rgba(12,35,43,.75))}
-:root[data-theme="light"] .page-bg:after{background:linear-gradient(180deg,rgba(238,243,244,.45),rgba(238,243,244,.85))}
+.page-bg{position:fixed;inset:-24px;z-index:-5;background:var(--bg-img) center/cover no-repeat;opacity:var(--bg-opacity,0);filter:blur(var(--bg-blur,0px)) saturate(1.05);pointer-events:none;transition:opacity .6s}
+.page-bg:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,26,33,calc(var(--bg-veil,.3) * .55)),rgba(8,26,33,var(--bg-veil,.3)))}
+:root[data-theme="light"] .page-bg:after{background:linear-gradient(180deg,rgba(238,243,244,calc(var(--bg-veil,.3) * .7)),rgba(238,243,244,calc(var(--bg-veil,.3) + .1)))}
+/* 朦胧玻璃：有页面背景时，卡片、列表、正文区域变成半透明磨砂，背景从后面透出来 */
+:root[data-bg="on"]{--surface:rgba(14,38,47,var(--frost-a,.42));--glass-edge:rgba(214,232,237,.16);--frost:blur(var(--frost-blur,16px)) saturate(150%)}
+:root[data-bg="on"][data-theme="light"]{--surface:rgba(255,255,255,var(--frost-a-l,.62));--glass-edge:rgba(255,255,255,.75)}
+:root[data-bg="on"] :is(.stat,.onboard,.pcard,.step,.topic,.datebar a,.funnel div,.table-wrap,.side-panel,.ztree,.zitem,.chart,.summary-box,.prow,.ritem,.panel,.tcard,.pe-status,.role-box,.empty,.row,.sgroups,.toc){background:var(--surface);-webkit-backdrop-filter:var(--frost);backdrop-filter:var(--frost);border-color:var(--glass-edge);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 8px 30px rgba(0,0,0,.10)}
+:root[data-bg="on"] .datebar a[aria-current="date"]{background:var(--mist)}
+:root[data-bg="on"][data-theme="light"] .datebar a[aria-current="date"]{background:#10272E}
+:root[data-bg="on"] #prose{background:var(--surface);-webkit-backdrop-filter:var(--frost);backdrop-filter:var(--frost);border:1px solid var(--glass-edge);border-radius:var(--r-lg);padding:6px 30px 26px;margin-top:18px}
+:root[data-bg="on"] .spanel .opts{background:var(--surface);-webkit-backdrop-filter:var(--frost);backdrop-filter:var(--frost);border:1px solid var(--glass-edge);border-radius:var(--r-md);padding:0 20px}
+:root[data-bg="on"] .spanel .opt:last-child{border-bottom:0}
+:root[data-bg="on"] .sgroups{padding:8px;border:1px solid var(--glass-edge);border-radius:var(--r-md)}
+:root[data-bg="on"] .toc{padding:8px 4px;border-radius:var(--r-md);border:1px solid var(--glass-edge)}
+:root[data-bg="on"] :is(.page-head,.section-head,footer,.toolbar>span,.store-tag){text-shadow:0 1px 14px rgba(0,0,0,.55)}
+:root[data-bg="on"][data-theme="light"] :is(.page-head,.section-head,footer,.toolbar>span,.store-tag){text-shadow:0 1px 12px rgba(255,255,255,.85)}
+@media (max-width:700px){:root[data-bg="on"] #prose{padding:4px 16px 18px}}
 :root[data-motion="off"] .page-bg{transition:none}
 .cover-grid .acts{position:absolute;top:6px;right:6px;display:flex;gap:4px}
 .cover-grid .acts b{font-size:10px;padding:1px 7px;border-radius:999px;background:rgba(0,0,0,.5);color:#fff;font-weight:600;cursor:pointer;border:1px solid transparent}
@@ -815,20 +829,31 @@ function pickCover() {
   return list[day % list.length];
 }
 const coverUrl = (c, w) => `${S.site}assets/covers/${c.files[String(w)]}`;
+const BUNDLED_BG = { id: "bundled", url: "assets/hero-sunrise-1200.jpg" };  // 没有素材库时用自带的雪山图
+const FROST = { off: [0, 0.62, 0.80], light: [8, 0.30, 0.50], mid: [16, 0.42, 0.62], heavy: [28, 0.55, 0.74] };  // [模糊 px, 夜间底色不透明度, 白天底色不透明度]
 function pickBackground(cover) {
-  const list = S.covers; const want = prefs().bg || "auto";
-  if (!list.length || want === "none") return null;
+  const list = S.covers || []; const want = prefs().bg || "auto";
+  if (want === "none") return null;
   const fixed = list.find((c) => c.id === want); if (fixed) return fixed;
-  if (list.length === 1) return null;
+  if (list.length < 2) return BUNDLED_BG;
   const i = Math.max(0, list.findIndex((c) => c.id === cover?.id));
   return list[(i + Math.floor(list.length / 2)) % list.length];  // 和封面错开半圈，两张不相同
 }
 function applyBackground() {
-  const h = document.documentElement.style; const b = pickBackground(S.cover); S.bg = b;
-  if (!b) { h.removeProperty("--bg-img"); h.setProperty("--bg-opacity", "0"); return; }
-  h.setProperty("--bg-img", `url("${coverUrl(b, 1200)}")`);
-  h.setProperty("--bg-opacity", String((prefs().bgOpacity || 0) / 100));
-  h.setProperty("--bg-blur", (prefs().bgBlur || 0) + "px");
+  const root = document.documentElement, h = root.style, P = prefs();
+  const b = pickBackground(S.cover); S.bg = b;
+  const on = !!b && (P.bgOpacity || 0) > 0;
+  root.dataset.bg = on ? "on" : "off";
+  if (!on) { h.removeProperty("--bg-img"); h.setProperty("--bg-opacity", "0"); return; }
+  h.setProperty("--bg-img", `url("${b.url || coverUrl(b, 1200)}")`);
+  h.setProperty("--bg-opacity", String(P.bgOpacity / 100));
+  h.setProperty("--bg-blur", (P.bgBlur || 0) + "px");
+  h.setProperty("--bg-veil", String((P.bgVeil ?? 30) / 100));
+  // 关闭动态效果时磨砂退化成纯半透明（backdrop-filter 在弱机器上较耗性能）
+  const level = reducedMotion() && P.frost !== "off" ? "off" : (P.frost || "mid");
+  const [blur, a, al] = FROST[level] || FROST.mid;
+  h.setProperty("--frost-blur", blur + "px"); h.setProperty("--frost-a", String(a)); h.setProperty("--frost-a-l", String(al));
+  h.setProperty("--frost", blur ? `blur(${blur}px) saturate(150%)` : "none");
 }
 function applyCover() {
   const c = pickCover(); S.cover = c;
@@ -858,13 +883,14 @@ const heroImgTag = () => { const c = S.cover; return c
 
 /* ---------- 偏好：外观与阅读设置，存在浏览器里（localStorage dp.prefs） ---------- */
 const PREF_DEFAULTS = { theme: "system", font: "default", customFont: "", fontSize: 15, proseSize: 16, lineHeight: "normal", motion: "system", density: "comfy",
-  paperDefault: "note", splitPct: 50, proseWidth: "full", hlColor: "yellow", srcMarks: "normal", confirmRun: false, cover: "daily", bg: "auto", bgOpacity: 22, bgBlur: 8 };
+  paperDefault: "note", splitPct: 50, proseWidth: "full", hlColor: "yellow", srcMarks: "normal", confirmRun: false, cover: "daily", bg: "auto", bgOpacity: 75, bgBlur: 2, bgVeil: 30, frost: "mid", v: 2 };
 let PREFS = null;
 function prefs() {
   if (PREFS) return PREFS;
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem("dp.prefs") || "{}") || {}; } catch { saved = {}; }
   if (saved.theme === undefined) { try { const t = localStorage.getItem("dp.theme"); if (t) saved.theme = t; } catch { /* 忽略 */ } }  // 旧版主题设置
+  if ((saved.v || 1) < 2) { delete saved.bgOpacity; delete saved.bgBlur; saved.v = 2; }  // v2：背景从 22% 改为朦胧玻璃，旧的过淡数值作废
   PREFS = { ...PREF_DEFAULTS, ...saved };
   return PREFS;
 }
@@ -872,6 +898,7 @@ function setPref(key, value) {
   prefs()[key] = value;
   try { localStorage.setItem("dp.prefs", JSON.stringify(PREFS)); } catch { /* 忽略 */ }
   applyPrefs();
+  if (["bg", "bgOpacity", "bgBlur", "bgVeil", "frost", "motion", "theme"].includes(key)) applyBackground();
 }
 const sysDark = matchMedia("(prefers-color-scheme: dark)");
 const sysReduced = matchMedia("(prefers-reduced-motion: reduce)");
@@ -1839,8 +1866,10 @@ SETTINGS.appearance = () => `${groupHead(SETTINGS_GROUPS[0], "主题、字体和
     ${opt("列表密度", "紧凑模式下列表只显示标题和一句话总结，不显示缩略图。", seg("density", [["comfy", "舒适"], ["compact", "紧凑"]]))}
     ${opt("封面照片", S.covers.length ? `素材库里有 ${S.covers.length} 张。每日轮换按日期顺序换，同一天刷新不变；在下面的缩略图上点「封面」可以固定某一张。` : "还没有素材库，用的是自带的雪山图。", seg("cover", [["daily", "每日轮换"], ["random", "每次随机"]]) + (S.covers.some((c) => c.id === prefs().cover) ? `<span class="status s-pending">已固定</span>` : ""))}
     ${opt("页面背景", "整个网页底下再铺一张图，默认自动选一张和封面不同的；缩略图上点「背景」可以固定。", seg("bg", [["auto", "自动"], ["none", "不要"]]) + (S.covers.some((c) => c.id === prefs().bg) ? `<span class="status s-pending">已固定</span>` : ""))}
-    ${opt("背景透明度", "0 等于看不见。", rangeCtl("bgOpacity", 0, 70, 2, "%"))}
-    ${opt("背景模糊", "", rangeCtl("bgBlur", 0, 24, 2, "px"))}
+    ${opt("背景强度", "图片本身的不透明度，0 等于不要背景。", rangeCtl("bgOpacity", 0, 100, 5, "%"))}
+    ${opt("压暗", "在图片上盖一层底色：数值越大，文字越清楚、图越暗。", rangeCtl("bgVeil", 0, 80, 5, "%"))}
+    ${opt("背景模糊", "图片本身的模糊。卡片后面的磨砂由下一项决定。", rangeCtl("bgBlur", 0, 24, 1, "px"))}
+    ${opt("磨砂玻璃", "卡片、列表和正文区域半透明，背景从后面透出来并被磨砂。关闭动态效果时自动改为纯半透明。", seg("frost", [["off", "关"], ["light", "轻"], ["mid", "中"], ["heavy", "重"]]))}
   </div>
   ${S.covers.length ? `<div style="display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap"><span style="font-size:13px;color:var(--muted)">从素材库里抽 ${Math.min(8, S.covers.length)} 张给你挑（当前封面、背景和固定的一定在里面）</span><button class="btn sm ghost" type="button" id="cover-shuffle">换一批</button>${S.covers.length > 8 ? `<button class="btn sm ghost" type="button" id="cover-all">${S.showAllCovers ? "只看抽样" : "看全部 " + S.covers.length + " 张"}</button>` : ""}</div><div class="cover-grid" id="cover-grid">${coverGrid()}</div>` : ""}
   ${isLocal() ? `<div class="panel" style="margin-top:18px"><h3>素材库</h3>
@@ -2517,8 +2546,7 @@ VIEWS.settings.after = (_, params) => {
       const el = e.target.closest("input[data-pref], select[data-pref]"); if (!el) return;
       const v = el.type === "range" ? Number(el.value) : el.value;
       setPref(el.dataset.pref, v);
-      if (el.type === "range") el.nextElementSibling.value = v + (el.dataset.pref === "splitPct" || el.dataset.pref === "bgOpacity" ? "%" : "px");
-      if (el.dataset.pref === "bgOpacity" || el.dataset.pref === "bgBlur") applyBackground();
+      if (el.type === "range") el.nextElementSibling.value = v + (["splitPct", "bgOpacity", "bgVeil"].includes(el.dataset.pref) ? "%" : "px");
       if (el.dataset.pref === "font") $("#custom-font-row").hidden = v !== "custom";
     });
     if (gid === "appearance") {
