@@ -409,7 +409,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
         from ..integrations.covers import set_cover_meta
 
         try:
-            return set_cover_meta(cfg, cover_id, body.get("credit"), body.get("position"))
+            return set_cover_meta(cfg, cover_id, body.get("credit"), body.get("position"), body.get("weather"))
         except ValueError as e:
             raise HTTPException(404, str(e)) from e
 

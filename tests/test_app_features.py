@@ -84,3 +84,36 @@ def test_covers_build_and_manifest(client, cfg):
     assert client.get("/site/assets/covers/covers.json").status_code == 200
     assert client.put(f"/api/covers/{api['covers'][0]['id']}", json={"credit": "x"}, headers=H).json()["credit"] == "x"
     assert client.post("/api/covers/build", json={}, headers=H).json()["count"] == 1
+
+
+def test_cover_weather_tags(cfg):
+    import shutil
+    from pathlib import Path
+
+    from dailypaper.integrations.covers import (
+        build_covers,
+        covers_view,
+        default_credit,
+        infer_weather,
+        set_cover_meta,
+        source_dir,
+    )
+
+    pytest.importorskip("pymupdf")
+    assert infer_weather("[雨, 夜] Some Title.jpg") == ["rain", "night"]
+    assert infer_weather("Receding Fog over Lake Altaussee.jpg") == ["fog"]
+    assert infer_weather("Rainier Aerial West.jpg") == []  # Rainier 不是 rain
+    assert infer_weather("雪山景观上的壮丽银河.jpg") == ["snow", "night"]
+    assert default_credit("[雨] Rain over Beinn Eich - Michal Klajban (CC BY-SA 4.0).jpg") == "Rain over Beinn Eich - Michal Klajban (CC BY-SA 4.0)"
+    sample = Path(__file__).resolve().parents[1] / "src" / "dailypaper" / "app" / "static" / "assets" / "hero-sunrise-640.jpg"
+    src = source_dir(cfg)
+    src.mkdir(parents=True)
+    shutil.copy(sample, src / "[雨] wet window.jpg")
+    shutil.copy(sample, src / "plain.jpg")
+    build_covers(cfg)
+    by_src = {c["source"]: c for c in covers_view(cfg)["covers"]}
+    assert by_src["[雨] wet window.jpg"]["weather"] == ["rain"] and by_src["plain.jpg"]["weather"] == []
+    cid = by_src["plain.jpg"]["id"]
+    assert set_cover_meta(cfg, cid, weather="晴 夜 bogus")["weather"] == ["clear", "night"]
+    build_covers(cfg)  # 重新扫描保留手动标签
+    assert {c["source"]: c for c in covers_view(cfg)["covers"]}["plain.jpg"]["weather"] == ["clear", "night"]
