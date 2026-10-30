@@ -37,6 +37,7 @@
 | GET | `/api/storage` | 输出目录、笔记与批注占用、各类缓存（llm / fulltext / pdf / runs / prompts）的大小与文件数 |
 | POST | `/api/storage/clear` `{kind}` | 清空一类缓存目录，不动 data/ 与笔记 |
 | POST | `/api/open-folder` `{which}` | 在资源管理器中打开 workspace / content / data / cache / config 目录（仅本机） |
+| GET/PUT | `/api/schedule` `{mode: on/pause/off, until?, time?}`；POST `/api/schedule/register {time}` | 定时运行开关：Windows 任务计划程序的状态、下次 / 上次运行；暂停到某天记在 data/schedule.json，`run --scheduled` 期间直接跳过 |
 | GET | `/api/venues/status` | 顶会论文池：本地篇数（按会议、年份）、已筛选 / 已精读、上次同步、后台同步进度 |
 | POST | `/api/venues/sync` `{venues?, force?}` | 后台线程增量同步论文池；进度在 status 的 `sync.log` |
 | GET/PUT | `/api/config/venues` | 会议开关、回看年数、自动同步天数、专栏参数（合计篇数、arXiv 最多、最低分、筛选预算）；写回 venues.yaml，arXiv 篇数同步到 pipeline.yaml 的 screen.top_k |

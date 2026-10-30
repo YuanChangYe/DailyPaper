@@ -210,7 +210,15 @@ powershell -ExecutionPolicy Bypass -File scripts\install_task.ps1 -Time 14:00
 
 日志在项目目录的 `logs/` 下，保留 30 天。取消任务：`scripts\uninstall_task.ps1`。
 
-**macOS / Linux**：用 cron 调用同样的命令，例如 `0 14 * * 1-5 cd /path/to/DailyPaper && .venv/bin/dailypaper --log-file logs/daily.log run`。
+**随时开关**：网页「设置 → 运行与费用」最上面的「定时运行」卡片可以开启、关闭，或「暂停到某天」（任务照常触发但直接跳过、不调用模型，到那天自动恢复），也能改运行时间。也可以用命令：
+
+```bash
+dailypaper schedule status
+dailypaper schedule pause 2026-11-20
+dailypaper schedule on
+```
+
+**macOS / Linux**：用 cron 调用同样的命令，例如 `0 14 * * 1-5 cd /path/to/DailyPaper && .venv/bin/dailypaper --log-file logs/daily.log run --scheduled`（`--scheduled` 让「暂停到某天」生效）。
 
 ### 方式 B：在 GitHub Actions 上运行并发布网站
 
@@ -676,6 +684,7 @@ class MinAuthors(Filter):
 | `dailypaper covers [--force]` | 扫描首页封面素材目录，生成尺寸与清单 |
 | `dailypaper venues sync [--venue id] [--year Y] [--force]` / `venues status` | 顶会论文池：同步近两年录用论文的标题与摘要到本地 SQLite / 查看各会篇数 |
 | `dailypaper read venue:<key>` | 精读顶会论文池里的某一篇 |
+| `dailypaper schedule status / on / off / pause 日期 / time HH:MM` | 定时运行的开关、暂停到某天、改时间（Windows 任务计划程序） |
 | `dailypaper list-plugins` / `list-lenses` | 列出插件 / lens |
 | `mkdocs serve` / `mkdocs build` | 预览 / 构建静态网站 |
 
