@@ -304,6 +304,35 @@ def create_app(cfg: AppConfig) -> FastAPI:
         return Response(export_notes_zip(cfg), media_type="application/zip",
                         headers={"Content-Disposition": 'attachment; filename="dailypaper-notes.zip"'})
 
+    # ------------------------------------------------------------ 定时运行开关
+    @app.get("/api/schedule")
+    def schedule_get(refresh: bool = False):
+        from .schedule import view
+
+        return view(cfg, refresh=refresh)
+
+    @app.put("/api/schedule")
+    def schedule_put(body: dict):
+        from .schedule import apply, view
+
+        try:
+            msgs = apply(cfg, str(body.get("mode", "")), until=body.get("until"), hhmm=body.get("time") or None)
+        except ValueError as e:
+            raise HTTPException(400, str(e)) from e
+        except RuntimeError as e:
+            raise HTTPException(409, str(e)) from e
+        return {"messages": msgs, **view(cfg, refresh=True)}
+
+    @app.post("/api/schedule/register")
+    def schedule_register(body: dict):
+        from .schedule import register, view
+
+        try:
+            register(cfg, str(body.get("time") or "14:00"))
+        except (ValueError, RuntimeError) as e:
+            raise HTTPException(400, str(e)) from e
+        return {"messages": ["已注册定时任务"], **view(cfg, refresh=True)}
+
     # ------------------------------------------------------------ 顶会论文池
     venue_sync_state: dict = {"running": False, "started_at": None, "finished_at": None, "log": [], "results": None}
 

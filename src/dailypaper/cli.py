@@ -97,10 +97,39 @@ def summarize(items, cfg: AppConfig | None = None) -> None:
 
 
 def cmd_run(cfg: AppConfig, args) -> int:
+    if getattr(args, "scheduled", False):
+        from .app.schedule import is_paused, paused_until
+
+        if is_paused(cfg):
+            say(f"定时运行已暂停到 {paused_until(cfg)}，今天跳过（不调用模型）。在网页「设置 → 运行与费用」或 dailypaper schedule on 恢复。")
+            return 0
     apply_toggles(cfg, args.pipeline, args.enable, args.disable)
     ctx = make_ctx(cfg, args, args.pipeline)
     items = Pipeline.from_config(ctx).run(start_from=args.from_stage, stop_after=args.until)
     summarize(items, cfg)
+    return 0
+
+
+def cmd_schedule(cfg: AppConfig, args) -> int:
+    from .app import schedule as sch
+
+    if args.action == "time":
+        if not args.value:
+            print("用法：dailypaper schedule time 14:30")
+            return 2
+        sch.set_time(args.value)
+        print(f"运行时间改为每天 {args.value}")
+    elif args.action != "status":
+        if args.action == "pause" and not args.value:
+            print("用法：dailypaper schedule pause 2026-11-20")
+            return 2
+        for m in sch.apply(cfg, args.action, until=args.value):
+            print(m)
+    v = sch.view(cfg, refresh=True)
+    label = {"on": "开启", "pause": f"暂停到 {v.get('paused_until')}", "off": "关闭", "unregistered": "未注册"}[v["mode"]]
+    print(f"定时运行：{label}" + (f" · 每天 {v.get('time')} · 下次 {v.get('next_run') or '—'} · 上次 {v.get('last_run') or '—'}（结果 {v.get('last_result')}）" if v.get("registered") else ""))
+    if not v["supported"]:
+        print("（只有 Windows 支持；其他系统请用 cron 调用 dailypaper run --scheduled）")
     return 0
 
 
@@ -307,8 +336,14 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--pipeline", default="daily")
     sp.add_argument("--from", dest="from_stage", metavar="STAGE", help="从某个 stage 开始（读取上一步的检查点）")
     sp.add_argument("--until", metavar="STAGE", help="运行到某个 stage 为止")
+    sp.add_argument("--scheduled", action="store_true", help="由定时任务调用：处于「暂停到某天」期间直接跳过")
     common(sp)
     sp.set_defaults(func=cmd_run)
+
+    sp = sub.add_parser("schedule", help="定时运行：status 查看 / on 开启 / off 关闭 / pause YYYY-MM-DD 暂停到某天 / time HH:MM 改时间")
+    sp.add_argument("action", choices=["status", "on", "off", "pause", "time"])
+    sp.add_argument("value", nargs="?", help="pause 的日期或 time 的时间")
+    sp.set_defaults(func=cmd_schedule)
 
     sp = sub.add_parser("read", help="精读指定论文：arXiv ID 或 Zotero 条目 key")
     sp.add_argument("ids", nargs="+")

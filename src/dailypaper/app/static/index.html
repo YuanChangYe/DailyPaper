@@ -511,6 +511,14 @@ footer a{border-bottom:1px solid var(--line-2)}
 .swatches button[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 2px var(--bg)}
 .sw-yellow{background:#FFD666}.sw-green{background:#78DCA0}.sw-pink{background:#FF96AA}.sw-blue{background:#82BEFF}
 .about-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:18px}
+.sched{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px 18px;align-items:start}
+.sched-state{display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:600;color:var(--ink)}
+.sched-state i{width:9px;height:9px;border-radius:50%;background:var(--muted)}.sched-state.on i{background:var(--ok);box-shadow:0 0 8px var(--ok)}.sched-state.pause i{background:var(--warn)}.sched-state.off i{background:var(--bad)}
+.sched-meta{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.7}
+.sched-ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
+.sched-ctl input[type=date],.sched-ctl input[type=time]{min-height:34px;padding:4px 10px;border-radius:10px;border:1px solid var(--line-2);background:rgba(9,30,38,.35);outline:0;color:var(--ink);font:inherit;font-size:13px}
+:root[data-theme="light"] .sched-ctl input[type=date],:root[data-theme="light"] .sched-ctl input[type=time]{background:#fff}
+.stat .sched-tag{display:block;font-size:11.5px;color:var(--warn);margin-top:2px}
 .usage-big{font-size:34px;font-weight:700;color:var(--ink);letter-spacing:-.02em;line-height:1.1}.usage-big small{font-size:14px;color:var(--muted);font-weight:500;margin-left:6px}
 .bar{height:8px;border-radius:999px;background:var(--glass-2);overflow:hidden;margin:10px 0 6px}.bar i{display:block;height:100%;background:var(--accent);border-radius:999px}
 .bar i.warn{background:var(--warn)}.bar i.bad{background:var(--bad)}
@@ -1210,7 +1218,7 @@ VIEWS.home = async () => {
     <div class="stat reveal"><b data-count="${today.length}">0</b><span>${esc(fmtDate(latest || ""))} 精读</span></div>
     <div class="stat reveal"><b data-count="${S.index.length}">0</b><span>累计笔记</span></div>
     <div class="stat reveal"><b data-count="${imported}">0</b><span>已入库 Zotero</span></div>
-    ${isLocal() ? `<a class="stat reveal" href="#/settings?g=run" title="查看运行日志"><b class="stat-text">${esc(lastRunLabel())}</b><span>上次运行 · 点击看日志</span></a>`
+    ${isLocal() ? `<a class="stat reveal" href="#/settings?g=run" title="查看运行日志"><b class="stat-text">${esc(lastRunLabel())}</b><span>上次运行 · 点击看日志<em class="sched-tag" id="home-sched" style="font-style:normal"></em></span></a>`
                 : `<div class="stat reveal"><b data-count="${S.topics.length}">0</b><span>研究方向</span></div>`}
   </div>
   ${!S.index.length ? `<section class="section"><div class="onboard">
@@ -1236,6 +1244,7 @@ VIEWS.home = async () => {
 };
 VIEWS.home.after = () => {
   $$("[data-count]").forEach((el) => countUp(el, el.dataset.count));
+  if (isLocal()) getJSON("/api/schedule").then((sc) => { S.schedule = sc; const el = $("#home-sched"); if (el && sc.mode !== "on") el.textContent = sc.mode === "pause" ? `自动运行暂停到 ${sc.paused_until.slice(5)}` : sc.mode === "off" ? "自动运行已关闭" : "未注册定时任务"; }).catch(() => {});
   // 动态玻璃：光斑跟随鼠标，首选卡片随鼠标轻微倾斜
   const stage = $(".hero-stage"), card = $("#float-card");
   if (stage && !reducedMotion() && matchMedia("(hover:hover)").matches) {
@@ -1953,11 +1962,13 @@ const fmtUSD = (x) => "$" + Number(x || 0).toFixed(2);
 const fmtTok = (n) => n >= 1e6 ? (n / 1e6).toFixed(2) + "M" : n >= 1e3 ? (n / 1e3).toFixed(0) + "k" : String(n);
 SETTINGS.run = async () => {
   await loadConfig();
-  let L = null, U = null;
+  let L = null, U = null, SC = null;
   if (isLocal()) {
     try { L = await getJSON("/api/config/llm"); } catch { /* 旧版本地助手 */ }
     try { U = await getJSON("/api/usage"); } catch { /* 忽略 */ }
+    try { SC = await getJSON("/api/schedule"); } catch { /* 旧版本地助手 */ }
   }
+  S.schedule = SC;
   S.llm = L;
   const c = S.config, d = c.daily;
   S.dailyLoaded = JSON.stringify(d);
@@ -1983,6 +1994,7 @@ SETTINGS.run = async () => {
   };
   return `${groupHead(SETTINGS_GROUPS[3], "用哪个模型、花多少钱、每天精读几篇。")}
   ${!isLocal() ? `<div class="notice">只读网站看不到用量，也不能改模型设置；连接本地助手后可用。</div>` : !L ? `<div class="notice">本地助手版本过旧，没有 <code>/api/config/llm</code>。请重启本地助手。</div>` : canSave ? "" : `<div class="notice">config/llm.yaml 不可写，只能查看。</div>`}
+  ${isLocal() ? scheduleCard(SC) : ""}
   <div class="settings-layout">
     <div>
       ${U ? `<div class="panel"><h3>本月花费 · ${esc(U.month)}</h3>
@@ -2049,7 +2061,59 @@ function readRunForm() {
   const budget = $("#b-month").value.trim();
   return { roles, monthly_budget_usd: budget === "" ? null : Number(budget), budget_warn_ratio: Number($("#b-warn").value), pricing, cache: $("#l-cache").value === "true" };
 }
+/* ---------- 定时运行开关（Windows 任务计划程序 + 暂停到某天） ---------- */
+const schedLabel = (sc) => !sc ? "" : { on: "定时运行已开启", pause: `已暂停到 ${sc.paused_until}`, off: "定时运行已关闭", unregistered: "还没有注册定时任务" }[sc.mode] || "";
+const fmtWhen = (t) => t ? String(t).replace("T", " ").slice(0, 16) : "—";
+function scheduleCard(sc) {
+  if (!sc) return `<div class="notice">本地助手版本过旧，没有 /api/schedule。请重启本地助手。</div>`;
+  if (!sc.supported) return `<div class="panel"><h3>定时运行</h3><p style="font-size:13px;color:var(--muted);margin:0">只有 Windows 支持在网页里开关。其他系统请用 cron 每天调用 <span class="mono">dailypaper run --scheduled</span>。</p></div>`;
+  const plus14 = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
+  const tomorrow = new Date(Date.now() + 864e5).toISOString().slice(0, 10);
+  if (!sc.registered) return `<div class="panel" id="sched-card"><h3>定时运行</h3>
+    <div class="sched-state off"><i></i>${esc(schedLabel(sc))}</div>
+    <p class="sched-meta">注册后每天在指定时间自动抓取、筛选和精读（Windows 任务计划程序，错过时开机后补跑）。</p>
+    <div class="sched-ctl"><label style="font-size:13px">每天 <input type="time" id="sched-time" value="14:00"></label><button class="btn sm primary" type="button" id="sched-register">注册定时任务</button></div></div>`;
+  const result = sc.last_result === 0 ? "成功" : sc.last_result == null ? "—" : sc.last_result === 267011 ? "还没运行过" : `代码 ${sc.last_result}`;
+  return `<div class="panel" id="sched-card"><div class="sched">
+    <div><h3 style="margin-bottom:8px">定时运行</h3>
+      <div class="sched-state ${esc(sc.mode)}"><i></i>${esc(schedLabel(sc))}</div>
+      <p class="sched-meta">每天 ${esc(sc.time || "—")} 运行 · ${sc.mode === "on" ? `下次 ${esc(fmtWhen(sc.next_run))}` : sc.mode === "pause" ? `${esc(sc.paused_until)} 起自动恢复；期间每天触发后直接跳过，不调用模型` : "不会自动运行；「立即运行」仍然可用"}<br>上次 ${esc(fmtWhen(sc.last_run))} · ${esc(result)}</p>
+    </div>
+    <div class="seg" id="sched-mode" role="group" aria-label="定时运行">${[["on", "开启"], ["pause", "暂停到某天"], ["off", "关闭"]].map(([v, t]) => `<button type="button" data-v="${v}" aria-pressed="${sc.mode === v}">${t}</button>`).join("")}</div>
+  </div>
+  <div class="sched-ctl">
+    <label style="font-size:13px" id="sched-until-wrap" ${sc.mode === "pause" ? "" : "hidden"}>暂停到 <input type="date" id="sched-until" min="${tomorrow}" value="${esc(sc.paused_until || plus14)}"></label>
+    <label style="font-size:13px">每天 <input type="time" id="sched-time" value="${esc(sc.time || "14:00")}"></label>
+    <button class="btn sm primary" type="button" id="sched-save">保存</button>
+    <span id="sched-msg" style="font-size:12.5px;color:var(--muted)"></span>
+  </div></div>`;
+}
+function afterScheduleCard() {
+  const card = $("#sched-card"); if (!card) return;
+  let mode = S.schedule?.mode || "on";
+  $("#sched-mode")?.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-v]"); if (!b) return;
+    mode = b.dataset.v;
+    $$("#sched-mode button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+    $("#sched-until-wrap").hidden = mode !== "pause";
+    $("#sched-msg").textContent = "点「保存」生效";
+  });
+  $("#sched-save")?.addEventListener("click", async (e) => {
+    const btn = e.currentTarget; btn.disabled = true;
+    try {
+      const r = await send("/api/schedule", { mode, until: $("#sched-until")?.value, time: $("#sched-time")?.value }, "PUT");
+      r.messages.forEach((m) => toast(m, "ok")); S.schedule = r; route(true);
+    } catch (err) { toast(err.message, "err"); } finally { btn.disabled = false; }
+  });
+  $("#sched-register")?.addEventListener("click", async (e) => {
+    const btn = e.currentTarget; btn.disabled = true;
+    try { const r = await send("/api/schedule/register", { time: $("#sched-time").value }); r.messages.forEach((m) => toast(m, "ok")); route(true); }
+    catch (err) { toast(err.message, "err"); btn.disabled = false; }
+  });
+}
+
 function afterRunGroup() {
+  afterScheduleCard();
   $$('input[type="range"]').forEach((r) => r.addEventListener("input", () => (r.nextElementSibling.value = r.id === "b-warn" ? Math.round(r.value * 100) + "%" : Number(r.value).toFixed(1))));
   document.addEventListener("keydown", tagKeys);
   $("#view").addEventListener("click", tagClicks);

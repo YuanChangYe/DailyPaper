@@ -1,4 +1,5 @@
 ﻿# 本地每日运行脚本（任务计划程序调用，也可以手动运行；参数原样传给 dailypaper run）。
+# 带 --scheduled：处于「暂停到某天」期间直接跳过（网页「设置 → 运行与费用」或 dailypaper schedule 设置）。
 # 日志由 dailypaper 自己写到 <项目目录>\logs\daily-YYYY-MM-DD.log（UTF-8），保留 30 天。
 $ErrorActionPreference = "Continue"
 $root = Split-Path -Parent $PSScriptRoot
@@ -12,7 +13,7 @@ New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 $log = Join-Path $logDir ("daily-" + (Get-Date -Format "yyyy-MM-dd") + ".log")
 
 Set-Location $root
-& $exe --log-file $log run @args | Out-Null
+& $exe --log-file $log run --scheduled @args | Out-Null
 $code = $LASTEXITCODE
 
 Get-ChildItem $logDir -Filter "daily-*.log" | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-30) } | Remove-Item -Force
