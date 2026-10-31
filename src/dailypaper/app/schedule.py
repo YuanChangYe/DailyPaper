@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -49,7 +50,8 @@ def _state_path(cfg: AppConfig) -> Path:
 
 
 def paused_until(cfg: AppConfig) -> date | None:
-    raw = (read_json(_state_path(cfg), {}) or {}).get("paused_until")
+    # GitHub Actions 里用仓库变量（.github/workflows/daily.yml 传入环境变量），本机用 data/schedule.json
+    raw = os.environ.get("DAILYPAPER_PAUSED_UNTIL") or (read_json(_state_path(cfg), {}) or {}).get("paused_until")
     try:
         return date.fromisoformat(raw) if raw else None
     except ValueError:

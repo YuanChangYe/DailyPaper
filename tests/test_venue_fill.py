@@ -110,7 +110,7 @@ def test_venues_config_api(cfg, project):
     client = TestClient(create_app(cfg), base_url="http://127.0.0.1")
     H = {"X-DailyPaper": "1"}
     v = client.get("/api/config/venues").json()
-    assert v["editable"] and len(v["venues"]) == 8 and v["column"]["total"] == 6
+    assert v["editable"] and len(v["venues"]) == 24 and v["column"]["total"] == 6
     body = {"years_back": 2, "auto_sync_days": 10, "column": {"total": 5, "arxiv_max": 2, "min_score": 7, "screen_budget": 30},
             "venues": [{"id": x["id"], "enabled": x["id"] != "eacl"} for x in v["venues"]]}
     r = client.put("/api/config/venues", json=body, headers=H)

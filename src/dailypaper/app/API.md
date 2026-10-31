@@ -51,6 +51,18 @@
 | POST | `/api/lenses/simulate` `{paper_id}` | 某篇论文按当前规则会用到哪些 lens、哪些超预算被丢弃 |
 | POST | `/api/skills/import` `{names}`；GET `/api/skills/{id}/preview` | 从本机 ~/.claude/skills 复制 skill 文本并加入 catalog；查看 skill 原文与实际注入提示词的文本 |
 | GET | `/api/export/annotations.json`、`/api/export/notes.zip` | 导出全部高亮与批注；或把所有精读笔记打包，带批注的在末尾附上高亮与批注 |
+| GET | `/api/llm/models?provider=&refresh=` | 某个模型服务当前可用的模型（设置页的下拉框），缓存 1 小时 |
+| GET | `/api/pdf-anchors/{id}` | PDF 出处定位表 `{pages, anchors: {"§5.2": 7, "Table 2": 10}}`，网页把笔记和回答里的出处变成跳页按钮 |
+| GET/POST/DELETE | `/api/ask?paper_id=`、`/api/ask`、`/api/ask/stream`、`/api/ask?paper_id=&item_id=` | 论文问答：历史与上下文说明（依据、模型、建议问题）、一次性回答、Server-Sent Events 流式回答（`{delta}` … `{done, item}` / `{error}`，断开即取消且不保存）、删除一条 |
+| POST/GET | `/api/search`、`/api/search/history`、`/api/search/result?key=`、`/api/search/report {key, n}`、`/api/search/bibtex?key=&ids=` | AI 检索（`{q, scope: pool/web/all, venues, years, ccf, core, n, refresh}`）、历史、读取缓存的结果、深入综述、导出 BibTeX |
+| GET/PUT | `/api/research-profile`、`/api/follow` | 课题档案（config/profile.md）、关注的作者与机构（config/follow.yaml） |
+| GET | `/api/venues/calendar` | 即将召开的会议与截稿日（ccfddl，缓存 7 天） |
+| GET | `/api/lookup?url=` | 书签小工具：论文网址 → 已有笔记或论文池条目 |
+| GET | `/api/estimate?kind=read/report/search/ask&n=&quick=` | 按价格表估算费用 |
+| GET/PUT | `/api/lan` `{enabled, rotate?}` | 局域网模式与配对令牌（只能在本机读写；改动重启后生效） |
+| GET/POST | `/api/notify`、`/api/notify/test` | 完成提醒的渠道状态、发一条测试通知 |
+| POST | `/api/schedule/github` `{until}` | 用本机 gh 设置 / 删除仓库变量 DAILYPAPER_PAUSED_UNTIL（暂停云端定时任务） |
+| POST | `/api/app/restart` | 重启本地助手；`/api/meta` 的 `api_level` 和 `static_hash` 让网页发现版本落后或文件更新 |
 
 ## 2. 需要主会话新增的接口
 

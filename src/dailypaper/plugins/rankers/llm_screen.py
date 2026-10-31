@@ -91,6 +91,9 @@ def screen_and_score(ctx: RunContext, items: list[Candidate], opts: ScreenOption
 
     mult = topic_multipliers(cfg) if opts.use_feedback else {}
     profile = load_profile(cfg)
+    from ...integrations.follow import load_follow
+
+    follow_bonus = load_follow(cfg)["bonus"]
     for c in items:
         s = c.screen
         if not s:
@@ -102,6 +105,8 @@ def screen_and_score(ctx: RunContext, items: list[Candidate], opts: ScreenOption
         parts = {"relevance": round(rel, 2), "novelty": s.novelty * opts.novelty_bonus}
         if profile:
             parts["profile"] = round(profile.score(f"{c.paper.title} {c.paper.abstract}") * opts.profile_weight, 2)
+        if c.paper.extra.get("followed"):
+            parts["follow"] = follow_bonus
         c.score_parts.update(parts)
         c.score = round(sum(parts.values()), 2)
     return failures

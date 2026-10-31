@@ -4,6 +4,11 @@
 {% for t in topics %}
 - **{{ t.name }}**（{{ t.id }}）：{{ t.description | trim }}
 {% endfor %}
+{% if profile is defined and profile %}
+
+研究者的课题档案（写"对我的研究有什么用"和 follow-up idea 时要具体结合它）：
+{{ profile | trim }}
+{% endif %}
 
 {% set sections = schema.numbered(include_deep) %}
 任务：精读下面这篇论文，按后面给出的 {{ sections | length }} 节写一份阅读笔记。读者想在 10 分钟内弄懂论文做了什么、作者为什么能想到、证据是否可靠、对自己的研究有什么用。不要复述摘要，不要泛泛而谈，目标是重建作者的思路、审视证据，并找出能接着做的研究。

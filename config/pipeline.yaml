@@ -15,8 +15,10 @@ pipelines:
     - {id: prefilter,    use: filter.keyword,   with: {max_candidates: 60}}
     - {id: screen,       use: ranker.llm_screen, with: {top_k: 3, min_score: 6.5, batch_size: 10}}   # arXiv 最多 3 篇（venues.yaml column.arxiv_max）
     - {id: venue_fill,   use: ranker.venue_fill, on_error: skip}   # 不足 venues.yaml column.total 篇时从顶会论文池补足
+    - {id: explore,      use: ranker.explore, enabled: false, with: {weekday: 0}}   # 探索位：每周一挑 1 篇主方向之外、新颖性高的
     - {id: fulltext,     use: enricher.fulltext, with: {loaders: [arxiv_html, arxiv_lookup, pdf, abstract]}}   # arxiv_lookup：顶会论文按标题找 arXiv 版本
     - {id: read,         use: reader.deep_read,  with: {workers: 2}}
+    - {id: signals,      use: enricher.signals, on_error: skip}   # 作者机构、被引数、冷门好文（OpenAlex + HF 每日论文榜）
     - {id: render,       use: renderer.markdown}
     - {id: site_index,   use: renderer.site_index}
     - {id: thumbs,       use: renderer.thumbnails, on_error: skip}   # 论文首页缩略图（需要 pymupdf）
@@ -24,6 +26,7 @@ pipelines:
     - {id: mark_seen,    use: publisher.mark_seen}
     - {id: venue_mark,   use: publisher.venue_mark, on_error: skip}   # 顶会论文写回池子（已读）
     - {id: site,         use: publisher.site, on_error: skip}
+    - {id: notify,       use: publisher.notify, on_error: skip}   # 完成提醒：Windows 通知；.env 里配了 NTFY_URL / SERVERCHAN_SENDKEY 时推送到手机
     - {id: obsidian,     use: publisher.local_copy, enabled: false}          # 本地直接写 vault 时启用
     - {id: git,          use: publisher.git_commit, enabled: false, with: {push: true}}  # Actions 中用 --enable git
 
@@ -33,6 +36,7 @@ pipelines:
     - {id: screen,       use: ranker.llm_screen, with: {force_select: true}}
     - {id: fulltext,     use: enricher.fulltext, with: {loaders: [local_pdf, arxiv_html, arxiv_lookup, pdf, abstract]}}
     - {id: read,         use: reader.deep_read}
+    - {id: signals,      use: enricher.signals, on_error: skip}
     - {id: render,       use: renderer.markdown, with: {digest: false}}
     - {id: site_index,   use: renderer.site_index}
     - {id: thumbs,       use: renderer.thumbnails, on_error: skip}

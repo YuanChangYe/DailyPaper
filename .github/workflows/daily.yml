@@ -57,7 +57,10 @@ jobs:
       - name: Run daily pipeline
         env:
           EXTRA_ARGS: ${{ github.event.inputs.args }}
-        run: dailypaper run --enable git $EXTRA_ARGS
+          # 「暂停到某天」：仓库变量 DAILYPAPER_PAUSED_UNTIL=YYYY-MM-DD（网页 设置 → 运行与费用 可以一键设置）。只影响定时触发
+          DAILYPAPER_PAUSED_UNTIL: ${{ vars.DAILYPAPER_PAUSED_UNTIL }}
+          SCHEDULED: ${{ github.event_name == 'schedule' && '--scheduled' || '' }}
+        run: dailypaper run --enable git $SCHEDULED $EXTRA_ARGS
 
       - name: Build site
         run: mkdocs build

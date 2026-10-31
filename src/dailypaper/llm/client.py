@@ -13,7 +13,7 @@ from ..core import registry
 from ..core.context import RunContext
 from ..core.io import read_json, write_json
 from . import usage
-from .base import LLMError, LLMProvider, LLMResponse
+from .base import Cancelled, LLMError, LLMProvider, LLMResponse
 
 log = logging.getLogger("dailypaper.llm")
 
@@ -57,22 +57,42 @@ class LLMClient:
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
     def complete(self, system: str, user: str, *, tag: str = "", json_mode: bool = False) -> LLMResponse:
+        return self._call(system, user, tag=tag, json_mode=json_mode)
+
+    def stream(self, system: str, user: str, on_delta, *, tag: str = "", json_mode: bool = False) -> LLMResponse:
+        """边生成边回调 on_delta(文字片段)。命中缓存时一次性回调全文。on_delta 抛 Cancelled 可中止。"""
+        return self._call(system, user, tag=tag, json_mode=json_mode, on_delta=on_delta)
+
+    def _call(self, system: str, user: str, *, tag: str, json_mode: bool, on_delta=None) -> LLMResponse:
         use_cache = self.cfg.cache and self.provider_name != "fake"
         key = self._cache_key(system, user, json_mode)
         cache_path = self.cache_dir / key[:2] / f"{key}.json"
         if use_cache and cache_path.exists():
             resp = LLMResponse.model_validate(read_json(cache_path))
             resp.cached = True
+            if on_delta:
+                on_delta(resp.text)
             return resp
 
         last: Exception | None = None
+        sent: list[str] = []  # 流式时已经交给调用方的文字
+
+        def relay(piece: str) -> None:
+            sent.append(piece)
+            on_delta(piece)
+
         for attempt in range(1, self.cfg.max_retries + 1):
             try:
-                resp = self.provider.complete(system, user, tag=tag, json_mode=json_mode)
+                if on_delta:
+                    resp = self.provider.stream(system, user, relay, tag=tag, json_mode=json_mode)
+                else:
+                    resp = self.provider.complete(system, user, tag=tag, json_mode=json_mode)
                 break
-            except LLMError:
-                raise  # 配置类错误（缺 key 等）不重试
+            except (LLMError, Cancelled):
+                raise  # 配置类错误（缺 key 等）和用户取消不重试
             except Exception as e:  # noqa: BLE001
+                if sent:  # 已经输出了一部分，重试会让网页上的文字重复
+                    raise LLMError(f"LLM 输出中断（{self.model}）: {type(e).__name__}: {e}") from e
                 if not self.provider.is_transient(e):
                     raise LLMError(f"LLM 调用失败（{self.model}）: {type(e).__name__}: {e}") from e
                 last = e
@@ -112,11 +132,14 @@ class LLMClient:
         with (self.ctx.run_dir / "usage.jsonl").open("a", encoding="utf-8") as f:
             f.write(line + "\n")
         if self.provider_name != "fake":
-            usage.record(self.ctx.config, self.provider.role.model, resp.input_tokens, resp.output_tokens, self.ctx.run_date)
+            usage.record(self.ctx.config, self.provider.role.model, resp.input_tokens, resp.output_tokens, self.ctx.run_date,
+                         feature=usage.feature_of(self.role_name, tag))
 
 
-def get_llm(ctx: RunContext, role_name: str) -> LLMClient:
-    """按 llm.yaml 中的角色创建客户端；--provider 覆盖时所有角色都改用该 provider。"""
+def get_llm(ctx: RunContext, role_name: str, **overrides: Any) -> LLMClient:
+    """按 llm.yaml 中的角色创建客户端；--provider 覆盖时所有角色都改用该 provider。
+
+    overrides 临时改角色参数（例如 web_search=True），不写回配置。"""
 
     def factory() -> LLMClient:
         cfg = ctx.config.llm
@@ -126,6 +149,8 @@ def get_llm(ctx: RunContext, role_name: str) -> LLMClient:
         provider_name = ctx.provider_override or role.provider
         if ctx.provider_override:
             role = role.model_copy(update={"provider": provider_name})
+        if overrides:
+            role = role.model_copy(update=overrides)
         spec = cfg.providers.get(provider_name)
         if spec is None:
             if provider_name != "fake":
@@ -136,4 +161,5 @@ def get_llm(ctx: RunContext, role_name: str) -> LLMClient:
         cls = registry.get("llm", spec.type)
         return LLMClient(ctx, role_name, cls(spec, role), provider_name)
 
-    return ctx.service(f"llm:{role_name}", factory)
+    key = f"llm:{role_name}" + (":" + json.dumps(overrides, sort_keys=True) if overrides else "")
+    return ctx.service(key, factory)

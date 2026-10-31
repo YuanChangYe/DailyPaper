@@ -12,6 +12,7 @@ from pathlib import Path
 
 _ARXIV_RE = re.compile(r"^(?:arXiv:)?(\d{4}\.\d{4,5})(v\d+)?$", re.I)
 _ZOTERO_RE = re.compile(r"^(?:zotero:)?([A-Z0-9]{8})$")
+_VENUE_RE = re.compile(r"^(venue:[A-Za-z0-9:._/\-]{3,200})$")  # 顶会论文池的 key（检索结果里的「精读」）
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
@@ -42,7 +43,7 @@ class RunManager:
         if pipeline == "read":
             clean = []
             for raw in ids or []:
-                m = _ARXIV_RE.match(raw.strip()) or _ZOTERO_RE.match(raw.strip())
+                m = _ARXIV_RE.match(raw.strip()) or _ZOTERO_RE.match(raw.strip()) or _VENUE_RE.match(raw.strip())
                 if not m:
                     raise ValueError(f"无法识别的论文 ID：{raw!r}（需要 arXiv ID 如 2610.35877，或 Zotero 条目 key）")
                 clean.append(m.group(1))

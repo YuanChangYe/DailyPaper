@@ -80,7 +80,15 @@ def _title_of(cfg: AppConfig, pid: str, text: str) -> tuple[str, str]:
         names = {"deep_read.system.md.j2": ("精读 · 系统提示", "全局规则与输出格式；各节标题来自 schema.yaml"),
                  "deep_read.user.md.j2": ("精读 · 用户消息", "论文元数据与全文的排版"),
                  "screen.system.md.j2": ("筛选 · 系统提示", "摘要级筛选的任务说明与打分标准"),
-                 "screen.user.md.j2": ("筛选 · 用户消息", "一批论文的摘要如何交给模型")}
+                 "screen.user.md.j2": ("筛选 · 用户消息", "一批论文的摘要如何交给模型"),
+                 "ask.system.md.j2": ("问答 · 系统提示", "论文页问答：回答规则；全文、笔记、研究方向放在这里"),
+                 "ask.user.md.j2": ("问答 · 用户消息", "问题、选中的引文和之前几轮问答"),
+                 "search_expand.system.md.j2": ("检索 · 扩展关键词", "把问题改写成英文关键词和 arXiv 查询式"),
+                 "search_expand.user.md.j2": ("检索 · 扩展关键词（用户消息）", "问题本身"),
+                 "search_rerank.system.md.j2": ("检索 · 重排打分", "按和研究方向的相关度给候选论文打分、写理由"),
+                 "search_rerank.user.md.j2": ("检索 · 重排打分（用户消息）", "候选论文 JSON"),
+                 "search_report.system.md.j2": ("检索 · 深入综述", "方法分组、对比表、研究空白、follow-up idea"),
+                 "search_report.user.md.j2": ("检索 · 深入综述（用户消息）", "检索问题与论文列表")}
         return names.get(pid.split("/")[-1], (pid, ""))
     fm, _ = split_frontmatter(text)
     return str(fm.get("title") or pid.split("/")[-1]), str(fm.get("description") or "")
@@ -136,6 +144,9 @@ def _sample_vars(cfg: AppConfig, schema: NoteSchema | None = None) -> dict[str, 
         "topics_hit": ["x"], "fulltext": "BODY", "fulltext_loader": "abstract", "grounding": "source-limited",
         "papers": [{"id": paper.id, "title": paper.title, "abstract": paper.abstract}], "lens_catalog": {},
         "batch": [paper], "candidates": [Candidate(paper=paper)],
+        # 问答与检索模板用到的变量
+        "profile": "", "note": "", "focus_topics": cfg.topics[:1], "question": "Q?", "quote": "", "history": [],
+        "query": "Q", "intent": "", "payload": "{}", "count": 1,
     }
 
 

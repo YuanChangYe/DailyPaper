@@ -1,0 +1,17 @@
+{#- AI 检索第一步：把研究者的问题扩展成检索式。变量：topics、profile、language、query。输出 JSON。 -#}
+你帮一位研究者在论文库里找论文。把对方的问题（可能是中文、可能很口语）改写成检索式。
+
+研究者关注的方向：
+{% for t in topics %}
+- {{ t.name }}：{{ t.description | trim }}
+{% endfor %}
+
+只输出一个 JSON 对象：
+```json
+{
+  "intent": "一句话说清对方想找什么样的论文（中文）",
+  "keywords_en": ["4–8 个英文关键词或短语，包含同义说法和常见缩写，如 selective prediction、abstention、reject option"],
+  "arxiv_query": "arXiv API 的 search_query，例如 all:\"selective prediction\" OR all:abstention"
+}
+```
+关键词要具体：用论文标题和摘要里真会出现的术语，不要用"method""model"这类泛词。

@@ -124,7 +124,7 @@ def cmd_schedule(cfg: AppConfig, args) -> int:
 
 def cmd_read(cfg: AppConfig, args) -> int:
     apply_toggles(cfg, "read", args.enable, args.disable)
-    ctx = make_ctx(cfg, args, "read", ids=args.ids, prompt_only=args.prompt_only)
+    ctx = make_ctx(cfg, args, "read", ids=args.ids, prompt_only=args.prompt_only, quick=args.quick)
     items = Pipeline.from_config(ctx).run()
     if args.prompt_only:
         print(f"prompt 已写入 {cfg.cache_dir / 'prompts'}")
@@ -254,6 +254,25 @@ def cmd_app(cfg: AppConfig, args) -> int:
     return 0
 
 
+def cmd_mcp(cfg: AppConfig, args) -> int:
+    from .app.mcp_server import serve_stdio
+
+    serve_stdio(cfg)
+    return 0
+
+
+def cmd_search(cfg: AppConfig, args) -> int:
+    from .integrations.search.service import search
+
+    res = search(cfg, " ".join(args.q), scope=args.scope, venues=args.venue or None, ccf=args.ccf or None, n=args.n,
+                 provider_override=args.provider)
+    print(f"{res['intent']}  （候选 {res['candidates']} 篇，约 ${res['usd']:.3f}）")
+    for i, r in enumerate(res["results"], 1):
+        where = f"{r.get('venue_name') or r['source']} {r.get('year') or ''}".strip()
+        print(f"{i:2}. [{r['score']:.0f}] {r['title']}  ·  {where}\n     {r['reason']}\n     {r.get('url_abs') or ''}")
+    return 0
+
+
 def cmd_review(cfg: AppConfig, args) -> int:
     from .integrations.review import ReviewStore
     from .integrations.zotero.service import ZoteroService, import_approved
@@ -337,6 +356,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("read", help="精读指定论文：arXiv ID 或 Zotero 条目 key")
     sp.add_argument("ids", nargs="+")
     sp.add_argument("--prompt-only", action="store_true", help="只生成 prompt（写到 .cache/prompts/），不调用模型")
+    sp.add_argument("--quick", action="store_true", help="快速概览：只写前几节，用便宜的模型（约 $0.01、十几秒）")
     common(sp)
     sp.set_defaults(func=cmd_read)
 
@@ -345,6 +365,18 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--port", type=int)
     sp.add_argument("--no-browser", action="store_true")
     sp.set_defaults(func=cmd_app)
+
+    sp = sub.add_parser("mcp", help="以 MCP 服务器方式运行（stdio），在 Claude Desktop / Claude Code 里查论文库")
+    sp.set_defaults(func=cmd_mcp)
+
+    sp = sub.add_parser("search", help='AI 检索：dailypaper search "LLM agent 的拒答" --scope web')
+    sp.add_argument("q", nargs="+")
+    sp.add_argument("--scope", choices=["pool", "web", "all"], default="pool")
+    sp.add_argument("--venue", action="append", help="只在这些会议里找（可重复）")
+    sp.add_argument("--ccf", action="append", help="CCF 等级 A / B（可重复）")
+    sp.add_argument("-n", type=int, default=20)
+    sp.add_argument("--provider", help="例如 fake，不花钱试跑")
+    sp.set_defaults(func=cmd_search)
 
     sp = sub.add_parser("review", help="命令行审核：列出队列，或批准/拒绝")
     sp.add_argument("--status", default="pending", help="pending / approved / later / rejected / imported / failed，逗号分隔；空字符串=全部")

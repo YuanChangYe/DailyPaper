@@ -33,6 +33,9 @@ DailyPaper 每天自动抓取 arXiv 新论文，用大语言模型按你设定�
 - [每天自动运行](#每天自动运行)
 - [配置研究方向](#配置研究方向)
 - [精读框架与 lens](#精读框架与-lens)
+- [顶会专栏](#顶会专栏)
+- [AI 检索与论文问答](#ai-检索与论文问答)
+- [个性化：推荐理由、课题档案、关注](#个性化推荐理由课题档案关注)
 - [网页](#网页)
 - [接入 Zotero](#接入-zotero)
 - [接入 Obsidian](#接入-obsidian)
@@ -226,7 +229,7 @@ dailypaper schedule on
 
 1. 在 **Actions** 标签页启用工作流（fork 默认禁用）。
 2. **添加 API key**：**Settings → Secrets and variables → Actions → Secrets → New repository secret**，名称填 `ANTHROPIC_API_KEY`（或你所用模型对应的变量名）。
-3. **开启定时**：同一页面的 **Variables** 中添加 `DAILYPAPER_SCHEDULE`，值填 `true`。不添加时只能手动触发，不会自动运行。
+3. **开启定时**：同一页面的 **Variables** 中添加 `DAILYPAPER_SCHEDULE`，值填 `true`。不添加时只能手动触发，不会自动运行。想暂停一段时间，添加变量 `DAILYPAPER_PAUSED_UNTIL`，值填恢复日期（如 `2027-01-15`），这之前的定时运行会直接跳过；本地网页「设置 → 运行与费用」里可以用已登录的 `gh` 命令行一键设置。
 4. **开启网站**：**Settings → Pages → Build and deployment → Source** 选择 **GitHub Actions**。页面上推荐的 Jekyll / Static HTML 模板不要点，仓库里已经有自己的发布流程。
 5. **试运行**：**Actions → daily → Run workflow**。工作流会先做自检（`dailypaper check`），缺少 Secret 等问题会直接显示在页面的 Annotations 中。之后每个工作日 UTC 06:00 自动运行，时间可以在 `.github/workflows/daily.yml` 中修改。
 6. **填写网站地址**：网站发布在 `https://<用户名>.github.io/<仓库名>/`。把它填进 `config/settings.yaml` 的 `site.base_url`，RSS 中的链接就会指向网站。
@@ -330,12 +333,48 @@ dailypaper read <arXiv ID> --prompt-only                           # 只生成 p
 
 ## 顶会专栏
 
-除了 arXiv 每天的新论文，DailyPaper 还会从 AI 顶会的录用论文里挑论文精读。会议名单在 [config/venues.yaml](config/venues.yaml)（入选规则：CCF 推荐目录 A/B 或 CORE A*/A，满足其一；默认 ACL、EMNLP、NAACL、COLING、EACL、NeurIPS、ICML、ICLR，可增删和停用），数据来自官方源：ACL Anthology（按卷 BibTeX）、OpenReview（需要免费账号，`.env` 里填 `OPENREVIEW_USERNAME` / `OPENREVIEW_PASSWORD`）、OpenAlex（兜底）。
+除了 arXiv 每天的新论文，DailyPaper 还会从 AI 顶会的录用论文里挑论文精读。会议名单在 [config/venues.yaml](config/venues.yaml)（入选规则：CCF 推荐目录 A/B 或 CORE A*/A，满足其一）。默认开启 ACL、EMNLP、NAACL、COLING、EACL、NeurIPS、ICML、ICLR；另有 CoNLL、COLT、UAI、AISTATS、AAAI、IJCAI、AAMAS、ECAI、KR、ICAPS、CVPR、ICCV、ECCV、CIKM、WSDM、SDM 默认关闭，在「设置 → 研究方向 → 顶会论文池」里勾选后下次同步时拉取。数据来自各会议的官方源：
+
+| 数据源 | 会议 | 说明 |
+|---|---|---|
+| ACL Anthology | ACL、EMNLP、NAACL、COLING、EACL、CoNLL | 按卷下载 BibTeX，含摘要 |
+| OpenReview | NeurIPS、ICML、ICLR | 需要免费账号，`.env` 里填 `OPENREVIEW_USERNAME` / `OPENREVIEW_PASSWORD` |
+| PMLR | ICML（备用）、COLT、UAI、AISTATS | 每卷一个含摘要的 BibTeX；新一年的卷号在 `pmlr_volumes` 里补一行 |
+| CVF Open Access | CVPR、ICCV | 列表页取标题和作者，逐篇抓摘要（约 3000 篇要 5–10 分钟） |
+| OpenAlex | AAAI、IJCAI、AAMAS、ECAI、KR、ICAPS、CIKM、WSDM、SDM 等 | 覆盖面因会议而异；可选 `OPENALEX_API_KEY` |
 
 - `dailypaper venues sync` 把近两年的标题和摘要同步到本地 `data/venues.sqlite`（几万篇，不进 git）；每天的任务在超过 `auto_sync_days` 没同步时会自动补一次。
 - `daily` 流水线里的 `ranker.venue_fill` 在 arXiv 入选不足 `column.total` 篇时从池里补足：先用研究方向的关键词预筛，再用筛选模型打分（结果缓存在池里，不重复花钱），取分数最高的几篇，之后和 arXiv 论文一样精读。arXiv 当天没有公告时全部来自池子。
 - 网页「顶会」页显示论文池状态和来自池子的精读；卡片和详情页带「ACL 2026 · CCF-A」徽章；文库可按来源筛选；「设置 → 研究方向 → 顶会论文池」改会议开关和篇数。
 - `dailypaper read venue:<池子里的 key>` 可以单独精读池里的某一篇（key 在「顶会」页或 `venues status` 里看）。
+- 「顶会」页顶部的**即将召开**列出会期、地点和最近的截稿日，数据来自社区维护的 [ccfddl/ccf-deadlines](https://github.com/ccfddl/ccf-deadlines)，每 7 天更新一次；也可以在 `venues.yaml` 里用 `next:` 手写覆盖。
+
+## AI 检索与论文问答
+
+**检索**（网页「检索」页，或 `dailypaper search "问题"`）：用一句话描述要找的论文，中文英文都可以。
+
+1. 便宜的模型把问题扩展成英文关键词和 arXiv 查询式；
+2. 召回：「我的顶会池」在本地全文检索（可按会议、年份、CCF / CORE 等级筛选）；「全网」同时请求 arXiv API（覆盖 arXiv 全部历史）和 OpenAlex（覆盖不在 arXiv 上的会议、期刊论文）；
+3. 每 25 篇一批并行打分，打分时带上你的研究方向和课题档案，每篇写一句"为什么相关"。
+
+一次检索约 $0.01，同一个问题 24 小时内再搜不花钱。结果可以直接**精读**、**快速看看**（只写前几节，约 $0.01）、导出 BibTeX，或者**生成深入综述**：用精读模型对前 20–25 篇写方法分组、对比表、研究空白和 follow-up idea，每条结论标出处论文编号（约 $0.1），保存为 Markdown，配置了 Obsidian vault 时同时复制过去。arXiv API 限流时检索照常进行，只用 OpenAlex 的结果并给出提示。
+
+**论文问答**（论文页的「问答」标签）：就这篇论文提问，回答依据 PDF 全文（按页标注）、精读笔记、研究方向和课题档案，边生成边显示，并标出原文页码。在笔记里选中一段文字，弹出的小窗里有「问 AI」。
+
+- 笔记和回答里的出处（【§5.2】【Table 2】`[p.7]`）可以点：右侧 PDF 直接跳到对应页。页码由 PDF 书签和版面里的小节标题、图表标题算出。
+- 默认用 `llm.yaml` 里的 `ask` 角色（便宜快速的模型）；勾选「深入」改用精读模型，勾选「联网」允许 Claude 联网搜索。
+- Claude 会缓存放在 system prompt 里的全文，同一篇论文接着问时按缓存价计费。
+- 有用的回答可以「存入我的笔记」（写回笔记 frontmatter，Obsidian 里可见）；问答记录存在 `data/qa/`，不发布。
+
+论文页左栏是「笔记 / 问答 / 批注」三个标签（`Alt+1/2/3` 切换），右栏是 PDF；每个标签记住自己的滚动位置。
+
+## 个性化：推荐理由、课题档案、关注
+
+- **推荐理由**：每篇精读的卡片和详情页都写着筛选模型给的"为什么推荐给你"。
+- **课题档案**（「设置 → 研究方向」，存在 `config/profile.md`，默认不提交）：几句话写你现在在做什么、卡在哪里。精读、问答、检索都会参考它，回答能具体到"对你的课题有什么用"。
+- **关注的作者与机构**（`config/follow.yaml`，默认不提交）：命中的论文不会被关键词预筛掉，排序时加分，并显示「关注」。
+- **安静的外部信号**：精读完成后查一次 OpenAlex（作者机构、被引数）和 Hugging Face 每日论文榜。热度**不参与排序**，默认的安静模式只显示作者机构。和你的方向高度相关、却还没人引用也不在热门榜上的论文会标「冷门好文」。
+- **探索位**（默认关闭，`pipeline.yaml` 里的 `explore`）：每周挑 1 篇不在主方向上但新颖性高的论文，避免越看越窄。
 
 ## 网页
 
@@ -346,15 +385,24 @@ dailypaper read <arXiv ID> --prompt-only                           # 只生成 p
 | 发现 | 最近一天的精读论文、统计，搜索框粘贴 arXiv ID 可直接精读 |
 | 今日 | 某一天的日报：精读列表（带首页缩略图）、也值得关注的论文 |
 | 文库 | 所有已精读论文，按方向、价值筛选，搜索标题、摘要、insight、作者、ID |
-| 论文 | 完整精读笔记（Markdown + 公式）、目录、上一篇 / 下一篇（← →）、入库按钮；「阅读 PDF」把页面分成左右两栏，分隔线可拖动；选中文字可**高亮和批注**，右侧有**我的笔记**（写回笔记 frontmatter 的 `notes`，Obsidian 里可见） |
+| 论文 | 左栏「笔记 / 问答 / 批注」三个标签，右栏 PDF（「阅读 PDF」打开，分隔线可拖动）；笔记里的出处可点，PDF 跳到对应页；**问答**就这篇论文提问；选中文字可**高亮、批注**或「问 AI」；**我的笔记**写回笔记 frontmatter 的 `notes`，Obsidian 里可见；只依据摘要的笔记、快速概览可以一键用全文重读 |
+| 检索 | 用一句话找论文：我的顶会池 / 全网（arXiv + OpenAlex），结合研究方向重排、每篇一句理由，可精读、导出 BibTeX、生成深入综述 |
+| 顶会 | 论文池状态、各会议篇数与同步、即将召开的会议与截稿日、来自论文池的精读 |
 | 审核台 | 待审核队列：加入 Zotero / 稍后 / 不要，批量操作，Obsidian 同步，兴趣画像 |
-| 文献库 | 直接浏览 Zotero 的分类和条目；已精读的显示评分并可打开笔记，其余可一键精读 |
+| Zotero | 直接浏览 Zotero 的分类和条目；已精读的显示评分并可打开笔记，其余可一键精读 |
 | 趋势 | 近 7 / 14 / 30 / 90 天的每日篇数、方向分布、论文类型、最值得回看的论文；一键生成 **AI 阅读总结**（用筛选模型，约 $0.02，结果缓存） |
-| 设置 | 外观（主题、字体、字号、行距、动态效果、列表密度、封面轮换、页面背景的强度 / 压暗 / 模糊、磨砂玻璃程度）和阅读偏好（默认分栏、正文宽度、高亮颜色、出处标记）保存在浏览器里；研究方向（方向、关键词、镜头问题）、运行与费用（筛选 / 精读用哪个模型、effort、联网搜索、月度预算与价格表、每天精读几篇、阈值、arXiv 分类）写入项目配置并保留注释；运行与费用页显示本月花费、近几个月趋势和按模型明细；数据与隐私页查看目录占用、清理缓存、一键打开目录、导出笔记与批注；提示词与 Skill 页直接编辑精读模板、笔记结构（schema.yaml）和 lens 文件，保存前程序校验 + 筛选模型审核，带历史版本与恢复默认，可预览组装后的提示词、管理 lens 目录与规则、导入本机 Claude skill；关于页显示版本并检查更新 |
+| 设置 | 外观（主题、字体、字号、行距、动态效果、列表密度、封面轮换、页面背景的强度 / 压暗 / 模糊、磨砂玻璃程度）和阅读偏好（默认分栏、正文宽度、高亮颜色、出处标记）保存在浏览器里；研究方向（方向、关键词、镜头问题、课题档案、关注的作者与机构、顶会论文池）、运行与费用（筛选 / 精读 / 问答与检索用哪个模型，模型从各服务的可用列表里选；effort、联网搜索、月度预算与价格表、每天精读几篇、阈值、arXiv 分类、定时运行）写入项目配置并保留注释；运行与费用页显示本月花费、近几个月趋势、按用途和按模型的明细，以及按价格表估算的单篇费用；数据与隐私页列出每个功能会把什么发给谁，查看目录占用、清理缓存、导出笔记与批注，设置局域网模式和完成提醒；提示词与 Skill 页直接编辑精读模板、笔记结构（schema.yaml）和 lens 文件，保存前程序校验 + 筛选模型审核，带历史版本与恢复默认，可预览组装后的提示词、管理 lens 目录与规则、导入本机 Claude skill；关于页显示版本、检查更新，并提供书签小工具和 MCP 接入方式 |
 
 顶栏的 ☀ / ☾ 切换白天和夜间模式（默认跟随系统）。首页封面可以换成自己的照片：把图片放进输出目录旁的 `covers/` 文件夹（文件名随意），运行 `dailypaper covers` 或在「设置 → 外观 → 素材库」点「扫描」，会生成三档尺寸和清单，网页按日期轮换，页脚署名默认取文件名；原图不会被发布。
 
-**天气动态封面**：首页封面会按当地实时天气变化（浏览器定位 + [Open-Meteo](https://open-meteo.com)，免费、无需 key；地名来自 BigDataCloud）：晴天有暖色光束，多云有飘动的云，雾天雾气加浓，雨天有斜向雨丝、玻璃上还有会折射景物、慢慢滑落合并的水珠，雪天飘雪，雷暴有闪电，晴夜是星空。素材文件名开头写 `[雨]`、`[雪,夜]` 这样的标签（或含 rain / fog / 银河 等词）时，对应天气会优先用这些照片。「设置 → 外观」里可以关闭、只保留色调、关掉按天气选封面，或者手动预览每种天气。效果代码在 `src/dailypaper/app/static/assets/weather.js`，只用 Canvas 2D。API key 永远不经过网页：设置页只显示某个环境变量是否已配置。网页根据环境自动切换模式：连接到本地助手时可读写；部署为静态网站时只读（设置页可导出 `topics.yaml`）；没有数据时显示示例。本地助手只监听 `127.0.0.1`，写操作要求自定义请求头，其他网站无法通过你的浏览器调用它。前后端接口约定见 [src/dailypaper/app/API.md](src/dailypaper/app/API.md)。
+**天气动态封面**：首页封面会按当地实时天气变化（浏览器定位 + [Open-Meteo](https://open-meteo.com)，免费、无需 key；地名来自 BigDataCloud）：晴天有暖色光束，多云有飘动的云，雾天雾气加浓，雨天有斜向雨丝、玻璃上还有会折射景物、慢慢滑落合并的水珠，雪天飘雪，雷暴有闪电，晴夜是星空。素材文件名开头写 `[雨]`、`[雪,夜]` 这样的标签（或含 rain / fog / 银河 等词）时，对应天气会优先用这些照片。「设置 → 外观」里可以关闭、只保留色调、关掉按天气选封面，或者手动预览每种天气。效果代码在 `src/dailypaper/app/static/assets/weather.js`，只用 Canvas 2D。API key 永远不经过网页：设置页只显示某个环境变量是否已配置。网页根据环境自动切换模式：连接到本地助手时可读写；部署为静态网站时只读（设置页可导出 `topics.yaml`）；没有数据时显示示例。本地助手只监听 `127.0.0.1`，写操作要求自定义请求头，其他网站无法通过你的浏览器调用它。前后端接口约定见 [src/dailypaper/app/API.md](src/dailypaper/app/API.md)。网页文件更新或本地助手版本落后时，页面底部会提示刷新或一键重启。
+
+**更多入口**：
+
+- **书签小工具**：在「设置 → 关于」把「用 DailyPaper 打开」拖到书签栏；在 arXiv、OpenReview、ACL Anthology 的论文页点一下，就会打开已有笔记或一键精读。
+- **MCP**：`dailypaper mcp` 以 stdio 方式运行 MCP 服务器，提供 `list_papers`、`get_note`、`pool_search`、`ai_search`、`ask_paper` 五个工具。在 Claude Code 里添加：`claude mcp add dailypaper -- <项目>/.venv/Scripts/dailypaper.exe --root <项目> mcp`。
+- **手机**：「设置 → 数据与隐私 → 局域网模式」打开后扫码，同一个 Wi-Fi 下的手机就能审核、问答、检索（见[隐私与安全](#隐私与安全)）。
+- **完成提醒**：每日运行完成后弹出 Windows 通知；在 `.env` 里填 `NTFY_URL`（[ntfy](https://ntfy.sh)）或 `SERVERCHAN_SENDKEY`（Server 酱）可以推送到手机，内容只有篇数和标题。
 
 ---
 
@@ -448,7 +496,9 @@ roles:
 | `GEMINI_API_KEY` | Gemini（OpenAI 兼容端点） |
 | `ZOTERO_API_KEY`、`ZOTERO_USER_ID` | 可选，Zotero Web API |
 
-**费用参考**（Claude，2026-10 价格）：精读一篇论文约输入 2 万、输出 1 万 token，用 Sonnet 约 $0.14；摘要筛选的花费可以忽略。每天精读 5 篇，一个月约 $15。
+**费用参考**（Claude，2026-10 价格）：精读一篇论文约输入 2 万、输出 1 万 token，用 Sonnet 约 $0.14；摘要筛选的花费可以忽略。每天精读 5 篇，一个月约 $15。问答一次、检索一次在 $0.01 左右，深入综述约 $0.1。网页上点「精读」等会花钱的按钮前，会按价格表显示预估费用；「运行与费用」页按用途（筛选、精读、问答、检索、综述）统计花费。
+
+`roles` 里的 `ask` 用于论文问答、AI 检索和快速概览，建议用便宜快速的模型；不配置时用 `screen`。也可以接本地模型：加一个 `type: openai_compat`、`base_url: http://localhost:11434/v1` 的 provider（Ollama），内容就不会发到云端。
 
 - 相同的 prompt 会缓存在 `.cache/llm/`，重复运行不会重复收费。
 - 每次运行结束会打印本月累计花费（记录在 `data/usage*.json`），超过 `llm.yaml` 中 `monthly_budget_usd` 的 80% 时发出警告。这只是提醒，不会阻止调用；硬性上限请在模型服务商的控制台中设置。
@@ -686,6 +736,9 @@ class MinAuthors(Filter):
 | `dailypaper covers [--force]` | 扫描首页封面素材目录，生成尺寸与清单 |
 | `dailypaper venues sync [--venue id] [--year Y] [--force]` / `venues status` | 顶会论文池：同步近两年录用论文的标题与摘要到本地 SQLite / 查看各会篇数 |
 | `dailypaper read venue:<key>` | 精读顶会论文池里的某一篇 |
+| `dailypaper read <ID> --quick` | 快速概览：只写前几节，用 `ask` 模型（约 $0.01） |
+| `dailypaper search "问题" [--scope pool\|web\|all] [--venue acl] [--ccf A] [-n 20]` | AI 检索 |
+| `dailypaper mcp` | 以 MCP 服务器方式运行（stdio） |
 | `dailypaper schedule status / on / off / pause 日期 / time HH:MM` | 定时运行的开关、暂停到某天、改时间（Windows 任务计划程序） |
 | `dailypaper list-plugins` / `list-lenses` | 列出插件 / lens |
 | `mkdocs serve` / `mkdocs build` | 预览 / 构建静态网站 |
@@ -697,7 +750,9 @@ class MinAuthors(Filter):
 - **API key**：只放在本地 `.env` 或 GitHub Secrets 中，不要写进代码或配置文件。GitHub Secrets 加密保存，日志中会被自动遮盖；来自 fork 的 Pull Request 无法读取你的 Secrets。建议为本项目单独创建一个 key，并在服务商控制台设置花费上限。
 - **本地运行**：设置 `DAILYPAPER_WORKSPACE` 后，笔记、状态和缓存都在项目目录之外，不会被提交到任何仓库。
 - **GitHub Actions 运行**：生成的笔记会提交到你的仓库；仓库公开时笔记也是公开的，介意的话请使用私有仓库。`skills/` 中的外部 skill 文本（`sync-skills` 或网页导入后生成）默认在 `.gitignore` 中；想让 Actions 里的精读也用到它们，从 `.gitignore` 删掉 `/skills/` 再提交，此时它们会随仓库公开。从 Zotero 文库导出的 `data/zotero_index.json` 和 `data/interest_profile.json`（包含你的文库标题和关键词）默认在 `.gitignore` 中，只在本地使用。私有仓库使用 GitHub Pages 需要付费账户；也可以改用 Cloudflare Pages 等免费服务，构建命令填 `pip install mkdocs-material && mkdocs build`，输出目录填 `site`。
-- **本地网页**：只监听 `127.0.0.1`，校验 Host，写操作要求自定义请求头；不要把它暴露到公网。
+- **本地网页**：默认只监听 `127.0.0.1`，校验 Host，写操作要求自定义请求头；不要把它暴露到公网。打开局域网模式后，其他设备必须来自局域网地址（192.168.x.x 等）并带配对令牌（扫码地址里的 `lan_token`，之后存在 Cookie 里）；令牌可以随时更换，旧的立即失效，局域网设置只能在本机修改。
+- **发给外部服务的内容**：筛选、精读、问答、检索会把论文内容、你的问题、研究方向和课题档案发给你选的模型服务；检索的关键词会发给 arXiv 和 OpenAlex；网页「设置 → 数据与隐私」逐项列出。DailyPaper 本身没有任何统计或遥测。
+- **个人文件**：课题档案（`config/profile.md`）、关注列表（`config/follow.yaml`）、局域网令牌（`config/lan.json`）、问答记录（`data/qa/`）、检索历史与综述（`data/searches.jsonl`、`data/reports/`）默认都在 `.gitignore` 中。
 - **版权**：笔记中引用了论文摘要和少量原文内容。请遵守相应论文的许可证，以及 [arXiv 的使用条款](https://info.arxiv.org/help/api/tou.html)。
 
 ---
@@ -737,7 +792,10 @@ PyMuPDF 2.0 会自动加载版面分析模块并依赖 onnxruntime，在部分 W
 ## 路线图
 
 - [ ] 把 Zotero 中的高亮和批注同步到对应的 Obsidian 笔记
-- [ ] 更多数据源（OpenReview、Hugging Face Daily Papers）
+- [x] 更多数据源（OpenReview、PMLR、CVF、OpenAlex；Hugging Face 每日论文榜作为参考信号）
+- [x] AI 检索、深入综述、论文问答、出处跳页
+- [ ] 向量检索（作为检索的召回插件）
+- [ ] PDF.js 阅读器：在 PDF 里选字提问、高亮被引用的原句
 - [x] 阅读趋势与 AI 总结（网页「趋势」视图）
 
 ## 许可证

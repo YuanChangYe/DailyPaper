@@ -6,8 +6,9 @@
 - ``/site``        内容目录（笔记、api/*.json、feed.xml），网页从 /site/api/ 读数据
 - ``/api/...``     审核、Zotero、配置读写、触发运行（接口约定见同目录的 API.md）
 
-安全：只监听本机；所有写操作要求自定义请求头 ``X-DailyPaper: 1``（跨站页面无法在不经预检的情况下附带它，
+安全：默认只监听本机；所有写操作要求自定义请求头 ``X-DailyPaper: 1``（跨站页面无法在不经预检的情况下附带它，
 而本服务不开放 CORS），并校验 Host，防止其他网站借你的浏览器调用本地接口。
+开启局域网模式（app/lan.py）后，其他设备必须来自局域网地址并带配对令牌。
 """
 
 from __future__ import annotations
@@ -29,6 +30,9 @@ from ..core.env import load_dotenv
 from ..core.io import read_markdown
 from ..integrations.review import ReviewStore
 from ..integrations.zotero.service import ZoteroService, collect_obsidian_approvals, import_approved
+from .papers import static_hash
+from .research_api import API_LEVEL
+from .research_api import mount as mount_research
 from .runner import RunManager
 
 STATIC = Path(__file__).parent / "static"
@@ -46,6 +50,7 @@ class RunBody(BaseModel):
     ids: list[str] = []
     date: str | None = None
     provider: str | None = None  # 例如 fake，用于不花钱试跑
+    quick: bool = False  # 精读用快速概览档位
 
 
 def _now_iso() -> str:
@@ -88,14 +93,29 @@ def create_app(cfg: AppConfig) -> FastAPI:
 
     @app.middleware("http")
     async def guard(request: Request, call_next):
+        from .lan import COOKIE, is_ip, is_loopback, is_private, token_ok
+
         host = (request.headers.get("host") or "").split(":")[0]
-        if host not in ALLOWED_HOSTS:
-            return JSONResponse({"detail": "forbidden host"}, status_code=403)
+        client = request.client.host if request.client else ""
+        set_cookie = ""
+        remote = is_private(client) or (is_ip(client) and not is_loopback(client))  # 来自其他设备
+        if remote or host not in ALLOWED_HOSTS:
+            # 其他设备（或用局域网地址访问）：必须是局域网地址，且带配对令牌（URL 参数或 Cookie）
+            q_token = request.query_params.get("lan_token")
+            token = q_token or request.cookies.get(COOKIE) or request.headers.get("x-dailypaper-token")
+            if not token_ok(cfg, token) or (remote and not is_private(client)):
+                if not remote:
+                    return JSONResponse({"detail": "forbidden host"}, status_code=403)
+                return JSONResponse({"detail": "需要局域网配对令牌：请在电脑上的 设置 → 数据与隐私 → 局域网模式 扫码打开"}, status_code=403)
+            set_cookie = q_token or ""
         if request.method != "GET" and request.headers.get("x-dailypaper") != "1":
             return JSONResponse({"detail": "missing X-DailyPaper header"}, status_code=403)
         if request.url.path.startswith("/api/"):
             load_dotenv(cfg.root / ".env", refresh=True)  # .env 改过就重读：新加的 key 不用重启本地助手
-        return await call_next(request)
+        resp = await call_next(request)
+        if set_cookie:
+            resp.set_cookie(COOKIE, set_cookie, max_age=180 * 86400, httponly=True, samesite="strict")
+        return resp
 
     # ------------------------------------------------------------ 页面与静态内容
     @app.get("/")
@@ -120,9 +140,12 @@ def create_app(cfg: AppConfig) -> FastAPI:
             "repo_url": cfg.settings.site.repo_url,
             "schema": cfg.note_schema.to_public(),
             "version": __version__,
+            "api_level": API_LEVEL,
+            "static_hash": static_hash(STATIC),
             "venue_total": cfg.venues.column.total,
             "git_enabled": git_enabled,
             "workspace": str(cfg.content_dir.parent),
+            "root": str(cfg.root),
             "running": runner.running,
         }
 
@@ -144,31 +167,14 @@ def create_app(cfg: AppConfig) -> FastAPI:
     @app.get("/api/pdf/{paper_id:path}")
     def pdf(paper_id: str):
         """同源提供论文 PDF（缓存在 .cache/pdf/），供网页在分栏里直接阅读。"""
-        import re
+        from .papers import PaperNotFound, ensure_pdf
 
-        import httpx
-
-        from ..core.models import Paper
-        from ..integrations.site.contract import SiteContract
-
-        entry = next((e for e in SiteContract(cfg).load_index() if e.id == paper_id), None)
-        is_arxiv = bool(re.match(r"^\d{4}\.\d{4,5}$", paper_id))
-        if not is_arxiv and not (entry and entry.url_pdf):
-            raise HTTPException(400, "只支持 arXiv ID 或索引里带 PDF 链接的论文")
-        paper = Paper(id=paper_id, title="", url_pdf=(entry.url_pdf if entry else "") or f"https://arxiv.org/pdf/{paper_id}")
-        path = cfg.cache_dir / "pdf" / f"{paper.slug}.pdf"
-        if not path.exists():
-            from ..integrations.venues.openreview_auth import auth_headers
-
-            try:
-                r = httpx.get(paper.url_pdf, timeout=120, follow_redirects=True,
-                              headers={"User-Agent": "DailyPaper/0.1 (personal research digest)", **auth_headers(paper.url_pdf)})
-            except httpx.HTTPError as e:
-                raise HTTPException(502, f"下载 PDF 失败: {e}") from e
-            if r.status_code != 200 or not r.content.startswith(b"%PDF"):
-                raise HTTPException(502, f"没有拿到 PDF（HTTP {r.status_code}）")
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(r.content)
+        try:
+            path = ensure_pdf(cfg, paper_id)
+        except PaperNotFound as e:
+            raise HTTPException(400, str(e)) from e
+        except RuntimeError as e:
+            raise HTTPException(502, str(e)) from e
         return FileResponse(path, media_type="application/pdf",
                             headers={"Content-Disposition": f'inline; filename="{paper_id}.pdf"'})
 
@@ -645,6 +651,8 @@ def create_app(cfg: AppConfig) -> FastAPI:
     @app.post("/api/run")
     def run(body: RunBody):
         extra = ["--provider", body.provider] if body.provider else []
+        if body.quick and body.pipeline == "read":
+            extra.append("--quick")
         try:
             started = runner.start(body.pipeline, body.ids, body.date, extra)
         except ValueError as e:
@@ -658,6 +666,7 @@ def create_app(cfg: AppConfig) -> FastAPI:
     def run_status():
         return runner.status()
 
+    mount_research(app, cfg, runner)
     app.state.runner = runner
     return app
 
@@ -665,10 +674,16 @@ def create_app(cfg: AppConfig) -> FastAPI:
 def serve(cfg: AppConfig, host: str = "127.0.0.1", port: int = 8765, open_browser: bool = True) -> None:
     import uvicorn
 
+    from .lan import lan_ips, load_lan
+
     if host not in ALLOWED_HOSTS:
-        raise SystemExit("本地助手只允许监听 127.0.0.1 / localhost")
+        raise SystemExit("本地助手只允许监听 127.0.0.1 / localhost；要让手机访问，请在网页设置里打开局域网模式")
     url = f"http://{host}:{port}"
     print(f"DailyPaper 本地助手: {url}  （Ctrl+C 退出）")
+    if load_lan(cfg)["enabled"]:
+        host = "0.0.0.0"  # 局域网模式：其他设备凭令牌访问（见 app/lan.py）
+        for ip in lan_ips():
+            print(f"局域网地址: http://{ip}:{port}/  （需要配对令牌，在网页 设置 → 数据与隐私 里扫码）")
     if open_browser:
         Timer(1.0, lambda: webbrowser.open(url)).start()
     uvicorn.run(create_app(cfg), host=host, port=port, log_level="warning")

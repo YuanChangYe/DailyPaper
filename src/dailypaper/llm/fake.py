@@ -21,6 +21,20 @@ class FakeProvider(LLMProvider):
             text = self._screen(user)
         elif tag == "read":
             text = self._read(system, user)
+        elif tag == "ask":
+            q = re.search(r"^问题[:：]\s*(.+)$", user, re.M)
+            text = f"（fake）关于「{q.group(1).strip() if q else '这个问题'}」：论文的做法见 [p.1]【§2】。〔分析〕这是离线假模型的回答。"
+        elif tag == "search_expand":
+            q = re.search(r"^问题[:：]\s*(.+)$", user, re.M)
+            words = re.findall(r"[A-Za-z][A-Za-z-]{2,}", q.group(1) if q else user)[:6] or ["language", "model"]
+            text = json.dumps({"intent": "（fake）检索意图", "keywords_en": words,
+                               "fts": " OR ".join(words), "arxiv_query": " OR ".join(f'all:"{w}"' for w in words)})
+        elif tag == "search_rerank":
+            data = self._payload(user)
+            text = json.dumps({"results": [{"i": c["i"], "score": float(9 - _jitter(c.get("title", "") + str(c["i"]), 6)),
+                                            "reason": "（fake）标题与问题相关"} for c in data.get("candidates", [])]}, ensure_ascii=False)
+        elif tag == "report":
+            text = "## 方法分组\n\n（fake）[1] 与 [2] 属于同一类。\n\n## 研究空白\n\n（fake）〔分析〕还没有人做 X。\n\n## Follow-up idea\n\n（fake）把 [1] 用到 Y 上。"
         else:
             text = json.dumps({"ok": True}) if json_mode else "（fake 输出）"
         return LLMResponse(text=text, model="fake", input_tokens=len(system + user) // 4, output_tokens=len(text) // 4)

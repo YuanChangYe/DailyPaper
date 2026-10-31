@@ -21,6 +21,7 @@ from ...core.interfaces import Reader
 from ...core.io import write_text
 from ...core.models import Candidate, ReadingNote
 from ...core.registry import register
+from ...integrations.research_profile import load_profile_text
 from ...llm import get_llm
 from ...llm.client import extract_json
 from ...prompting.composer import PromptComposer
@@ -102,6 +103,11 @@ class DeepReader(Reader):
         fulltext = Path(c.fulltext.path).read_text(encoding="utf-8") if c.fulltext else f"[Abstract]\n{c.paper.abstract}"
         lenses = select_lenses(catalog, c)
         include_deep = not self.p.deep_min_score or c.score >= self.p.deep_min_score
+        quick = bool(self.ctx.inputs.get("quick"))
+        if quick:  # 快速概览：只写非 deep 的小节，只给前 3 万字（摘要、引言、方法），用便宜的模型
+            include_deep = False
+            fulltext = fulltext[:30000] + ("\n\n[……快速概览只读了前面部分……]" if len(fulltext) > 30000 else "")
+            lenses = []
         role = self.config.llm.roles.get("read")
         provider = self.config.llm.providers.get(role.provider) if role else None
         web_search = bool(role and role.web_search and provider and provider.type == "anthropic") and not self.ctx.provider_override
@@ -115,7 +121,8 @@ class DeepReader(Reader):
             fulltext_loader=c.fulltext.loader if c.fulltext else "abstract",
             grounding=c.fulltext.grounding if c.fulltext else "source-limited",
             include_deep=include_deep,
-            web_search=web_search,
+            web_search=web_search and not quick,
+            profile=load_profile_text(self.config),
         )
         if self.ctx.inputs.get("prompt_only"):
             path = self.config.cache_dir / "prompts" / f"{c.paper.slug}.md"
@@ -142,6 +149,7 @@ class DeepReader(Reader):
             schema_version=schema.version,
             schema_ok=not problems,
             sections=note_headings(body),
+            depth="quick" if quick else "full",
         )
         if resp.stop_reason in ("max_tokens", "length"):
             c.errors.append("deep_read: 输出达到 max_tokens 上限，笔记可能不完整")
@@ -155,7 +163,9 @@ class DeepReader(Reader):
             return items
         composer = PromptComposer(self.config)
         catalog = LensCatalog(self.config)
-        llm = None if self.ctx.inputs.get("prompt_only") else get_llm(self.ctx, "read")
+        quick_role = "ask" if "ask" in self.config.llm.roles else "screen"
+        role = quick_role if self.ctx.inputs.get("quick") else "read"
+        llm = None if self.ctx.inputs.get("prompt_only") else get_llm(self.ctx, role)
 
         def work(c: Candidate) -> None:
             try:

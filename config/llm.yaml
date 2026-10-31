@@ -31,6 +31,12 @@ roles:
     max_tokens: 8000
     effort: low
     json_mode: true
+  # 论文页问答、AI 检索（扩展关键词与重排）、快速概览：调用频繁，用便宜快速的模型（没有这一项时用 screen）
+  ask:
+    provider: claude
+    model: claude-haiku-5-5
+    max_tokens: 4000
+    effort: low
   # 全文精读：用推理更强的模型
   read:
     provider: claude

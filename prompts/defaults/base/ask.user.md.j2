@@ -1,0 +1,15 @@
+{#- 论文问答的用户消息。变量：question、quote（研究者在笔记或 PDF 里选中的一段，可能为空）、history（最近几轮问答）。 -#}
+{% if history %}
+之前的问答（供上下文参考）：
+{% for h in history %}
+- 问：{{ h.q | trim }}
+  答：{{ h.a | trim | truncate(600) }}
+{% endfor %}
+
+{% endif %}
+{% if quote %}
+研究者选中的这段：
+> {{ quote | trim | replace("\n", "\n> ") }}
+
+{% endif %}
+问题：{{ question | trim }}

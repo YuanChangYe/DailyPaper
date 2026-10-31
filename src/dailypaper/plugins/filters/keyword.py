@@ -54,12 +54,18 @@ class KeywordFilter(Filter):
         title_weight: float = 2.0  # 标题命中比摘要命中更重要
 
     def run(self, items: list[Candidate]) -> list[Candidate]:
+        from ...integrations.follow import load_follow, paper_matches
+
         matchers = [TopicMatcher(t) for t in self.config.topics]
+        follow = load_follow(self.config)
         kept: list[tuple[float, Candidate]] = []
         for c in items:
             text = f"{c.paper.title}\n{c.paper.abstract}"
             hits = {m.topic.id: h for m in matchers if (h := m.match(text))}
-            if not hits:
+            followed = paper_matches(follow, c.paper) if follow["authors"] or follow["institutions"] else []
+            if followed:  # 关注的作者 / 机构：不看关键词，直接进入筛选
+                c.paper.extra["followed"] = followed
+            if not hits and not followed:
                 continue
             title_hits = sum(1 for m in matchers for _, p in m.keywords if p.search(c.paper.title))
             score = sum(len(h) * self.config.topic(t).weight for t, h in hits.items()) + self.p.title_weight * title_hits

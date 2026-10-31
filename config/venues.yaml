@@ -7,7 +7,12 @@
 #                  2026 年起 OpenReview 匿名请求会被人机验证拦截，需要在 .env 里填 OPENREVIEW_USERNAME / OPENREVIEW_PASSWORD（免费注册）
 #   acl_anthology  参数 volumes，每个卷名的 {y} 替换成年份，例如 {y}.acl-long；不存在的卷自动跳过
 #   openalex       参数 openalex_source（会议在 OpenAlex 的 source id）。覆盖面因会议而异：NeurIPS 好，ICLR / ICML 很差
+#   pmlr           参数 pmlr_volumes：年份 → PMLR 卷号（ICML、COLT、AISTATS、UAI），新一年的卷号出来后补一行
+#   cvf            参数 cvf_conf（CVPR / ICCV）；cvf_abstracts: false 时不逐篇抓摘要（快，但只有标题）
 #   fallback       主数据源拿不到时改用的适配器名（需要它的参数也写在同一项里）
+#
+# 日程：顶会页的「即将召开」默认取自 ccfddl/ccf-deadlines（GitHub 上社区维护的会议日程），
+#   参数 ccfddl 指定文件（默认 AI/<id>.yml）；也可以手写 next: {date: 2026-12-02, place: San Diego, deadline: 2026-05-15} 覆盖。
 #
 # 同步：dailypaper venues sync（每周跑一次即可；daily 运行时距上次同步超过 auto_sync_days 也会自动增量同步）
 
@@ -30,5 +35,29 @@ venues:
   - {id: eacl,    name: EACL,    field: nlp, ccf: "", core: A,    adapter: acl_anthology, volumes: ["{y}.eacl-long", "{y}.eacl-short", "{y}.findings-eacl"]}
   # ---- ML（OpenReview）
   - {id: neurips, name: NeurIPS, field: ml,  ccf: A,  core: "A*", adapter: openreview, venueid: "NeurIPS.cc/{y}/Conference", fallback: openalex, openalex_source: S4363606243}
-  - {id: icml,    name: ICML,    field: ml,  ccf: A,  core: "A*", adapter: openreview, venueid: "ICML.cc/{y}/Conference"}
+  - {id: icml,    name: ICML,    field: ml,  ccf: A,  core: "A*", adapter: openreview, venueid: "ICML.cc/{y}/Conference", fallback: pmlr, pmlr_volumes: {2025: 267, 2024: 235}}
   - {id: iclr,    name: ICLR,    field: ml,  ccf: "", core: "A*", adapter: openreview, venueid: "ICLR.cc/{y}/Conference"}
+
+  # ---- 以下默认关闭：在「设置 → 研究方向 → 顶会论文池」里打开，下次同步时拉取。
+  # 等级按 CCF 第六版（2023）/ CORE 2023 填写，未逐个联网核对，以官方目录为准。
+  # ---- NLP
+  - {id: conll,   name: CoNLL,   field: nlp, ccf: C,  core: A,    adapter: acl_anthology, volumes: ["{y}.conll-1"], enabled: false}
+  # ---- ML（PMLR，含摘要）
+  - {id: colt,    name: COLT,    field: ml,  ccf: B,  core: "A*", adapter: pmlr, pmlr_volumes: {2025: 291, 2024: 247}, enabled: false}
+  - {id: uai,     name: UAI,     field: ml,  ccf: B,  core: A,    adapter: pmlr, pmlr_volumes: {2025: 286, 2024: 244}, enabled: false}
+  - {id: aistats, name: AISTATS, field: ml,  ccf: C,  core: A,    adapter: pmlr, pmlr_volumes: {2025: 258, 2024: 238}, enabled: false}
+  # ---- AI 综合（OpenAlex）
+  - {id: aaai,    name: AAAI,    field: ai,  ccf: A,  core: "A*", adapter: openalex, openalex_source: S4210191458, ccfddl: AI/aaai.yml, enabled: false}
+  - {id: ijcai,   name: IJCAI,   field: ai,  ccf: A,  core: "A*", adapter: openalex, openalex_source: S4306419999, ccfddl: AI/ijcai.yml, enabled: false}
+  - {id: aamas,   name: AAMAS,   field: ai,  ccf: B,  core: "A*", adapter: openalex, openalex_source: S4306417597, ccfddl: AI/aamas.yml, enabled: false}
+  - {id: ecai,    name: ECAI,    field: ai,  ccf: B,  core: A,    adapter: openalex, openalex_source: S4306418308, ccfddl: AI/ecai.yml, enabled: false}
+  - {id: kr,      name: KR,      field: ai,  ccf: B,  core: "A*", adapter: openalex, openalex_source: S4306420732, ccfddl: AI/kr.yml, enabled: false}
+  - {id: icaps,   name: ICAPS,   field: ai,  ccf: B,  core: "A*", adapter: openalex, openalex_source: S4387283601, ccfddl: AI/icaps.yml, enabled: false}
+  # ---- CV（CVF Open Access；ECCV 在 OpenAlex 里几乎没有收录，暂时拿不到）
+  - {id: cvpr,    name: CVPR,    field: cv,  ccf: A,  core: "A*", adapter: cvf, cvf_conf: CVPR, enabled: false}
+  - {id: iccv,    name: ICCV,    field: cv,  ccf: A,  core: "A*", adapter: cvf, cvf_conf: ICCV, enabled: false}
+  - {id: eccv,    name: ECCV,    field: cv,  ccf: B,  core: "A*", adapter: openalex, openalex_source: S4306418318, ccfddl: AI/eccv.yml, enabled: false}
+  # ---- 数据挖掘（OpenAlex；ICDM、ECML-PKDD 在 OpenAlex 里没有可靠的会议 source，暂缺）
+  - {id: cikm,    name: CIKM,    field: dm,  ccf: B,  core: A,    adapter: openalex, openalex_source: S4393918199, ccfddl: DB/cikm.yml, enabled: false}
+  - {id: wsdm,    name: WSDM,    field: dm,  ccf: B,  core: "A*", adapter: openalex, openalex_source: S4363608885, ccfddl: DB/wsdm.yml, enabled: false}
+  - {id: sdm,     name: SDM,     field: dm,  ccf: B,  core: A,    adapter: openalex, openalex_source: S4306420871, ccfddl: DB/sdm.yml, enabled: false}

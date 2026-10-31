@@ -263,7 +263,9 @@ a.stat:hover{border-color:var(--line-2)}
 .pcard{position:relative;display:flex;flex-direction:column;gap:10px;padding:20px;border-radius:var(--r-md);border:1px solid var(--line);background:linear-gradient(180deg,rgba(206,226,232,.09),rgba(206,226,232,.04));scroll-snap-align:start;transition:transform .25s,border-color .25s,background .25s,box-shadow .25s;min-width:0}
 .pcard:hover{transform:translateY(-4px);border-color:var(--line-2);box-shadow:0 18px 40px rgba(0,0,0,.22)}
 .pcard.is-picked{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
-.pcard-top{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);padding-right:34px}
+.pcard-top{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;font-size:12px;color:var(--muted);padding-right:34px;min-height:24px}
+.pcard-top>*{flex:none;white-space:nowrap}
+.pcard-top .chip.venue{padding:3px 9px;font-size:11px}
 .rank{font-size:22px;font-weight:800;color:var(--ink);line-height:1;margin-right:4px;font-variant-numeric:tabular-nums}
 .pcard h3{font-size:17px;line-height:1.4;font-weight:700}
 .pcard h3 a:hover{color:var(--accent)}
@@ -307,8 +309,8 @@ table{width:100%;border-collapse:collapse;font-size:14px}
 th,td{padding:11px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
 th{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.04em;background:rgba(9,30,38,.25)}
 tr:last-child td{border-bottom:0}
-.bar{position:relative;width:76px;height:6px;border-radius:9px;background:rgba(206,226,232,.12);margin-top:8px}
-.bar i{position:absolute;inset:0 auto 0 0;border-radius:inherit;background:var(--accent)}
+.sbar{position:relative;width:76px;height:6px;border-radius:9px;background:rgba(206,226,232,.12);margin-top:8px}
+.sbar i{position:absolute;inset:0 auto 0 0;border-radius:inherit;background:var(--accent)}
 
 /* ---------- library ---------- */
 .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:18px 0}
@@ -385,9 +387,9 @@ mark.hl.has-comment{border-bottom:2px dotted var(--accent)}
 .chart{padding:18px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--glass)}
 .chart h3{font-size:15px;margin-bottom:12px}
 .bars{display:flex;align-items:flex-end;gap:6px;height:150px}
-.bars .bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
-.bars .bar i{display:block;width:100%;max-width:38px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--accent),rgba(169,220,225,.45));transition:height .6s cubic-bezier(.2,.7,.2,1)}
-.bars .bar b{font-size:12px;color:var(--ink);margin-bottom:4px}.bars .bar span{font-size:10.5px;color:var(--muted);margin-top:6px;white-space:nowrap}
+.bars .vbar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
+.bars .vbar i{display:block;width:100%;max-width:38px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--accent),rgba(169,220,225,.45));transition:height .6s cubic-bezier(.2,.7,.2,1)}
+.bars .vbar b{font-size:12px;color:var(--ink);margin-bottom:4px}.bars .vbar span{font-size:10.5px;color:var(--muted);margin-top:6px;white-space:nowrap}
 .linechart{width:100%;height:auto;display:block;overflow:visible}
 .linechart .line{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
 .linechart circle{fill:var(--panel);stroke:var(--accent);stroke-width:2}
@@ -450,6 +452,50 @@ body.split-mode main.wrap{max-width:none}
 .pdf-bar a{color:var(--accent)}
 .pdf-pane iframe{flex:1;width:100%;border:0;background:#fff}
 @media (max-width:1000px){.paper-split.on{grid-template-columns:1fr}.split-handle{display:none}.pdf-pane{position:static;height:70vh;margin-top:16px}}
+
+/* ---------- 论文页标签栏（笔记 / 问答 / 批注）与可点的出处 ---------- */
+.ptabs{position:sticky;top:86px;z-index:6;display:flex;align-items:center;gap:4px;margin:22px 0 20px;padding:5px;border-radius:14px;border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.ptabs .tab{border:0;background:none;color:var(--muted);font:inherit;font-size:14px;padding:7px 16px;border-radius:10px;cursor:pointer;white-space:nowrap}
+.ptabs .tab:hover{color:var(--ink)}.ptabs .tab[aria-selected="true"]{background:var(--glass);color:var(--ink);font-weight:600;box-shadow:inset 0 0 0 1px var(--line)}
+.ptabs .grow{flex:1}
+.ptabs .toc-pop{position:absolute;right:6px;top:calc(100% + 8px);width:min(320px,80vw);max-height:62vh;overflow:auto;padding:10px 6px 10px 10px;border-radius:14px;border:1px solid var(--line-2);background:var(--panel);box-shadow:0 18px 50px rgba(0,0,0,.35)}
+.ptabs .toc-pop .toc{position:static;border-left:0}
+.tab-panel[hidden]{display:none!important}
+#anno-tab .side-panel{margin-top:0}
+#anno-tab #my-note{min-height:160px}
+.src.jump{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}.src.jump:hover,.src.jump:focus-visible{background:rgba(169,220,225,.2);outline:none}
+.update-bar{position:fixed;left:16px;right:16px;bottom:22px;margin-inline:auto;width:fit-content;z-index:70;display:flex;align-items:center;gap:12px;max-width:calc(100vw - 32px);padding:10px 12px 10px 18px;border-radius:16px;border:1px solid var(--accent);background:var(--panel);box-shadow:0 18px 50px rgba(0,0,0,.35);font-size:14px;color:var(--ink)}
+.update-bar span{flex:1;min-width:0}.update-bar .x{border:0;background:none;color:var(--muted);font-size:18px;cursor:pointer;padding:0 4px}
+@media (max-width:700px){.ptabs{top:8px}.ptabs .tab{padding:7px 11px}}
+
+/* ---------- 推荐理由、信号徽章、快速概览 ---------- */
+.why{margin:0;font-size:13px;line-height:1.6;color:var(--muted)}.why b{color:var(--body);font-weight:600}
+.chip.gem{border-color:rgba(147,215,176,.55);color:var(--ok)}
+.chip.follow{border-color:rgba(169,220,225,.6);color:var(--accent)}
+.chip.explore{border-color:rgba(214,170,240,.55);color:#D6AAF0}
+.chip.warnc{border-color:rgba(235,201,131,.55);color:var(--warn)}
+.chip.sig{color:var(--muted);border-style:dashed}
+.affil{font-size:12.5px;color:var(--muted)}
+.paper-notice{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:14px 0 0;padding:10px 14px;border-radius:var(--r-sm);border:1px solid rgba(235,201,131,.4);background:rgba(235,201,131,.08);color:var(--warn);font-size:13.5px}
+.paper-notice .grow{flex:1}
+.pdf-loading{position:absolute;inset:44px 0 0;display:grid;place-items:center;color:#cfd8dc;font-size:14px;background:#2b2b2b;pointer-events:none}
+.pdf-pane{position:sticky}
+.view-loading{padding:80px 0;text-align:center;color:var(--muted);font-size:14px}
+.view-loading::before{content:"";display:block;width:28px;height:28px;margin:0 auto 14px;border-radius:50%;border:2px solid var(--line-2);border-top-color:var(--accent);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cal{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.cal a,.cal div.c{display:block;padding:12px 14px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--glass);font-size:13px;color:var(--muted)}
+.cal b{display:block;color:var(--ink);font-size:15px;margin-bottom:4px}.cal .dl{color:var(--warn)}
+.feat-table td,.feat-table th{font-size:13px}
+.qr{display:inline-block;padding:10px;background:#fff;border-radius:12px;margin-top:10px}
+.bm{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;border:1px dashed var(--accent);color:var(--accent);font-size:13.5px;cursor:grab}
+/* 审查修复：顶栏按钮在手机上也保留主题和运行；关于页列表标签不被挤；Zotero 状态点不变形 */
+.zpill i{flex:none}
+.about-list li>span:first-child{flex:0 0 auto}.about-list li>b{min-width:0;text-align:right}
+:root[data-theme="light"] .go{color:#fff}
+:root[data-theme="light"] .hero .btn:not(.primary),:root[data-theme="light"] .paper-head .btn:not(.primary),:root[data-theme="light"] .paper-head .chip,:root[data-theme="light"] .search-chips .chip{background:rgba(12,35,43,.42);border-color:rgba(238,245,246,.35);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+:root[data-bg="on"] .page-head p,:root[data-bg="on"] .section-head p{color:var(--body)}
+:root[data-theme="light"][data-bg="on"] .page-head p,:root[data-theme="light"][data-bg="on"] .section-head p,:root[data-theme="light"][data-bg="on"] .page-head h1{text-shadow:0 1px 10px rgba(255,255,255,.85)}
 
 /* ---------- review ---------- */
 .review-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start}
@@ -521,7 +567,7 @@ footer a{border-bottom:1px solid var(--line-2)}
 @media (max-width:700px){
   .nav-bar{flex-wrap:wrap;border-radius:24px;gap:8px;padding:8px 10px 8px 14px}
   .links{order:3;width:100%;margin:0}
-  .nav-end .btn{display:none}
+  .nav-end .btn{display:none}.nav-end #theme-toggle,.nav-end #run-now{display:inline-flex}
   .hero{margin-top:-120px}
   .hero-inner{padding:150px 20px 230px}
   .hero .sub{font-size:15px}
@@ -582,8 +628,8 @@ footer a{border-bottom:1px solid var(--line-2)}
 :root[data-theme="light"] .sched-ctl input[type=date],:root[data-theme="light"] .sched-ctl input[type=time]{background:#fff}
 .stat .sched-tag{display:block;font-size:11.5px;color:var(--warn);margin-top:2px}
 .usage-big{font-size:34px;font-weight:700;color:var(--ink);letter-spacing:-.02em;line-height:1.1}.usage-big small{font-size:14px;color:var(--muted);font-weight:500;margin-left:6px}
-.bar{height:8px;border-radius:999px;background:var(--glass-2);overflow:hidden;margin:10px 0 6px}.bar i{display:block;height:100%;background:var(--accent);border-radius:999px}
-.bar i.warn{background:var(--warn)}.bar i.bad{background:var(--bad)}
+.ubar{height:8px;border-radius:999px;background:var(--glass-2);overflow:hidden;margin:10px 0 6px}.ubar i{display:block;height:100%;background:var(--accent);border-radius:999px}
+.ubar i.warn{background:var(--warn)}.ubar i.bad{background:var(--bad)}
 .mini-bars{display:flex;gap:8px;align-items:flex-end;height:72px;margin-top:14px}.mini-bars div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;font-size:10px;color:var(--muted);height:100%}
 .mini-bars i{width:100%;border-radius:4px 4px 0 0;background:var(--accent);opacity:.65;min-height:2px}.mini-bars b{font-size:10px;color:var(--ink)}
 .ptable{width:100%;border-collapse:collapse;font-size:13px}.ptable td,.ptable th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}.ptable th{font-weight:600;color:var(--muted);font-size:12px}
@@ -619,7 +665,7 @@ footer a{border-bottom:1px solid var(--line-2)}
 .rule .input,.rule input[type=text]{width:100%;min-height:36px;padding:6px 12px;border-radius:10px;border:1px solid var(--line-2);background:rgba(9,30,38,.35);outline:0;font-family:var(--mono);font-size:12.5px}
 .rule .acts{display:flex;gap:4px}
 .skill-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}.skill-row .grow{flex:1 1 240px;min-width:0}.skill-row b{display:block;color:var(--ink)}.skill-row span{font-size:12.5px;color:var(--muted)}
-@media (max-width:1000px){.pe-layout{grid-template-columns:1fr}.rule{grid-template-columns:1fr}}
+@media (max-width:1000px){.pe-layout{grid-template-columns:minmax(0,1fr)}.rule{grid-template-columns:1fr}}
 .model-refresh{border:0;background:none;padding:0 0 0 6px;font:inherit;font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline dotted}.model-refresh:hover{color:var(--ink)}
 .model-note{display:block;margin-top:5px;font-size:12px;color:var(--muted);min-height:0}.model-note:empty{display:none}.model-note.bad{color:var(--bad)}
 .role-box{padding:16px 18px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--glass);margin-bottom:12px}.role-box h4{margin:0 0 12px;color:var(--ink);font-size:15px}
@@ -632,7 +678,7 @@ footer a{border-bottom:1px solid var(--line-2)}
 .cover-grid button{position:relative;padding:0;border:2px solid transparent;border-radius:12px;overflow:hidden;background:none;aspect-ratio:4/3;cursor:pointer}
 .cover-grid button img{width:100%;height:100%;object-fit:cover;display:block}
 .cover-grid button[aria-pressed="true"]{border-color:var(--accent)}
-.cover-grid button span{position:absolute;left:0;right:0;bottom:0;padding:4px 8px;font-size:11px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.6));text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cover-grid button>span[data-credit]{position:absolute;left:0;right:0;bottom:0;padding:4px 8px;font-size:11px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.6));text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cover-grid button i{position:absolute;top:6px;left:8px;font-size:10px;letter-spacing:.06em;color:#fff;background:rgba(0,0,0,.45);padding:1px 6px;border-radius:999px;font-style:normal}
 @media (max-width:1000px){
   .settings-shell{grid-template-columns:1fr;gap:18px}
@@ -656,9 +702,10 @@ footer a{border-bottom:1px solid var(--line-2)}
       <a href="#/" data-nav="home">发现</a>
       <a href="#/daily" data-nav="daily">今日</a>
       <a href="#/venues" data-nav="venues">顶会</a>
+      <a href="#/search" data-nav="search">检索</a>
       <a href="#/library" data-nav="library">文库</a>
       <a href="#/review" data-nav="review">审核台<span class="badge" id="pending-badge" hidden></span></a>
-      <a href="#/zlib" data-nav="zlib">文献库</a>
+      <a href="#/zlib" data-nav="zlib" title="本机 Zotero 文献库">Zotero</a>
       <a href="#/trends" data-nav="trends">趋势</a>
       <a href="#/settings" data-nav="settings">设置</a>
     </nav>
@@ -783,6 +830,8 @@ $$\mathbb E_{P_X}|w-\widehat w_h|=\tfrac1\rho\,\mathbb E_M\!\left[\tfrac{|\eta-h
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js" defer></script>
 <script src="assets/weather.js"></script>
+<script src="assets/ask.js"></script>
+<script src="assets/search.js"></script>
 <script>
 "use strict";
 /* ======================================================================
@@ -913,7 +962,7 @@ function getPosition() {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) return reject(new Error("这个浏览器不支持定位"));
     navigator.geolocation.getCurrentPosition((p) => resolve(p.coords),
-      (e) => reject(new Error({ 1: "浏览器没有允许定位", 2: "拿不到位置", 3: "定位超时" }[e.code] || "定位失败")),
+      (e) => reject(new Error({ 1: "未授权定位", 2: "拿不到位置", 3: "定位超时" }[e.code] || "定位失败")),
       { timeout: 10000, maximumAge: 30 * 60e3 });
   });
 }
@@ -1024,7 +1073,7 @@ const heroImgTag = () => { const c = S.cover; return c
 
 /* ---------- 偏好：外观与阅读设置，存在浏览器里（localStorage dp.prefs） ---------- */
 const PREF_DEFAULTS = { theme: "system", font: "default", customFont: "", fontSize: 15, proseSize: 16, lineHeight: "normal", motion: "system", density: "comfy",
-  paperDefault: "note", splitPct: 50, proseWidth: "full", hlColor: "yellow", srcMarks: "normal", confirmRun: false, cover: "daily", bg: "auto", bgOpacity: 75, bgBlur: 0, bgVeil: 30, frost: "mid", v: 3, wx: "on", wxCover: true, wxPreview: "live" };
+  paperDefault: "note", splitPct: 50, proseWidth: "full", hlColor: "yellow", srcMarks: "normal", confirmRun: true, quiet: true, cover: "daily", bg: "auto", bgOpacity: 75, bgBlur: 0, bgVeil: 30, frost: "mid", v: 4, wx: "on", wxCover: true, wxPreview: "live" };
 let PREFS = null;
 function prefs() {
   if (PREFS) return PREFS;
@@ -1033,6 +1082,7 @@ function prefs() {
   if (saved.theme === undefined) { try { const t = localStorage.getItem("dp.theme"); if (t) saved.theme = t; } catch { /* 忽略 */ } }  // 旧版主题设置
   if ((saved.v || 1) < 2) { delete saved.bgOpacity; delete saved.bgBlur; saved.v = 2; }
   if ((saved.v || 1) < 3) { if (saved.bgBlur === 2) saved.bgBlur = 0; saved.v = 3; }  // v3：背景默认不再模糊
+  if ((saved.v || 1) < 4) { saved.confirmRun = true; saved.v = 4; }  // v4：花钱前默认确认
   saved.wxPreview = "live";  // 天气预览只在这次打开时有效  // v2：背景从 22% 改为朦胧玻璃，旧的过淡数值作废
   PREFS = { ...PREF_DEFAULTS, ...saved };
   return PREFS;
@@ -1132,6 +1182,45 @@ async function send(url, body, method = "POST") {
   return data;
 }
 const isLocal = () => S.mode === "local";
+/* 网页需要的后端接口版本（research_api.API_LEVEL）。后端比它旧就提示重启本地助手；网页文件改过就提示刷新 */
+const PAGE_API = 2;
+const staleNotice = (what) => `<div class="notice">本地助手是旧版本，还没有「${what}」。<button class="btn sm" type="button" data-restart-app style="margin-left:8px">重启本地助手</button></div>`;
+async function restartApp() {
+  try { const r = await send("/api/app/restart", {}); toast(r.messages[0], "ok"); }
+  catch (e) {
+    toast(e.status === 404 || e.status === 405 ? "这个版本的本地助手还不能从网页重启：请关掉它的窗口，再双击桌面图标启动。" : e.message, "err");
+    return;
+  }
+  await new Promise((r) => setTimeout(r, 3000));
+  for (let i = 0; i < 30; i++) {
+    try { await getJSON("/api/meta"); location.reload(); return; } catch { await new Promise((r) => setTimeout(r, 1000)); }
+  }
+  toast("重启超时：请手动双击桌面图标启动本地助手。", "err");
+}
+function showUpdateBar(kind) {
+  if ($("#update-bar")?.dataset.kind === kind) return;
+  $("#update-bar")?.remove();
+  const bar = document.createElement("div"); bar.className = "update-bar"; bar.id = "update-bar"; bar.dataset.kind = kind; bar.setAttribute("role", "status");
+  bar.innerHTML = kind === "restart"
+    ? `<span>本地助手是旧版本，部分新功能用不了。</span><button class="btn sm primary" type="button" data-restart-app>重启本地助手</button><button class="x" type="button" aria-label="关闭">×</button>`
+    : `<span>网页有更新。</span><button class="btn sm primary" type="button" data-reload>刷新</button><button class="x" type="button" aria-label="关闭">×</button>`;
+  bar.addEventListener("click", (e) => { if (e.target.closest("[data-reload]")) location.reload(); if (e.target.closest(".x")) bar.remove(); });
+  document.body.append(bar);
+}
+function setupUpdateCheck() {
+  if (!isLocal() || !S.meta) return;
+  const base = S.meta.static_hash;
+  let last = 0;
+  const check = async () => {
+    if (Date.now() - last < 30e3) return; last = Date.now();
+    let m; try { m = await getJSON("/api/meta"); } catch { return; }
+    if ((m.api_level || 1) < PAGE_API) showUpdateBar("restart");
+    else if (base && m.static_hash && m.static_hash !== base) showUpdateBar("reload");
+  };
+  if ((S.meta.api_level || 1) < PAGE_API) showUpdateBar("restart");
+  setInterval(check, 5 * 60e3); addEventListener("focus", check);
+}
+document.addEventListener("click", (e) => { const b = e.target.closest("[data-restart-app]"); if (b) { b.disabled = true; restartApp().finally(() => (b.disabled = false)); } });
 
 async function boot() {
   try { S.meta = await getJSON("/api/meta"); S.mode = "local"; S.site = "/site/"; } catch { /* 不在本地助手里 */ }
@@ -1152,6 +1241,7 @@ async function boot() {
   S.topics = S.meta?.topics?.length ? S.meta.topics : DEMO_CONFIG.topics.map(({ id, name }) => ({ id, name }));
   paintMode();
   setupSchedulePill();
+  setupUpdateCheck();
   if (isLocal()) { refreshZotero(); refreshBadge(); refreshSchedulePill(); await pollRun(true); }
   fillCollections();
   route();
@@ -1216,7 +1306,7 @@ const venueBadge = (p) => p.source === "venue" && (p.venue_name || p.venue) ? `<
 const TYPE_ZH = { method: "方法", theory: "理论", benchmark: "Benchmark", empirical: "实证", survey: "综述", position: "观点" };
 // 精读 lens 的可读标签：topic:x → 镜头·方向，type_x → 镜头·类型，其余为外部 skill
 const lensChip = (l) => {
-  const label = l.startsWith("topic:") ? `镜头 · ${tshort(l.slice(6))}` : l.startsWith("type_") ? `镜头 · ${TYPE_ZH[l.slice(5)] || l.slice(5)}` : `skill · ${l}`;
+  const label = l.startsWith("topic:") ? `视角 · ${tshort(l.slice(6))}` : l.startsWith("type_") ? `视角 · ${TYPE_ZH[l.slice(5)] || l.slice(5)}` : `技能 · ${l.replace(/[-_]/g, " ")}`;
   return `<span class="chip" title="精读时叠加的分析指引：${esc(l)}">${esc(label)}</span>`;
 };
 const fmtDate = (d) => { const [y, m, dd] = String(d).split("-"); return y && m && dd ? `${+m}月${+dd}日` : d; };
@@ -1229,13 +1319,31 @@ function statusPill(id) {
 }
 const pickBox = (id) => `<label class="pick" title="选择这篇"><input type="checkbox" data-pick="${esc(id)}" ${S.selected.has(id) ? "checked" : ""} aria-label="选择这篇论文"><span></span></label>`;
 
+/* 推荐理由与安静的外部信号：热度不参与排序，只作小字参考；安静模式下不显示被引数和热门榜 */
+function signalChips(p) {
+  const out = [];
+  if (p.followed?.length) out.push(`<span class="chip follow" title="关注：${esc(p.followed.join("、"))}">关注</span>`);
+  if (p.hidden_gem) out.push(`<span class="chip gem" title="和你的方向高度相关，但还没有人引用、也不在热门榜上">冷门好文</span>`);
+  if (p.explore) out.push(`<span class="chip explore" title="探索位：不在你的主方向上，但新颖性高">探索</span>`);
+  if (p.depth === "quick") out.push(`<span class="chip sig" title="只写了前几节，可以在论文页升级为完整精读">快速概览</span>`);
+  if (p.grounding === "source-limited") out.push(`<span class="chip warnc" title="精读时没拿到全文，只依据摘要">仅摘要</span>`);
+  if (!prefs().quiet) {
+    if (p.cited_by) out.push(`<span class="chip sig">被引 ${p.cited_by}</span>`);
+    if (p.hf_trending) out.push(`<span class="chip sig">HF 热门</span>`);
+  }
+  return out.join("");
+}
+const whyLine = (p) => p.reason ? `<p class="why"><b>为什么推荐给你：</b>${mdInline(p.reason)}</p>` : "";
+const affilText = (p) => (p.affiliations || []).slice(0, 3).join(" · ");
+
 function paperCard(p, { rank, insight = true } = {}) {
   return `<article class="pcard reveal${S.selected.has(p.id) ? " is-picked" : ""}" data-card="${esc(p.id)}">
     ${pickBox(p.id)}
-    <div class="pcard-top">${rank ? `<span class="rank">${rank}</span>` : ""}<span>${esc(p.paper_type || "paper")}</span><span>·</span><span class="mono">${esc(p.source === "venue" ? "顶会" : p.id)}</span>${venueBadge(p)}${statusPill(p.id)}</div>
+    <div class="pcard-top">${rank ? `<span class="rank">${rank}</span>` : ""}<span>${esc(p.paper_type || "paper")}</span>${p.source === "venue" ? venueBadge(p) : `<span>·</span><span class="mono">${esc(p.id)}</span>`}${statusPill(p.id)}</div>
     <h3><a href="#/paper/${encodeURIComponent(p.id)}">${esc(p.title)}</a></h3>
-    <div class="chips">${(p.topics || []).map(chip).join("")}</div>
+    <div class="chips">${(p.topics || []).map(chip).join("")}${signalChips(p)}</div>
     <p class="tldr">${mdInline(p.tldr)}</p>
+    ${whyLine(p)}
     ${insight && p.core_insight ? `<p class="insight"><b>${esc(label("core_insight"))}</b>${mdInline(p.core_insight)}</p>` : ""}
     <div class="pcard-foot">${stars(p.value_score)}<span class="mono">${p.score ? Number(p.score).toFixed(1) : ""}</span><span class="grow"></span><a href="#/paper/${encodeURIComponent(p.id)}">阅读笔记 →</a></div>
   </article>`;
@@ -1250,10 +1358,11 @@ function paperRow(p, { rank } = {}) {
     ${pickBox(p.id)}
     <div class="prow-main">
       <h3><a href="${href}">${rank ? `<span class="rank">${rank}</span>` : ""}${esc(p.title)}</a></h3>
-      ${authors.length ? `<div class="prow-authors">${esc(authors.slice(0, 4).join(", "))}${authors.length > 4 ? ` 等 ${authors.length} 人` : ""}</div>` : ""}
+      ${authors.length ? `<div class="prow-authors">${esc(authors.slice(0, 4).join(", "))}${authors.length > 4 ? ` 等 ${authors.length} 人` : ""}${affilText(p) ? ` · <span class="affil">${esc(affilText(p))}</span>` : ""}</div>` : ""}
       <p class="prow-tldr">${mdInline(p.tldr)}</p>
+      ${whyLine(p)}
       ${p.core_insight ? `<p class="insight"><b>${esc(label("core_insight"))}</b>${mdInline(p.core_insight)}</p>` : ""}
-      <div class="prow-foot">${stars(p.value_score)}${p.source === "venue" ? venueBadge(p) : `<span class="mono">${esc(p.id)}</span>`}<span>${esc(fmtDate(p.date))}</span>${p.paper_type ? `<span>${esc(p.paper_type)}</span>` : ""}${(p.topics || []).map(chip).join("")}${statusPill(p.id)}<span class="grow"></span><a href="${href}">阅读笔记 →</a></div>
+      <div class="prow-foot">${stars(p.value_score)}${p.source === "venue" ? venueBadge(p) : `<span class="mono">${esc(p.id)}</span>`}<span>${esc(fmtDate(p.date))}</span>${p.paper_type ? `<span>${esc(p.paper_type)}</span>` : ""}${(p.topics || []).map(chip).join("")}${signalChips(p)}${statusPill(p.id)}<span class="grow"></span><a href="${href}">阅读笔记 →</a></div>
     </div>
     <a class="prow-thumb" href="${href}" tabindex="-1" aria-hidden="true"><img src="${thumb}" alt="" loading="lazy" onerror="this.parentElement.classList.add('nothumb')"><span class="ph">${esc(p.id)}</span></a>
   </article>`;
@@ -1323,15 +1432,18 @@ async function refreshBadge() {
 
 /* ---------- 运行 ---------- */
 let runTimer = null;
-async function startRun(pipeline, ids = []) {
-  if (prefs().confirmRun && !confirm(pipeline === "daily" ? "现在运行今日任务？会调用模型并产生费用。" : `精读 ${ids.join(", ")}？会调用模型并产生费用。`)) return;
+async function startRun(pipeline, ids = [], opts = {}) {
   if (!isLocal()) { toast(S.mode === "demo" ? `示例：会在本地助手里执行 dailypaper ${pipeline === "read" ? "read " + ids.join(" ") : "run"}` : "请在电脑上运行 dailypaper app 后再触发", S.mode === "demo" ? "" : "err"); return; }
-  // 会真实调用模型，先确认并给出费用量级（按 Sonnet 精读约 $0.14 / 篇估算）
-  const n = pipeline === "read" ? ids.length : Number(S.config?.daily?.top_k || DEMO_CONFIG.daily.top_k);
-  const what = pipeline === "read" ? `精读 ${ids.join("、")}` : `运行今日任务（抓取 → 筛选 → 精读最多 ${n} 篇）`;
-  if (!confirm(`${what}？\n会调用模型，大约 $${(n * 0.14).toFixed(2)}，需要几分钟。`)) return;
+  // 会真实调用模型：按价格表预估费用后确认（设置 → 阅读 → 运行前确认 可以关掉）
+  const n = pipeline === "read" ? ids.length : Number(S.meta?.venue_total || S.config?.daily?.top_k || DEMO_CONFIG.daily.top_k);
+  const label = ids.map((x) => x.replace(/^venue:/, "顶会池 ")).join("、");
+  const what = pipeline === "read" ? `${opts.quick ? "快速概览" : "精读"} ${label}` : `运行今日任务（抓取 → 筛选 → 精读最多 ${n} 篇）`;
+  if (prefs().confirmRun) {
+    let est = ""; try { const r = await getJSON(`/api/estimate?kind=read&n=${n}&quick=${!!opts.quick}`); if (r.usd != null) est = `大约 $${r.usd.toFixed(2)}（${r.model}）`; } catch { /* 旧版本地助手 */ }
+    if (!confirm(`${what}？\n会调用模型${est ? "，" + est : ""}，需要${opts.quick ? "十几秒" : "几分钟"}。`)) return;
+  }
   try {
-    const r = await send("/api/run", { pipeline, ids });
+    const r = await send("/api/run", { pipeline, ids, quick: !!opts.quick });
     (r.messages || [`已开始：${pipeline}`]).forEach((m) => toast(m, "ok"));
     pollRun();
   } catch (e) {
@@ -1394,7 +1506,7 @@ VIEWS.home = async () => {
         <button class="go" type="submit" aria-label="搜索">→</button>
       </div>
       <div class="search-hint" id="search-hint" hidden></div>
-      <div class="search-chips">${S.topics.slice(0, 5).map((t) => `<a class="chip" href="#/library?topic=${encodeURIComponent(t.id)}">${esc(tshort(t.id))}</a>`).join("")}</div>
+      <div class="search-chips">${S.topics.slice(0, 5).map((t) => `<a class="chip" href="#/library?topic=${encodeURIComponent(t.id)}">${esc(tshort(t.id))}</a>`).join("")}<a class="chip" id="ai-search-link" href="#/search" title="用一句话描述要找的论文，在顶会池或全网里找">用 AI 检索 →</a></div>
     </form>
    </div>
   </section>
@@ -1447,6 +1559,7 @@ VIEWS.home.after = () => {
   }
   const form = $("#hero-search"), q = $("#q"), hint = $("#search-hint");
   q.addEventListener("input", () => {
+    $("#ai-search-link").href = q.value.trim() ? `#/search?q=${encodeURIComponent(q.value.trim())}` : "#/search";
     const m = q.value.trim().match(ARXIV_ID);
     hint.hidden = !m;
     if (m) hint.innerHTML = `<span>arXiv <b class="mono">${esc(m[1])}</b></span><button class="btn primary sm" type="button" id="read-one">精读这篇</button>`;
@@ -1464,7 +1577,14 @@ VIEWS.home.after = () => {
 VIEWS.daily = async (date) => {
   const ds = dates(); date = date || ds[0];
   let day = { papers: S.index.filter((p) => p.date === date), also: [], notes: {} };
-  if (S.mode !== "demo") { try { const d = await getJSON(`${S.site}api/daily/${date}.json`); day = { papers: d.papers || day.papers, also: d.also || [], notes: d.notes || {} }; } catch { /* 用索引兜底 */ } }
+  if (S.mode !== "demo") {
+    try {
+      const d = await getJSON(`${S.site}api/daily/${date}.json`);
+      // 日报 JSON 只含当天流水线的结果；当天单独精读的论文在索引里，合并进来，篇数与日期条一致
+      const ids = new Set((d.papers || []).map((x) => x.id));
+      day = { papers: [...(d.papers || []), ...day.papers.filter((x) => !ids.has(x.id))], also: d.also || [], notes: d.notes || {} };
+    } catch { /* 用索引兜底 */ }
+  }
   else day.also = date === ds[0] ? DEMO.also : [];
   const st = S.mode === "demo" ? DEMO.stats[date] : null;
   const papers = [...day.papers].sort((a, b) => (b.value_score - a.value_score) || (b.score - a.score));
@@ -1480,7 +1600,7 @@ VIEWS.daily = async (date) => {
   ${day.also.length ? `<section class="section">
     <div class="section-head"><div><h2>其余筛选结果</h2><p>相关但没进入精读的论文，附 LLM 的一句话理由。需要时可以单独精读。</p></div></div>
     <div class="table-wrap"><table><thead><tr><th style="width:110px">分数</th><th>论文</th><th>理由</th><th style="width:110px"></th></tr></thead><tbody>
-    ${day.also.map((a) => `<tr><td><span class="mono">${Number(a.score || 0).toFixed(1)}</span><div class="bar"><i style="width:${Math.round(((a.score || 0) / maxScore) * 100)}%"></i></div></td>
+    ${day.also.map((a) => `<tr><td><span class="mono">${Number(a.score || 0).toFixed(1)}</span><div class="sbar"><i style="width:${Math.round(((a.score || 0) / maxScore) * 100)}%"></i></div></td>
       <td><a href="${esc(a.url_abs)}" target="_blank" rel="noopener noreferrer" style="color:var(--ink)">${esc(a.title)}</a><div class="mono" style="font-size:12px;color:var(--muted)">${esc(a.id)}</div></td>
       <td>${mdInline(a.reason)}</td><td><button class="btn sm" type="button" data-readone="${esc(a.id)}">精读</button></td></tr>`).join("")}
     </tbody></table></div></section>` : ""}`;
@@ -1549,7 +1669,8 @@ function renderMarkdown(md) {
     .replace(/\$\$([\s\S]+?)\$\$/g, (_, t) => keep(t, true))
     .replace(/\$(?!\s)([^$\n]+?)\$/g, (_, t) => keep(t, false))
     .replace(/〔分析〕/g, '<span class="tag-analysis">分析</span>')
-    .replace(/【([^】\n]{1,80})】/g, '<span class="src">$1</span>');
+    .replace(/【([^】\n]{1,80})】/g, '<span class="src">$1</span>')
+    .replace(/\[(pp?\.\s?\d+(?:[-–]\d+)?)\](?!\()/g, '<span class="src">$1</span>');
   let html = DOMPurify.sanitize(marked.parse(md, { gfm: true }), { ADD_TAGS: ["details", "summary"] });
   html = html.replace(/@@M(\d+)@@/g, (_, i) => { const m = math[+i]; try { return katex.renderToString(m.tex, { displayMode: m.display, throwOnError: false }); } catch { return esc(m.tex); } });
   return html;
@@ -1575,8 +1696,11 @@ VIEWS.paper = async (id) => {
       <header class="paper-head reveal">
         <div class="meta-line"><a href="#/daily/${esc(p.date)}">← ${esc(fmtDate(p.date))}日报</a>${p.source === "venue" ? venueBadge(p) : `<span class="mono">${esc(p.id)}</span>`}<span>${esc(p.paper_type || "")}</span>${stars(p.value_score)}${statusPill(id)}</div>
         <h1>${esc(p.title)}</h1>
-        <div class="meta-line">${esc((p.authors || []).slice(0, 8).join(", "))}${(p.authors || []).length > 8 ? " 等" : ""}</div>
-        <div class="meta-line" style="margin-top:10px">${(p.topics || []).map(chip).join("")}${(p.lenses || []).map(lensChip).join("")}</div>
+        <div class="meta-line">${esc((p.authors || []).slice(0, 8).join(", "))}${(p.authors || []).length > 8 ? " 等" : ""}${affilText(p) ? ` · ${esc(affilText(p))}` : ""}</div>
+        <div class="meta-line" style="margin-top:10px">${(p.topics || []).map(chip).join("")}${signalChips(p)}${(p.lenses || []).map(lensChip).join("")}</div>
+        ${whyLine(p) ? `<div style="margin-top:10px">${whyLine(p)}</div>` : ""}
+        ${p.depth === "quick" ? `<div class="paper-notice"><span>这是快速概览，只写了前几节（便宜的模型、只读了前面部分）。</span><span class="grow"></span><button class="btn sm" type="button" data-reread="full">升级为完整精读</button></div>`
+          : p.grounding === "source-limited" ? `<div class="paper-notice"><span>这篇精读时没拿到全文，只依据摘要写成，细节可能不准。</span><span class="grow"></span><button class="btn sm" type="button" data-reread="full">用全文重读</button></div>` : ""}
         <div class="paper-actions">
           ${d?.status === "imported" ? `<span class="btn ok" aria-disabled="true">已在 Zotero${d.citekey ? ` · <span class="mono">${esc(d.citekey)}</span>` : ""}</span>` : `<button class="btn primary" type="button" data-one="approve">加入 Zotero</button>`}
           <button class="btn" type="button" data-one="later">稍后</button>
@@ -1586,17 +1710,30 @@ VIEWS.paper = async (id) => {
           <button class="btn ghost" type="button" id="copy-id">复制 ${d?.citekey ? "citekey" : "ID"}</button>
         </div>
       </header>
-      <article class="prose" id="prose"><p style="color:var(--muted)">正在渲染笔记…</p></article>
+      <div class="ptabs" id="ptabs" role="tablist" aria-label="阅读面板">
+        <button class="tab" type="button" role="tab" data-tab="note" aria-selected="true" title="笔记（Alt+1）">笔记</button>
+        <button class="tab" type="button" role="tab" data-tab="ask" aria-selected="false" title="就这篇论文提问（Alt+2）">问答</button>
+        <button class="tab" type="button" role="tab" data-tab="anno" aria-selected="false" title="我的笔记、高亮与批注（Alt+3）" hidden>批注</button>
+        <span class="grow"></span>
+        <button class="btn sm ghost" type="button" id="toc-btn" aria-expanded="false" hidden>目录 ▾</button>
+        <div class="toc-pop" id="toc-pop" hidden></div>
+      </div>
+      <article class="prose tab-panel" id="prose" data-panel="note"><p style="color:var(--muted)">正在渲染笔记…</p></article>
+      <section class="tab-panel" id="ask-panel" data-panel="ask" aria-label="问答" hidden></section>
+      <section class="tab-panel" id="anno-tab" data-panel="anno" aria-label="批注" hidden></section>
       ${paperNav(id)}
     </div>
   </div>
   <div class="split-handle" id="split-handle" hidden role="separator" aria-orientation="vertical" title="拖动调整宽度"></div>
   <aside class="pdf-pane" id="pdf-pane" hidden aria-label="论文 PDF">
     <div class="pdf-bar"><span class="mono">${esc(p.id)}</span><span class="title" title="${esc(p.title)}">${esc(p.title)}</span>${p.url_pdf ? `<a href="${esc(p.url_pdf)}" target="_blank" rel="noopener noreferrer">新窗口打开 ↗</a>` : ""}<button class="btn sm ghost" type="button" id="pdf-close">关闭</button></div>
+    <div class="pdf-loading" id="pdf-loading" hidden>正在加载 PDF…（第一次打开要下载，可能要几秒）</div>
     <iframe id="pdf-frame" title="论文 PDF"></iframe>
   </aside>
   </div>`;
 };
+/* 重新精读时传给 /api/run 的 ID：顶会池论文用 venue:<key> */
+const readIdOf = (p) => (p.source === "venue" ? "venue:" + p.id : p.id);
 /* 同一列表顺序（日期降序、分数降序）下的上一篇 / 下一篇 */
 function paperNeighbors(id) {
   const list = [...S.index].sort((a, b) => b.date.localeCompare(a.date) || b.score - a.score);
@@ -1615,7 +1752,14 @@ function setupSplit(p) {
   const setSplit = (on) => {
     split.classList.toggle("on", on); document.body.classList.toggle("split-mode", on);
     handle.hidden = pane.hidden = !on;
-    if (on && !frame.getAttribute("src")) frame.src = pdfUrl(p);
+    // 分栏时左侧窄栏被隐藏：把「我的笔记 / 高亮」移进「批注」标签，目录移进标签栏的弹出菜单
+    const col = $(".toc-col"), toc = $("#toc"), anno = $("#anno-panel"), annoTab = $('[data-tab="anno"]'), tocBtn = $("#toc-btn");
+    if (col && toc && anno && annoTab) {
+      annoTab.hidden = tocBtn.hidden = !on;
+      if (on) { $("#anno-tab").append(anno); $("#toc-pop").append(toc); }
+      else { col.prepend(toc); col.append(anno); $("#toc-pop").hidden = true; if (annoTab.getAttribute("aria-selected") === "true") S.paperTab?.("note"); }
+    }
+    if (on && !frame.getAttribute("src")) { $("#pdf-loading").hidden = false; frame.addEventListener("load", () => ($("#pdf-loading").hidden = true), { once: true }); frame.src = pdfUrl(p); }
     tog.textContent = on ? "关闭 PDF" : "阅读 PDF";
     try { sessionStorage.setItem("dp.pdf", on ? "1" : "0"); } catch { /* 无痕模式 */ }
   };
@@ -1637,7 +1781,84 @@ function setupSplit(p) {
   if (!saved) split.style.setProperty("--split", prefs().splitPct + "%");
   let remembered = prefs().paperDefault === "split"; try { if (sessionStorage.getItem("dp.pdf") === "1") remembered = true; } catch { /* 忽略 */ }
   if (remembered && matchMedia("(min-width:1000px)").matches) setSplit(true);
+  // 出处跳页：PDF 没开就先打开分栏；窄屏在新标签页打开
+  S.openPdfAt = (page) => {
+    const url = `${pdfUrl(p)}#page=${page}`;
+    if (!matchMedia("(min-width:1000px)").matches) { window.open(url, "_blank", "noopener"); return; }
+    if (!split.classList.contains("on")) setSplit(true);
+    if (frame.getAttribute("src") === url) { frame.src = "about:blank"; setTimeout(() => (frame.src = url), 30); }
+    else frame.src = url;
+    toast(`PDF 跳到第 ${page} 页`);
+  };
 }
+/* 标签栏：笔记 / 问答 / 批注，每个标签记住自己的滚动位置 */
+function setupTabs(id, p) {
+  const bar = $("#ptabs"); if (!bar) return;
+  const scrolls = {}; let cur = "note";
+  const show = (t) => {
+    const btn = $(`[data-tab="${t}"]`, bar);
+    if (!btn || btn.hidden) t = "note";
+    if (t === cur) return;
+    scrolls[cur] = scrollY; cur = t;
+    $$("[data-tab]", bar).forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === t)));
+    $$("[data-panel]").forEach((el) => (el.hidden = el.dataset.panel !== t));
+    try { sessionStorage.setItem("dp.ptab", t); } catch { /* 无痕模式 */ }
+    if (t === "ask") mountAsk(id, p);
+    const top = bar.getBoundingClientRect().top + scrollY - 90;
+    scrollTo(0, scrolls[t] ?? Math.min(scrollY, Math.max(0, top)));
+  };
+  S.paperTab = show;
+  bar.addEventListener("click", (e) => { const b = e.target.closest("[data-tab]"); if (b) show(b.dataset.tab); });
+  const tocBtn = $("#toc-btn"), pop = $("#toc-pop");
+  tocBtn.addEventListener("click", (e) => { e.stopPropagation(); pop.hidden = !pop.hidden; tocBtn.setAttribute("aria-expanded", String(!pop.hidden)); });
+  pop.addEventListener("click", (e) => { if (e.target.closest("[data-sec]")) { pop.hidden = true; tocBtn.setAttribute("aria-expanded", "false"); } });
+  document.addEventListener("click", (e) => { if (!pop.hidden && !e.target.closest("#toc-pop, #toc-btn")) pop.hidden = true; });
+  let saved = "note"; try { saved = sessionStorage.getItem("dp.ptab") || "note"; } catch { /* 忽略 */ }
+  if (saved !== "note") show(saved);
+}
+/* 问答面板在 assets/ask.js；这里把页面里的工具函数交给它 */
+function mountAsk(id, p, quote) {
+  const panel = $("#ask-panel"); if (!panel) return;
+  if (!window.DPAsk) { panel.innerHTML = `<div class="notice">问答脚本没有加载（assets/ask.js）。</div>`; return; }
+  window.DPAsk.mount(panel, { id, paper: p, quote, isLocal: isLocal(), openPdfAt: S.openPdfAt, renderMarkdown, linkSources, toast, send, getJSON, esc, topics: S.topics, waitLibs });
+}
+addEventListener("keydown", (e) => {
+  if (!e.altKey || e.ctrlKey || e.metaKey || !$("#ptabs")) return;
+  const t = { 1: "note", 2: "ask", 3: "anno" }[e.key]; if (!t) return;
+  e.preventDefault(); S.paperTab?.(t);
+});
+/* 笔记和回答里的出处（【§5.2】【Table 2】[p.7]）→ 可点的跳页按钮；页码来自 /api/pdf-anchors */
+function resolveRef(text, anchors) {
+  const t = text.replace(/附录\s*/g, "Appendix ").replace(/表\s*(?=\d)/g, "Table ").replace(/图\s*(?=\d)/g, "Figure ");
+  // 明确写了页码（p.7）就用页码；"Prop. 1" 里的 p 不算（要求单词边界）
+  const pg = t.match(/(?:^|[^A-Za-z])(?:pp?\.|page)\s*(\d+)/i);
+  if (pg) return +pg[1];
+  const re = /(?:(?:§|\bsec(?:tion)?\.?\s*)([A-H]?\d*(?:\.\d+)*))|(?:\bappendix\s+([A-H](?:\.\d+)*))|(?:\b(?:table|tab\.)\s*(\d+))|(?:\b(?:figure|fig\.?)\s*(\d+))/gi;
+  for (const m0 of t.matchAll(re)) {
+    const m = [m0[0], 0, m0[1], m0[2], m0[3], m0[4]];  // 与原来的分组编号对齐
+    if (m[1]) return +m[1];
+    if (m[4]) { if (anchors[`Table ${m[4]}`]) return anchors[`Table ${m[4]}`]; continue; }
+    if (m[5]) { if (anchors[`Figure ${m[5]}`]) return anchors[`Figure ${m[5]}`]; continue; }
+    let n = (m[2] || m[3] || "").toUpperCase();
+    while (n) { if (anchors["§" + n]) return anchors["§" + n]; n = n.includes(".") ? n.slice(0, n.lastIndexOf(".")) : ""; }
+  }
+  return 0;
+}
+async function linkSources(id, root) {
+  if (!S.openPdfAt || !root) return;
+  const spans = $$("span.src:not(.jump)", root); if (!spans.length) return;
+  let anchors = {};
+  if (isLocal() && spans.some((x) => !/^\s*pp?\.\s*\d/i.test(x.textContent))) {
+    S.anchors ||= {};
+    try { anchors = (S.anchors[id] ||= await getJSON(`/api/pdf-anchors/${encodeURIComponent(id)}`)).anchors || {}; } catch { /* 拿不到 PDF：只处理 p.N */ }
+  }
+  for (const x of spans) {
+    const page = resolveRef(x.textContent, anchors); if (!page) continue;
+    x.classList.add("jump"); x.dataset.page = page; x.title = `在 PDF 中打开第 ${page} 页`; x.tabIndex = 0; x.setAttribute("role", "button");
+  }
+}
+document.addEventListener("click", (e) => { const x = e.target.closest(".src.jump"); if (x) { e.preventDefault(); S.openPdfAt?.(+x.dataset.page); } });
+document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.matches?.(".src.jump")) S.openPdfAt?.(+e.target.dataset.page); });
 VIEWS.paper.after = async (id) => {
   const p = await loadPaper(id).catch(() => null);
   $$("[data-one]").forEach((b) => b.addEventListener("click", () => decide([id], b.dataset.one)));
@@ -1646,6 +1867,9 @@ VIEWS.paper.after = async (id) => {
     try { await navigator.clipboard.writeText(text); toast("已复制 " + text, "ok"); } catch { toast("复制失败，请手动选择：" + text, "err"); }
   });
   if (p) setupSplit(p);
+  setupTabs(id, p);
+  S.curPaper = p;
+  $$("[data-reread]").forEach((b) => b.addEventListener("click", () => startRun("read", [readIdOf(p || { id })])));
   const prose = $("#prose");
   if (!p?.markdown) { prose.innerHTML = `<div class="empty">没有找到精读笔记。</div>`; return; }
   if (!(await waitLibs())) { prose.textContent = p.markdown; return; }
@@ -1665,6 +1889,7 @@ VIEWS.paper.after = async (id) => {
   const spy = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) $$("[data-sec]", toc).forEach((a) => a.classList.toggle("on", a.dataset.sec === e.target.id)); }), { rootMargin: "-20% 0px -70% 0px" });
   hs.forEach((h) => spy.observe(h));
   setupAnnotations(id);
+  linkSources(id, prose);
 };
 
 /* ---------- 高亮与批注 ---------- */
@@ -1733,9 +1958,10 @@ function setupAnnotations(id) {
     const sel = getSelection(); const text = sel?.toString().trim();
     if (!text || text.length < 2 || text.length > 2000 || !prose.contains(sel.anchorNode) || sel.anchorNode.parentElement?.closest("mark.hl")) return;
     const r = sel.getRangeAt(0).getBoundingClientRect(); const section = sectionOf(sel.anchorNode);
-    showPop(r.left + r.width / 2, r.top, ["yellow", "green", "pink", "blue"].map((c) => `<button type="button" class="c-${c}" data-c="${c}" title="高亮"></button>`).join("") + `<button type="button" class="note-btn" data-c="${esc(prefs().hlColor)}" data-note="1">高亮并批注</button>`);
+    showPop(r.left + r.width / 2, r.top, ["yellow", "green", "pink", "blue"].map((c) => `<button type="button" class="c-${c}" data-c="${c}" title="高亮"></button>`).join("") + `<button type="button" class="note-btn" data-c="${esc(prefs().hlColor)}" data-note="1">高亮并批注</button>` + (isLocal() ? `<button type="button" class="note-btn" data-ask="1">问 AI</button>` : ""));
     pop.addEventListener("click", (e) => {
       const b = e.target.closest("button"); if (!b) return;
+      if (b.dataset.ask) { closePop(); sel.removeAllRanges(); S.paperTab?.("ask"); mountAsk(id, S.curPaper, text); return; }
       const h = { id: uid(), text, color: b.dataset.c, comment: "", section };
       if (b.dataset.note) { const c = prompt("批注内容：", ""); if (c === null) { closePop(); return; } h.comment = c.trim(); }
       data.highlights.push(h); sel.removeAllRanges(); closePop(); repaint(); persist();
@@ -1756,6 +1982,29 @@ function setupAnnotations(id) {
   });
   document.addEventListener("mousedown", (e) => { if (pop && !pop.contains(e.target)) closePop(); });
 }
+
+/* ---------- AI 检索（assets/search.js） ---------- */
+const searchCtx = () => ({ isLocal: isLocal(), esc, getJSON, send, toast, startRun, renderMarkdown });
+VIEWS.search = async (_, params) => window.DPSearch ? window.DPSearch.view(params, searchCtx()) : `<div class="notice">检索脚本没有加载（assets/search.js）。</div>`;
+VIEWS.search.after = (_, params) => window.DPSearch?.after(params, searchCtx());
+
+/* ---------- 书签小工具：#/open?url=<论文网址> → 已有笔记 / 精读这篇 ---------- */
+VIEWS.open = async (_, params) => {
+  const url = params.get("url") || "";
+  if (!isLocal()) return `<div class="page-head"><h1>打开论文</h1></div><div class="notice">需要本地助手。</div>`;
+  let r = { kind: "unknown" };
+  try { r = await getJSON(`/api/lookup?url=${encodeURIComponent(url)}`); } catch (e) { return `<div class="page-head"><h1>打开论文</h1></div>${e.status === 404 ? staleNotice("书签小工具") : `<div class="notice">${esc(e.message)}</div>`}`; }
+  if (r.note_id) { setTimeout(() => (location.hash = "#/paper/" + encodeURIComponent(r.note_id)), 0); return `<div class="view-loading">已有笔记，正在打开…</div>`; }
+  return `<div class="page-head"><h1>打开论文</h1><p class="mono" style="word-break:break-all">${esc(url)}</p></div>
+    ${r.id ? `<div class="panel"><h3>${esc(r.title || r.id)}</h3><p style="font-size:13px;color:var(--muted)">还没有精读过。${r.kind === "venue" ? "这篇在你的顶会论文池里。" : ""}</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="button" data-open-read="full">精读这篇</button><button class="btn" type="button" data-open-read="quick">快速看看（约 $0.01）</button></div></div>`
+      : `<div class="notice">没认出这个网址。支持 arXiv，以及论文池里已有的 OpenReview、ACL Anthology、PMLR、CVF 论文。</div>`}`;
+};
+VIEWS.open.after = async (_, params) => {
+  if (!isLocal()) return;
+  let r; try { r = await getJSON(`/api/lookup?url=${encodeURIComponent(params.get("url") || "")}`); } catch { return; }
+  $$("[data-open-read]").forEach((b) => b.addEventListener("click", () => startRun("read", [r.id], { quick: b.dataset.openRead === "quick" })));
+};
 
 /* ---------- 我的文献库（Zotero 分类与条目） ---------- */
 /* ---------- 顶会：论文池状态 + 来自论文池的精读 ---------- */
@@ -1779,12 +2028,24 @@ VIEWS.venues = async (_, params) => {
       return `<tr style="${v.enabled ? "" : "opacity:.5"}"><td><a href="#/venues?v=${esc(v.id)}" ${vsel === v.id ? 'style="color:var(--accent)"' : ""}>${esc(v.name)}</a>${v.enabled ? "" : " <small>已停用</small>"}</td><td>${[v.ccf ? "CCF-" + v.ccf : "", v.core ? "CORE " + v.core : ""].filter(Boolean).join(" · ")}</td><td class="mono" style="font-size:12px">${esc(v.adapter || "")}</td>${(pool.years || []).map((y) => `<td class="num">${(rows.find((r) => r.year === y) || {}).count ?? "—"}</td>`).join("")}<td class="num">${n}</td><td style="font-size:12px;color:var(--muted)">${fmtSync(last)}</td></tr>`; }).join("")}
     </tbody></table></div>
     <div class="log" id="venue-sync-log" style="margin-top:10px" ${st.sync.log?.length ? "" : "hidden"}>${esc((st.sync.log || []).slice(-12).join("\n"))}</div>
-  </div>` : `<div class="notice info">${isLocal() ? "本地助手版本过旧，没有 /api/venues/status。请重启本地助手。" : "只读网站不显示论文池状态；下面是来自顶会论文池的精读。"}</div>`}
+  </div>` : (isLocal() ? staleNotice("论文池状态") : `<div class="notice info">只读网站不显示论文池状态；下面是来自顶会论文池的精读。</div>`)}
+  <div id="venue-cal"></div>
   <div class="toolbar" style="margin-top:18px"><button class="chip filter" type="button" data-venue="" aria-pressed="${!vsel}">全部会议</button>${venues.map((v) => `<button class="chip filter" type="button" data-venue="${esc(v.id)}" aria-pressed="${vsel === v.id}">${esc(v.name)}</button>`).join("")}<span id="venue-count" style="font-size:13px;color:var(--muted);margin-left:auto">${mine.length} 篇精读</span></div>
   ${dates.length ? dates.map((d) => `<section class="section"><div class="section-head"><div><h2>${esc(fmtDate(d))} · ${esc(weekday(d))}</h2></div><a class="btn sm ghost" href="#/daily/${d}">当天日报 →</a></div><div class="prows">${byDate[d].sort((a, b) => (b.value_score - a.value_score) || (b.score - a.score)).map((p, i) => paperRow(p, { rank: i + 1 })).join("")}</div></section>`).join("")
+    : vsel ? `<div class="empty">${esc(venues.find((v) => v.id === vsel)?.name || vsel)} 还没有精读过的论文。<a href="#/venues">看全部会议 →</a></div>`
     : `<div class="empty">还没有来自顶会论文池的精读。每天的任务会在 arXiv 不足 ${S.meta?.venue_total || 6} 篇时从池里补足；也可以在论文池同步后等明天的运行。</div>`}`;
 };
+async function paintCalendar() {
+  const el = $("#venue-cal"); if (!el || !isLocal()) return;
+  let items = []; try { items = (await getJSON("/api/venues/calendar")).items || []; } catch { return; }
+  items = items.filter((x) => x.date || x.deadline).slice(0, 8);
+  if (!items.length || !$("#venue-cal")) return;
+  const days = (d) => d ? Math.round((new Date(d) - new Date(new Date().toISOString().slice(0, 10))) / 864e5) : null;
+  el.innerHTML = `<section class="section" style="margin-top:22px"><div class="section-head"><div><h2 style="font-size:20px">即将召开</h2><p>会期和截稿来自 ccfddl（社区维护的 CCF 会议日程）；灰色是还没加入论文池的会议。</p></div></div>
+    <div class="cal">${items.map((x) => `<${x.link ? `a href="${esc(x.link)}" target="_blank" rel="noopener noreferrer"` : 'div class="c"'} style="${x.enabled ? "" : "opacity:.6"}"><b>${esc(x.name)} ${esc(x.year || "")}</b>${esc(x.date_text || x.date || "")}${x.place ? `<br>${esc(x.place)}` : ""}${x.deadline ? `<br><span class="dl">截稿 ${esc(x.deadline)}（还有 ${days(x.deadline)} 天）</span>` : ""}</${x.link ? "a" : "div"}>`).join("")}</div></section>`;
+}
 VIEWS.venues.after = (_, params) => {
+  paintCalendar();
   $$("[data-venue]").forEach((b) => b.addEventListener("click", () => { const v = b.dataset.venue; location.hash = v ? `#/venues?v=${encodeURIComponent(v)}` : "#/venues"; }));
   $("#venue-sync")?.addEventListener("click", async () => {
     try { (await send("/api/venues/sync", {})).messages.forEach((m) => toast(m, "ok")); } catch (err) { toast(err.message, "err"); return; }
@@ -1802,7 +2063,7 @@ VIEWS.zlib = async (_, params) => {
   if (!isLocal()) return head + `<div class="notice">需要本地助手并打开 Zotero 桌面端：在电脑上运行 <code>dailypaper app</code>。</div>`;
   let lib;
   try { lib = await getJSON("/api/zotero/library"); }
-  catch (e) { return head + `<div class="notice">读取 Zotero 失败：${esc(e.message)}。请确认 Zotero 已打开，并在 设置 → 高级 中允许本机其他程序通信。</div>`; }
+  catch (e) { return head + `<div class="notice">${e.status === 503 || /10061|refused|拒绝/i.test(e.message) ? "Zotero 没有打开。" : `读取 Zotero 失败（${esc(e.message)}）。`}请打开 Zotero 桌面端，并在 Zotero 的「设置 → 高级」里勾选「允许此计算机上的其他应用程序与 Zotero 通信」。</div>`; }
   const byParent = {};
   lib.collections.forEach((c) => (byParent[c.parent || ""] ||= []).push(c));
   Object.values(byParent).forEach((a) => a.sort((x, y) => x.name.localeCompare(y.name, "zh")));
@@ -1875,13 +2136,13 @@ VIEWS.trends = async (_, params) => {
   <div class="toolbar">${[7, 14, 30, 90].map((d) => `<a class="chip filter" href="#/trends?d=${d}" aria-pressed="${d === days}">近 ${d} 天</a>`).join("")}</div>
   <div class="trend-grid">
     <div class="chart"><h3>每日精读篇数</h3>${t.per_day.length <= 7
-      ? `<div class="bars">${t.per_day.map((d) => `<div class="bar" title="${esc(d.date)}：${d.count} 篇"><b>${d.count || ""}</b><i style="height:${Math.round(d.count / maxDay * 100)}%"></i><span>${esc(dayLabel(d.date))}</span></div>`).join("")}</div>`
+      ? `<div class="bars">${t.per_day.map((d) => `<div class="vbar" title="${esc(d.date)}：${d.count} 篇"><b>${d.count || ""}</b><i style="height:${Math.round(d.count / maxDay * 100)}%"></i><span>${esc(dayLabel(d.date))}</span></div>`).join("")}</div>`
       : lineChart(t.per_day)}</div>
     <div class="chart"><h3>方向分布</h3><div class="hbars">${t.per_topic.map((x) => `<div class="row2"><span title="${esc(x.name)}">${esc(tshort(x.id))}</span><i style="width:${Math.round(x.count / maxTopic * 100)}%"></i><b>${x.count}</b></div>`).join("") || `<p style="color:var(--muted)">暂无</p>`}</div>
       <h3 style="margin-top:18px">论文类型</h3><div style="display:flex;gap:6px;flex-wrap:wrap">${t.per_type.map((x) => `<span class="chip">${esc(TYPE_ZH[x.type] || x.type)} ${x.count}</span>`).join("") || `<span style="color:var(--muted)">暂无</span>`}</div></div>
   </div>
   <div class="summary-box">
-    <div class="section-head" style="margin-bottom:8px"><div><h2 style="font-size:20px">AI 阅读总结</h2><p>基于这段时间所有精读笔记的一句话总结、核心直觉和结论生成；用筛选模型（Haiku），一次约 $0.02，结果会缓存。</p></div>
+    <div class="section-head" style="margin-bottom:8px"><div><h2 style="font-size:20px">AI 阅读总结</h2><p>基于这段时间所有精读笔记的一句话总结、核心直觉和结论生成；用筛选模型，一次几美分以内，结果会缓存。</p></div>
       ${isLocal() ? `<button class="btn primary sm" type="button" id="gen-summary">${t.summary ? "重新生成" : "生成总结"}</button>` : ""}</div>
     <div class="prose" id="trend-summary"><p style="color:var(--muted)">${t.summary ? "正在渲染…" : isLocal() ? "还没有生成。" : "只读网站不生成总结。"}</p></div>
   </div>
@@ -1894,7 +2155,7 @@ VIEWS.trends.after = async (_, params) => {
   if (isLocal()) { try { const t = await getJSON(`/api/trends?days=${days}`); if (t.summary) await paintSummary(t.summary); } catch { /* 忽略 */ } }
   $("#gen-summary")?.addEventListener("click", async (e) => {
     const b = e.currentTarget;
-    if (!confirm(`用模型总结近 ${days} 天的阅读？约 $0.02。`)) return;
+    if (!confirm(`用筛选模型总结近 ${days} 天的阅读？费用在几美分以内。`)) return;
     b.disabled = true; b.textContent = "生成中…";
     try { const r = await send("/api/trends/summary", { days, force: true }); await paintSummary(r.summary); toast("总结已生成并缓存", "ok"); b.textContent = "重新生成"; }
     catch (err) { toast("生成失败：" + err.message, "err"); b.textContent = "生成总结"; }
@@ -1922,7 +2183,7 @@ VIEWS.review = async (_, params) => {
         ${pickBox(p.id)}
         <div style="min-width:0">
           <h3><a href="#/paper/${encodeURIComponent(p.id)}">${esc(p.title)}</a></h3>
-          <div class="meta-line"><span>${esc(fmtDate(p.date))}</span><span class="mono">${esc(p.id)}</span>${stars(p.value_score)}<span class="status s-${esc(d.status)}">${statusLabel[d.status] || esc(d.status)}</span>${(p.topics || []).map(chip).join("")}</div>
+          <div class="meta-line"><span>${esc(fmtDate(p.date))}</span>${p.source === "venue" ? venueBadge(p) : `<span class="mono">${esc(p.id)}</span>`}${stars(p.value_score)}<span class="status s-${esc(d.status)}">${statusLabel[d.status] || esc(d.status)}</span>${(p.topics || []).map(chip).join("")}</div>
           <p>${mdInline(p.tldr)}</p>
           ${p.core_insight ? `<p class="insight"><b>${esc(label("core_insight"))}</b>${mdInline(p.core_insight)}</p>` : ""}
           ${d.error ? `<p class="err">入库失败：${esc(d.error)}</p>` : ""}
@@ -1937,7 +2198,7 @@ VIEWS.review = async (_, params) => {
     </div>
     <aside>
       <div class="panel"><h3>Zotero</h3>
-        <div class="zpill ${z?.ok ? "on" : ""}"><i></i>${esc(z ? (z.ok ? "已连接" : z.message || "未连接") : S.mode === "local" ? "检查中" : "未连接（需要本地助手）")}</div>
+        <div class="zpill ${z?.ok ? "on" : ""}"><i></i>${esc(z ? (z.ok ? "已连接" : /10061|refused|拒绝|connect/i.test(z.message || "") ? "Zotero 没有打开" : z.message || "未连接") : S.mode === "local" ? "检查中" : "未连接（需要本地助手）")}</div>
         <p>默认分类：<span class="mono">${esc(collectionLabel(z?.default_collection))}</span></p>
         <p>写入内容：条目、方向标签、PDF、精读笔记（子笔记）。需要 Zotero 桌面端保持打开。</p>
         <button class="btn" type="button" id="z-refresh">重新检测</button>
@@ -2046,7 +2307,8 @@ SETTINGS.reading = () => `${groupHead(SETTINGS_GROUPS[1], "论文页的默认布
     ${opt("正文宽度", "舒适宽度把每行限制在约 76 个字符，长段落更好读。", seg("proseWidth", [["full", "全宽"], ["comfy", "舒适"]]))}
     ${opt("默认高亮颜色", "选中文字后点「高亮并批注」用的颜色。", `<div class="swatches" data-pref="hlColor">${["yellow", "green", "pink", "blue"].map((c) => `<button type="button" class="sw-${c}" data-v="${c}" aria-pressed="${prefs().hlColor === c}" title="${c}"></button>`).join("")}</div>`)}
     ${opt("原文出处标记", "笔记里的【§3.2】【Table 2】这类标记。", seg("srcMarks", [["normal", "正常"], ["dim", "淡化"], ["hide", "隐藏"]]))}
-    ${opt("运行前确认", "点「立即运行」或「精读这篇」前弹出确认，避免误触产生费用。", seg("confirmRun", [[false, "不用"], [true, "确认"]]))}
+    ${opt("运行前确认", "点「立即运行」「精读」前弹出确认并显示预估费用，避免误触。", seg("confirmRun", [[true, "确认"], [false, "不用"]]))}
+    ${opt("外部信号", "论文的被引数、Hugging Face 热门榜。安静模式只显示作者机构，不让热度干扰判断。", seg("quiet", [[true, "安静"], [false, "显示"]]))}
   </div>`;
 SETTINGS.about = () => {
   const version = S.meta?.version || S.siteInfo?.version || "";
@@ -2067,16 +2329,23 @@ SETTINGS.about = () => {
         <li><span>聚焦搜索框（首页）</span><span class="kbd">/</span></li>
         <li><span>上一篇 / 下一篇（论文页）</span><span><span class="kbd">←</span> <span class="kbd">→</span></span></li>
         <li><span>添加关键词（研究方向）</span><span class="kbd">Enter</span></li>
+        <li><span>笔记 / 问答 / 批注（论文页）</span><span><span class="kbd">Alt</span>+<span class="kbd">1</span> <span class="kbd">2</span> <span class="kbd">3</span></span></li>
       </ul>
+    </div>
+    <div class="panel"><h3>更多入口</h3>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 10px"><b style="color:var(--ink)">书签小工具</b>：把下面这个按钮拖到浏览器书签栏。在 arXiv、OpenReview、ACL Anthology 的论文页点一下，就会在 DailyPaper 里打开已有笔记，或者一键精读。</p>
+      <a class="bm" href="javascript:void(location.href='http://127.0.0.1:${location.port || 8765}/#/open?url='+encodeURIComponent(location.href))" onclick="event.preventDefault();toast('请把它拖到书签栏，而不是点击')">⇢ 用 DailyPaper 打开</a>
+      <p style="font-size:13px;color:var(--muted);margin:16px 0 6px"><b style="color:var(--ink)">MCP</b>：在 Claude Code 或 Claude Desktop 里直接查你的论文库、问论文。Claude Code 里运行：</p>
+      <pre class="mono" style="font-size:11.5px;white-space:pre-wrap;word-break:break-all;margin:0;padding:10px;border-radius:10px;background:var(--code)">claude mcp add dailypaper -- ${esc((S.meta?.root || "<项目目录>") + "\\.venv\\Scripts\\dailypaper.exe")} --root ${esc(S.meta?.root || "<项目目录>")} mcp</pre>
     </div>
     <div class="panel"><h3>数据来源</h3>
       <ul class="about-list">
-        <li><span>论文</span><b>arXiv RSS / API</b></li>
-        <li><span>筛选与精读</span><b>config/llm.yaml 里的模型</b></li>
+        <li><span>论文</span><b>arXiv RSS / API，顶会论文池（OpenReview、ACL Anthology、PMLR、CVF、OpenAlex）</b></li>
+        <li><span>筛选、精读、问答、检索</span><b>config/llm.yaml 里的模型</b></li>
         <li><span>文献库</span><b>本机 Zotero</b></li>
         <li><span>高亮与批注</span><b>${isLocal() ? "data/annotations/" : "这台浏览器"}</b></li>
       </ul>
-      <p style="font-size:13px;color:var(--muted);margin:12px 0 0">所有数据都在你自己的电脑或仓库里；网页本身不向第三方发送任何内容（字体除外）。</p>
+      <p style="font-size:13px;color:var(--muted);margin:12px 0 0">数据都在你自己的电脑或仓库里。会发给哪些外部服务，见 <a href="#/settings?g=data">数据与隐私</a>。</p>
     </div>
   </div>`;
 };
@@ -2113,6 +2382,17 @@ SETTINGS.topics = async () => {
         <button class="btn primary" type="button" id="save-config" ${canSave ? "" : "hidden"}>保存研究方向</button>
         <button class="btn" type="button" id="export-yaml">导出 topics.yaml</button>
       </div>
+      ${isLocal() ? `<div class="panel" id="profile-panel"><h3>课题档案</h3>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 10px">写几句你现在在做什么、用什么方法、卡在哪里。精读、问答、检索都会参考它，回答能具体到"对你的课题有什么用"。只存在本机（config/profile.md，不提交）。</p>
+        <textarea id="profile-text" rows="7" placeholder="例如：在做 LLM agent 的选择性预测，想给多步工具调用加上 conformal 风格的覆盖保证；卡在步骤之间不可交换……">读取中…</textarea>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><span id="profile-count" style="font-size:12px;color:var(--muted)"></span><button class="btn sm primary" type="button" id="profile-save">保存课题档案</button></div>
+      </div>
+      <div class="panel" id="follow-panel"><h3>关注的作者与机构</h3>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 10px">命中的论文不会被关键词预筛掉，排序时加分，并显示「关注」。作者写全名；同名太多时可以写 <span class="mono">名字 | OpenAlex 作者 id</span>。</p>
+        <div class="field"><label for="follow-authors">作者（每行一个）</label><textarea id="follow-authors" rows="4" placeholder="Chelsea Finn&#10;Yann LeCun | A5001226970"></textarea></div>
+        <div class="field" style="margin-top:10px"><label for="follow-insts">机构（每行一个）</label><textarea id="follow-insts" rows="3" placeholder="Stanford University&#10;Google DeepMind"></textarea></div>
+        <div class="two" style="margin-top:10px"><div class="field"><label for="follow-bonus">排序加分</label><input type="number" id="follow-bonus" min="0" max="10" step="0.5" value="1.5"></div><div style="display:flex;align-items:flex-end;justify-content:flex-end"><button class="btn sm primary" type="button" id="follow-save">保存关注</button></div></div>
+      </div>` : ""}
       ${renderVenuesPanel()}
     </aside>
   </div>`;
@@ -2141,6 +2421,29 @@ function renderVenuesPanel() {
     <p style="font-size:12px;color:var(--muted);margin:10px 0">不足合计篇数时从池里补足；arXiv 当天没有时全部来自池子。筛选每篇约 $0.0003，精读每篇约 $0.15–0.3。</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary sm" type="button" id="vn-save" ${V.editable ? "" : "hidden"}>保存会议设置</button><a class="btn sm" href="#/venues">查看论文池 →</a></div>
   </div>`;
+}
+async function setupProfileFollow() {
+  const ta = $("#profile-text"); if (!ta) return;
+  const count = () => ($("#profile-count").textContent = `${ta.value.length} / 4000 字`);
+  try { ta.value = (await getJSON("/api/research-profile")).text || ""; } catch { ta.value = ""; ta.placeholder = "本地助手是旧版本，重启后可用"; }
+  count(); ta.addEventListener("input", count);
+  $("#profile-save").addEventListener("click", async (e) => {
+    const b = e.currentTarget; b.disabled = true;
+    try { (await send("/api/research-profile", { text: ta.value }, "PUT")).messages.forEach((m) => toast(m, "ok")); } catch (err) { toast(err.message, "err"); } finally { b.disabled = false; }
+  });
+  try {
+    const f = await getJSON("/api/follow");
+    $("#follow-authors").value = f.authors.map((a) => a.openalex ? `${a.name} | ${a.openalex}` : a.name).join("\n");
+    $("#follow-insts").value = f.institutions.join("\n");
+    $("#follow-bonus").value = f.bonus;
+  } catch { /* 旧版本地助手 */ }
+  $("#follow-save").addEventListener("click", async (e) => {
+    const b = e.currentTarget; b.disabled = true;
+    const lines = (id) => $(id).value.split("\n").map((x) => x.trim()).filter(Boolean);
+    const authors = lines("#follow-authors").map((l) => { const [name, oa] = l.split("|").map((x) => x.trim()); return { name, openalex: oa || "" }; });
+    try { (await send("/api/follow", { authors, institutions: lines("#follow-insts"), bonus: Number($("#follow-bonus").value) }, "PUT")).messages.forEach((m) => toast(m, "ok")); }
+    catch (err) { toast(err.message, "err"); } finally { b.disabled = false; }
+  });
 }
 function readVenuesForm() {
   return { years_back: Number($("#vn-years").value), auto_sync_days: Number($("#vn-sync").value),
@@ -2184,20 +2487,22 @@ SETTINGS.run = async () => {
     </div>`;
   };
   return `${groupHead(SETTINGS_GROUPS[3], "用哪个模型、花多少钱、每天精读几篇。")}
-  ${!isLocal() ? `<div class="notice">只读网站看不到用量，也不能改模型设置；连接本地助手后可用。</div>` : !L ? `<div class="notice">本地助手版本过旧，没有 <code>/api/config/llm</code>。请重启本地助手。</div>` : canSave ? "" : `<div class="notice">config/llm.yaml 不可写，只能查看。</div>`}
+  ${!isLocal() ? `<div class="notice">只读网站看不到用量，也不能改模型设置；连接本地助手后可用。</div>` : !L ? staleNotice("模型设置") : canSave ? "" : `<div class="notice">config/llm.yaml 不可写，只能查看。</div>`}
   ${isLocal() ? scheduleCard(SC) : ""}
   <div class="settings-layout">
     <div>
       ${U ? `<div class="panel"><h3>本月花费 · ${esc(U.month)}</h3>
         <div class="usage-big">${fmtUSD(U.usd)}<small>${U.budget ? `/ 预算 ${fmtUSD(U.budget)} · ${(ratio * 100).toFixed(0)}%` : "未设预算"} · ${U.calls} 次调用</small></div>
-        ${U.budget ? `<div class="bar"><i class="${ratio >= 1 ? "bad" : ratio >= U.warn_ratio ? "warn" : ""}" style="width:${Math.min(100, ratio * 100).toFixed(1)}%"></i></div>` : ""}
+        ${U.budget ? `<div class="ubar"><i class="${ratio >= 1 ? "bad" : ratio >= U.warn_ratio ? "warn" : ""}" style="width:${Math.min(100, ratio * 100).toFixed(1)}%"></i></div>` : ""}
         <div class="mini-bars">${U.months.map((m) => `<div title="${esc(m.month)} ${fmtUSD(m.usd)} · ${m.calls} 次"><b>${m.usd ? fmtUSD(m.usd) : ""}</b><i style="height:${Math.max(2, m.usd / maxM * 48)}px"></i><span>${esc(m.month.slice(5))}月</span></div>`).join("")}</div>
+        ${(U.features || []).length ? `<table class="ptable feat-table" style="margin-top:14px"><thead><tr><th>用途</th><th>调用次数</th><th>花费</th></tr></thead><tbody>${U.features.map((f) => `<tr><td>${esc(f.label)}</td><td>${f.calls}</td><td>${fmtUSD(f.usd)}</td></tr>`).join("")}</tbody></table>` : ""}
         ${Object.keys(U.models).length ? `<table class="ptable" style="margin-top:14px"><thead><tr><th>模型</th><th>输入 token</th><th>输出 token</th><th>花费</th></tr></thead><tbody>${Object.entries(U.models).map(([m, v]) => `<tr><td class="mono">${esc(m)}</td><td>${fmtTok(v.in)}</td><td>${fmtTok(v.out)}</td><td>${fmtUSD(v.usd)}</td></tr>`).join("")}</tbody></table>` : `<p style="font-size:13px;color:var(--muted);margin:12px 0 0">本月还没有调用记录。命中缓存的调用不计费。</p>`}
       </div>` : ""}
       ${L ? `
       <div class="section-head" style="margin:8px 0 12px"><div><h2 style="font-size:22px">模型</h2><p>API key 只从环境变量读取（本地 .env），这里只显示是否已配置。</p></div></div>
       ${roleBox("screen", "筛选", "量大、任务简单，用便宜的模型")}
       ${roleBox("read", "精读", "全文阅读，用推理更强的模型")}
+      ${roleBox("ask", "问答与检索", "论文页问答、AI 检索、快速概览；用便宜快速的模型")}
       <div class="panel"><h3>预算与价格</h3>
         <div class="two">
           <div class="field"><label for="b-month">月度预算（美元，留空不限）</label><input type="number" id="b-month" min="0" step="5" value="${L.monthly_budget_usd ?? ""}" placeholder="100"></div>
@@ -2219,7 +2524,7 @@ SETTINGS.run = async () => {
           <div class="field"><label for="d-max">预筛上限</label><input type="number" id="d-max" min="10" max="300" step="10" value="${esc(d.max_candidates)}"></div>
         </div>
         <div class="field" style="margin-top:12px"><label for="d-min">精读最低分（0–10）</label><div class="range"><input type="range" id="d-min" min="0" max="10" step="0.5" value="${esc(d.min_score)}"><output>${Number(d.min_score).toFixed(1)}</output></div></div>
-        <p style="font-size:12px;color:var(--muted);margin:12px 0">估算：每篇精读约 $0.15–0.3（Sonnet，含联网搜索），筛选每天约 $0.02。</p>
+        <p style="font-size:12px;color:var(--muted);margin:12px 0" id="est-line">估算：读取中…</p>
         <button class="btn primary" type="button" id="save-run" ${canSave ? "" : "hidden"}>保存运行设置</button>
       </div>
       <div class="panel"><h3>运行</h3>
@@ -2256,7 +2561,7 @@ function readRunForm() {
 const schedLabel = (sc) => !sc ? "" : { on: "定时运行已开启", pause: `已暂停到 ${sc.paused_until}`, off: "定时运行已关闭", unregistered: "还没有注册定时任务" }[sc.mode] || "";
 const fmtWhen = (t) => t ? String(t).replace("T", " ").slice(0, 16) : "—";
 function scheduleCard(sc) {
-  if (!sc) return `<div class="notice">本地助手版本过旧，没有 /api/schedule。请重启本地助手。</div>`;
+  if (!sc) return staleNotice("定时运行开关");
   if (!sc.supported) return `<div class="panel"><h3>定时运行</h3><p style="font-size:13px;color:var(--muted);margin:0">只有 Windows 支持在网页里开关。其他系统请用 cron 每天调用 <span class="mono">dailypaper run --scheduled</span>。</p></div>`;
   const plus14 = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
   const tomorrow = new Date(Date.now() + 864e5).toISOString().slice(0, 10);
@@ -2268,7 +2573,7 @@ function scheduleCard(sc) {
   return `<div class="panel" id="sched-card"><div class="sched">
     <div><h3 style="margin-bottom:8px">定时运行</h3>
       <div class="sched-state ${esc(sc.mode)}"><i></i>${esc(schedLabel(sc))}</div>
-      <p class="sched-meta">每天 ${esc(sc.time || "—")} 运行 · ${sc.mode === "on" ? `下次 ${esc(fmtWhen(sc.next_run))}` : sc.mode === "pause" ? `${esc(sc.paused_until)} 起自动恢复；期间每天触发后直接跳过，不调用模型` : "不会自动运行；「立即运行」仍然可用"}<br>上次 ${esc(fmtWhen(sc.last_run))} · ${esc(result)}</p>
+      <p class="sched-meta">${sc.mode === "on" ? `每天 ${esc(sc.time || "—")} 运行 · 下次 ${esc(fmtWhen(sc.next_run))}` : sc.mode === "pause" ? `${esc(sc.paused_until)} 起自动恢复；期间每天触发后直接跳过，不调用模型` : "不会自动运行；「立即运行」仍然可用"}<br>定时任务上次触发 ${esc(fmtWhen(sc.last_run))} · ${esc(result)}${S.run?.finished_at ? ` · 最近一次运行（含手动） ${esc(fmtWhen(String(S.run.finished_at).slice(0, 16)))}` : ""}</p>
     </div>
     <div class="seg" id="sched-mode" role="group" aria-label="定时运行">${[["on", "开启"], ["pause", "暂停到某天"], ["off", "关闭"]].map(([v, t]) => `<button type="button" data-v="${v}" aria-pressed="${sc.mode === v}">${t}</button>`).join("")}</div>
   </div>
@@ -2277,7 +2582,8 @@ function scheduleCard(sc) {
     <label style="font-size:13px">每天 <input type="time" id="sched-time" value="${esc(sc.time || "14:00")}"></label>
     <button class="btn sm primary" type="button" id="sched-save">保存</button>
     <span id="sched-msg" style="font-size:12.5px;color:var(--muted)"></span>
-  </div></div>`;
+  </div>
+  <p style="font-size:12.5px;color:var(--muted);margin:12px 0 0">也在 GitHub Actions 上定时运行？<button class="btn sm ghost" type="button" id="sched-gh" data-until="${esc(sc.mode === "pause" ? sc.paused_until || "" : "")}">${sc.mode === "pause" ? `把云端也暂停到 ${esc(sc.paused_until)}` : "恢复云端定时任务"}</button>（用本机已登录的 gh 设置仓库变量 DAILYPAPER_PAUSED_UNTIL）</p></div>`;
 }
 /* 顶栏的「定时」按钮：一眼看到状态，点开就能开、暂停、关 */
 async function refreshSchedulePill() {
@@ -2329,6 +2635,12 @@ function setupSchedulePill() {
 }
 
 function afterScheduleCard() {
+  $("#sched-gh")?.addEventListener("click", async (e) => {
+    const b = e.currentTarget, until = b.dataset.until;
+    if (!confirm(until ? `修改 GitHub 仓库变量 DAILYPAPER_PAUSED_UNTIL=${until}？云端定时任务会在这之前跳过。` : "删除 GitHub 仓库变量 DAILYPAPER_PAUSED_UNTIL，恢复云端定时任务？")) return;
+    b.disabled = true;
+    try { (await send("/api/schedule/github", { until })).messages.forEach((m) => toast(m, "ok")); } catch (err) { toast(err.message, "err"); } finally { b.disabled = false; }
+  });
   const card = $("#sched-card"); if (!card) return;
   let mode = S.schedule?.mode || "on";
   $("#sched-mode")?.addEventListener("click", (e) => {
@@ -2386,6 +2698,13 @@ function setupModelSelects() {
 function afterRunGroup() {
   afterScheduleCard();
   setupModelSelects();
+  (async () => {  // 按价格表估算，不写死模型名和单价
+    const el = $("#est-line"); if (!el) return;
+    try {
+      const [r, sc] = await Promise.all([getJSON("/api/estimate?kind=read"), getJSON("/api/estimate?kind=search")]);
+      el.textContent = r.usd == null ? "价格表里没有当前精读模型，只记 token 不记金额。" : `估算：每篇精读约 $${r.usd.toFixed(2)}（${r.model}${S.llm?.roles?.read?.web_search ? "，联网另计" : ""}）；一次检索或问答约 $${(sc.usd ?? 0).toFixed(3)}。`;
+    } catch { el.textContent = ""; }
+  })();
   $$('input[type="range"]').forEach((r) => r.addEventListener("input", () => (r.nextElementSibling.value = r.id === "b-warn" ? Math.round(r.value * 100) + "%" : Number(r.value).toFixed(1))));
   document.addEventListener("keydown", tagKeys);
   $("#view").addEventListener("click", tagClicks);
@@ -2430,7 +2749,7 @@ SETTINGS.prompts = async (params) => {
   if (t === "lenses") return head + subtabs(t) + await renderLensesTab();
   if (t === "skills") return head + subtabs(t) + await renderSkillsTab();
   let data;
-  try { data = await getJSON("/api/prompts"); } catch { return `${head}${subtabs(t)}<div class="notice">本地助手版本过旧，没有 <code>/api/prompts</code>。请重启本地助手。</div>`; }
+  try { data = await getJSON("/api/prompts"); } catch { return `${head}${subtabs(t)}${staleNotice("提示词编辑")}`; }
   PE.list = data.items;
   const want = params.get("f") || PE.cur?.id || "schema.yaml";
   const cur = PE.list.find((x) => x.id === want) || PE.list[0];
@@ -2554,7 +2873,7 @@ addEventListener("beforeunload", (e) => { if (PE.dirty) { e.preventDefault(); e.
 /* lens 目录与规则 */
 async function renderLensesTab() {
   let L;
-  try { L = await getJSON("/api/lenses"); } catch { return `<div class="notice">本地助手版本过旧，没有 <code>/api/lenses</code>。请重启本地助手。</div>`; }
+  try { L = await getJSON("/api/lenses"); } catch { return staleNotice("阅读视角编辑"); }
   PE.lenses = L;
   const kindName = { type: "论文类型", reading: "阅读 skill", skill: "外部 skill" };
   const secHelp = L.sections.map((x) => `${x.n} ${x.title}`).join("，");
@@ -2658,7 +2977,7 @@ function afterLensesTab() {
 /* 外部 Skill */
 async function renderSkillsTab() {
   let L;
-  try { L = await getJSON("/api/lenses"); } catch { return `<div class="notice">本地助手版本过旧，没有 <code>/api/lenses</code>。请重启本地助手。</div>`; }
+  try { L = await getJSON("/api/lenses"); } catch { return staleNotice("阅读视角编辑"); }
   PE.lenses = L;
   const mounted = L.catalog.filter((c) => c.kind === "skill");
   return `
@@ -2709,16 +3028,24 @@ SETTINGS.data = async () => {
       </div>
       <div class="panel"><h3>缓存占用</h3>
         <p style="font-size:13px;color:var(--muted);margin:0 0 4px">清除只影响缓存，不会动笔记、审核结果和批注。</p>
-        ${st.cache.map((c) => `<div class="store-row"><div class="grow"><b>${esc(c.kind)}</b><span>${esc(c.label)}</span></div><span class="sz">${fmtBytes(c.bytes)} · ${c.files} 个文件</span><button class="btn sm" type="button" data-clear="${esc(c.kind)}" ${c.files ? "" : "disabled"}>清除</button></div>`).join("")}
-      </div>` : `<div class="notice">${isLocal() ? "本地助手版本过旧，没有 <code>/api/storage</code>。请重启本地助手。" : "只读网站没有本机目录和缓存；连接本地助手后可用。"}</div>`}
-      <div class="panel"><h3>隐私</h3>
+        ${st.cache.map((c) => `<div class="store-row"><div class="grow"><b>${esc(c.label)}</b><span class="mono">${esc(c.kind)}</span></div><span class="sz">${fmtBytes(c.bytes)} · ${c.files} 个文件</span><button class="btn sm" type="button" data-clear="${esc(c.kind)}" ${c.files ? "" : "disabled"}>清除</button></div>`).join("")}
+      </div>` : (isLocal() ? staleNotice("存储管理") : `<div class="notice">只读网站没有本机目录和缓存；连接本地助手后可用。</div>`)}
+      <div class="panel"><h3>隐私：什么会发给谁</h3>
         <ul class="about-list">
-          <li><span>发送到模型服务的内容</span><b>论文标题、摘要、全文和你的研究方向</b></li>
-          <li><span>留在本机的内容</span><b>笔记、审核结果、高亮批注、用量记录</b></li>
-          <li><span>网页向外请求</span><b>字体（Google Fonts）、关于页的 GitHub 版本检查、天气（经纬度发给 Open-Meteo 和 BigDataCloud，可在外观里关闭）</b></li>
+          <li><span>你选的模型服务</span><b>筛选、精读：论文标题、摘要、全文和研究方向；问答：你的问题、选中的引文、论文全文和笔记；检索：你的检索问题和候选论文的摘要；课题档案会一起发送</b></li>
+          <li><span>arXiv、OpenAlex</span><b>检索时的英文关键词；每日运行时的论文标题（找作者机构、被引数）</b></li>
+          <li><span>Hugging Face</span><b>只读取每日论文榜（不发送你的数据）</b></li>
+          <li><span>OpenReview、ACL Anthology、PMLR、CVF</span><b>同步论文池、下载 PDF；OpenReview 需要你的账号</b></li>
+          <li><span>GitHub</span><b>会议日程（ccfddl 的公开文件）、关于页的版本检查</b></li>
+          <li><span>网页本身</span><b>字体（Google Fonts）、天气（经纬度发给 Open-Meteo 和 BigDataCloud，可在外观里关闭）</b></li>
+          <li><span>只在本机</span><b>笔记、审核结果、高亮批注、问答记录、检索历史与综述、课题档案、关注列表、用量记录</b></li>
           <li><span>API key</span><b>只在 .env / 环境变量里，网页不读取也不显示</b></li>
+          <li><span>DailyPaper 作者</span><b>什么都不会收到，没有统计和遥测</b></li>
         </ul>
+        <p style="font-size:12.5px;color:var(--muted);margin:12px 0 0">不想把内容发给云端模型：在 config/llm.yaml 加一个本地模型服务（例如 Ollama：<span class="mono">type: openai_compat</span>、<span class="mono">base_url: http://localhost:11434/v1</span>），再在「运行与费用」里选它。</p>
       </div>
+      ${isLocal() ? `<div class="panel" id="lan-panel"><h3>局域网模式（手机访问）</h3><p style="font-size:13px;color:var(--muted);margin:0">读取中…</p></div>
+      <div class="panel" id="notify-panel"><h3>完成提醒</h3><p style="font-size:13px;color:var(--muted);margin:0">读取中…</p></div>` : ""}
     </div>
     <aside>
       <div class="panel"><h3>导出</h3>
@@ -2733,7 +3060,47 @@ SETTINGS.data = async () => {
     </aside>
   </div>`;
 };
+async function paintLan() {
+  const el = $("#lan-panel"); if (!el) return;
+  let L; try { L = await getJSON("/api/lan"); } catch (e) { el.innerHTML = `<h3>局域网模式（手机访问）</h3>${e.status === 404 ? staleNotice("局域网模式") : `<p style="font-size:13px;color:var(--muted)">${esc(e.message)}</p>`}`; return; }
+  el.innerHTML = `<h3>局域网模式（手机访问）</h3>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 10px">打开后，同一个 Wi-Fi 下的手机扫码就能审核、问答、检索。只接受局域网地址，并且必须带配对令牌；默认关闭。第一次打开时 Windows 防火墙可能会询问，选「专用网络」。</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn sm ${L.enabled ? "" : "primary"}" type="button" data-lan="${L.enabled ? "off" : "on"}">${L.enabled ? "关闭局域网模式" : "打开局域网模式"}</button>
+      ${L.enabled ? `<button class="btn sm ghost" type="button" data-lan="rotate">更换令牌</button>` : ""}
+      ${L.needs_restart ? `<button class="btn sm" type="button" data-restart-app>重启本地助手使其生效</button>` : ""}
+    </div>
+    ${L.enabled && L.urls.length ? `<div id="lan-qr" class="qr"></div><p class="mono" style="font-size:11.5px;word-break:break-all;color:var(--muted);margin:8px 0 0">${esc(L.urls[0])}</p>` : L.enabled ? `<p style="font-size:13px;color:var(--warn)">没找到这台电脑的局域网地址（没有连 Wi-Fi 或网线？）。</p>` : ""}`;
+  el.onclick = async (e) => {
+    const b = e.target.closest("[data-lan]"); if (!b) return;
+    const act = b.dataset.lan;
+    if (act === "on" && !confirm("打开局域网模式？同一网络里拿到扫码地址的设备都能使用本地助手（包括触发会花钱的精读）。")) return;
+    try { (await send("/api/lan", { enabled: act !== "off", rotate: act === "rotate" }, "PUT")).messages.forEach((m) => toast(m, "ok")); paintLan(); } catch (err) { toast(err.message, "err"); }
+  };
+  if (L.enabled && L.urls.length) {
+    if (!window.QRCode) await new Promise((res) => { const sc = document.createElement("script"); sc.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"; sc.onload = res; sc.onerror = res; document.head.append(sc); });
+    if (window.QRCode && $("#lan-qr")) new QRCode($("#lan-qr"), { text: L.urls[0], width: 168, height: 168 });
+  }
+}
+async function paintNotify() {
+  const el = $("#notify-panel"); if (!el) return;
+  let N; try { N = await getJSON("/api/notify"); } catch { el.remove(); return; }
+  const c = N.channels;
+  el.innerHTML = `<h3>完成提醒</h3>
+    <ul class="about-list">
+      <li><span>Windows 通知</span><b>${c.toast ? (N.enabled ? "每日运行完成后弹出" : "已关闭（pipeline.yaml 的 notify）") : "只有 Windows 支持"}</b></li>
+      <li><span>手机推送 · ntfy</span><b>${c.ntfy ? "已配置" : "未配置（.env 里填 NTFY_URL）"}</b></li>
+      <li><span>手机推送 · Server 酱</span><b>${c.serverchan ? "已配置" : "未配置（.env 里填 SERVERCHAN_SENDKEY）"}</b></li>
+    </ul>
+    <p style="font-size:12.5px;color:var(--muted);margin:10px 0">推送内容只有篇数和标题。ntfy 的主题名要起得别人猜不到，它就相当于密码。</p>
+    <button class="btn sm" type="button" id="notify-test">发一条测试通知</button>`;
+  $("#notify-test").addEventListener("click", async (e) => {
+    const b = e.currentTarget; b.disabled = true;
+    try { (await send("/api/notify/test", {})).messages.forEach((m) => toast(m, "ok")); } catch (err) { toast(err.message, "err"); } finally { b.disabled = false; }
+  });
+}
 function afterDataGroup() {
+  paintLan(); paintNotify();
   $$("[data-open]").forEach((b) => b.addEventListener("click", async () => {
     try { await send("/api/open-folder", { which: b.dataset.open }); } catch (err) { toast(err.message, "err"); }
   }));
@@ -2859,6 +3226,7 @@ VIEWS.settings.after = (_, params) => {
     readSettingsForm(); S.config.topics.splice(+del.dataset.delTopic, 1);
     list.innerHTML = S.config.topics.map(topicCard).join(""); bindRanges(list);
   });
+  setupProfileFollow();
   $("#vn-save")?.addEventListener("click", async (e) => {
     const btn = e.currentTarget; btn.disabled = true;
     try { (await send("/api/config/venues", readVenuesForm(), "PUT")).messages.forEach((m) => toast(m, "ok")); }
@@ -2897,12 +3265,17 @@ function tagClicks(e) {
    路由
    ====================================================================== */
 let lastKey = "";
+let routeSeq = 0;
 async function route(force = false) {
   const raw = location.hash.replace(/^#\/?/, "");
   const [path, qs] = raw.split("?");
   const [name = "", arg = ""] = path.split("/").map(decodeURIComponent);
   const key = path + "?" + (qs || "");
-  if (!["", "daily", "library", "paper", "review", "settings", "zlib", "trends", "venues"].includes(name)) return; // 页内锚点
+  if (!["", "daily", "library", "paper", "review", "settings", "zlib", "trends", "venues", "search", "open"].includes(name)) {
+    if (name && document.getElementById(name)) return;  // 页内锚点
+    $("#view").innerHTML = `<div class="view"><div class="page-head"><h1>没有这个页面</h1><p>地址 #/${esc(path)} 不存在。</p></div><a class="btn" href="#/">回到首页</a></div>`;
+    lastKey = ""; return;
+  }
   if (key === lastKey && !force) return;
   lastKey = key;
   document.removeEventListener("keydown", tagKeys);
@@ -2912,15 +3285,22 @@ async function route(force = false) {
   const root = $("#view");
   document.body.classList.remove("split-mode");
   window.DPWeather?.stop();
+  const token = ++routeSeq;  // 快速连点导航时，只渲染最后一次
+  const slow = setTimeout(() => { if (token === routeSeq) root.innerHTML = `<div class="view"><div class="view-loading">正在加载…</div></div>`; }, 250);
   try {
     await waitLibs();  // 卡片里的行内 Markdown / 公式需要 marked、DOMPurify、KaTeX
     const html = await VIEWS[view](arg, params);
+    clearTimeout(slow);
+    if (token !== routeSeq) return;
     root.innerHTML = `<div class="view">${html}</div>`;
     if (!force) window.scrollTo({ top: 0, behavior: "auto" });
     await VIEWS[view].after?.(arg, params);
+    if (token !== routeSeq) return;
     revealAll(root); syncSelection();
-    document.title = { home: "DailyPaper", daily: "今日 · DailyPaper", library: "文库 · DailyPaper", paper: "论文 · DailyPaper", review: "审核台 · DailyPaper", settings: "设置 · DailyPaper", zlib: "文献库 · DailyPaper", trends: "趋势 · DailyPaper", venues: "顶会 · DailyPaper" }[view];
+    document.title = { home: "DailyPaper", daily: "今日 · DailyPaper", library: "文库 · DailyPaper", paper: "论文 · DailyPaper", review: "审核台 · DailyPaper", settings: "设置 · DailyPaper", zlib: "文献库 · DailyPaper", trends: "趋势 · DailyPaper", venues: "顶会 · DailyPaper", search: "检索 · DailyPaper", open: "打开论文 · DailyPaper" }[view];
   } catch (e) {
+    clearTimeout(slow);
+    if (token !== routeSeq) return;
     root.innerHTML = `<div class="view"><div class="page-head"><h1>出错了</h1><p>${esc(e.message)}</p></div><a class="btn" href="#/">回到首页</a></div>`;
   }
 }

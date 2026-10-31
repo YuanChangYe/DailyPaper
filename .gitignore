@@ -28,3 +28,11 @@ prompts/.history/
 
 # 顶会论文池（几万篇标题摘要，本地数据）
 data/venues.sqlite*
+
+# 个人数据：课题档案、关注列表、局域网配对令牌、问答记录、检索历史与综述
+config/profile.md
+config/follow.yaml
+config/lan.json
+data/qa/
+data/searches.jsonl
+data/reports/

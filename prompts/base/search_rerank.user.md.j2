@@ -1,0 +1,8 @@
+{#- 变量：query、intent、payload（候选论文 JSON） -#}
+问题：{{ query | trim }}
+{% if intent %}检索意图：{{ intent }}
+{% endif %}
+
+```json
+{{ payload }}
+```

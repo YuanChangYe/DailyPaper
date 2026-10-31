@@ -50,6 +50,17 @@ class IndexEntry(BaseModel):
     ccf: str = ""
     core: str = ""
     filled_from: str = ""  # "venue" = 当天由顶会池补足
+    # 推荐理由与安静的外部信号（只加字段；旧索引没有这些字段时取默认值）
+    reason: str = ""  # 筛选阶段写的「为什么推荐给你」
+    primary_topic: str = ""
+    grounding: str = ""  # 精读依据：structure-grounded / page-grounded = 全文；source-limited = 只有摘要
+    depth: str = "full"  # full / quick（快速概览）
+    affiliations: list[str] = Field(default_factory=list)
+    cited_by: int | None = None
+    hf_trending: bool = False
+    hidden_gem: bool = False  # 冷门好文：筛选高分、但还没有人引用、不在热门榜
+    followed: list[str] = Field(default_factory=list)  # 命中的关注作者 / 机构
+    explore: bool = False  # 探索位
 
 
 def entry_from_candidate(c: Candidate, date: str) -> IndexEntry:
@@ -77,6 +88,16 @@ def entry_from_candidate(c: Candidate, date: str) -> IndexEntry:
         ccf=str(x.get("ccf", "")) if c.paper.source == "venue" else "",
         core=str(x.get("core", "")) if c.paper.source == "venue" else "",
         filled_from=str((c.meta or {}).get("filled_from", "")),
+        reason=c.screen.reason if c.screen else "",
+        primary_topic=c.screen.primary_topic if c.screen else "",
+        grounding=n.grounding if n else "",
+        depth=getattr(n, "depth", "full") if n else "full",
+        affiliations=[str(a) for a in x.get("affiliations") or []][:6],
+        cited_by=x.get("cited_by"),
+        hf_trending=bool(x.get("hf_trending")),
+        hidden_gem=bool(x.get("hidden_gem")),
+        followed=[str(a) for a in x.get("followed") or []],
+        explore=bool((c.meta or {}).get("explore")),
     )
 
 

@@ -16,7 +16,7 @@ import os
 import anthropic
 
 from ..core.registry import register
-from .base import LLMError, LLMProvider, LLMResponse
+from .base import Cancelled, LLMError, LLMProvider, LLMResponse
 
 FALLBACK_BETA = "server-side-fallback-2026-07-01"
 WEB_SEARCH_TOOL = "web_search_20260209"
@@ -39,14 +39,20 @@ class AnthropicProvider(LLMProvider):
         # Haiku 没有服务端 fallback，只对其他模型开启
         self.use_fallbacks = bool(spec.options.get("fallbacks", True)) and "haiku" not in role.model
 
-    def _request(self, params: dict):
-        if self.use_fallbacks:
-            with self.client.beta.messages.stream(betas=[FALLBACK_BETA], fallbacks="default", **params) as stream:
-                return stream.get_final_message()
-        with self.client.messages.stream(**params) as stream:
+    def _request(self, params: dict, on_delta=None):
+        ctx = (self.client.beta.messages.stream(betas=[FALLBACK_BETA], fallbacks="default", **params) if self.use_fallbacks
+               else self.client.messages.stream(**params))
+        with ctx as stream:
+            if on_delta:
+                for event in stream:
+                    if event.type == "content_block_delta" and getattr(event.delta, "type", "") == "text_delta":
+                        on_delta(event.delta.text)
             return stream.get_final_message()
 
-    def complete(self, system: str, user: str, *, tag: str = "", json_mode: bool = False) -> LLMResponse:
+    def stream(self, system: str, user: str, on_delta, *, tag: str = "", json_mode: bool = False) -> LLMResponse:
+        return self.complete(system, user, tag=tag, json_mode=json_mode, on_delta=on_delta)
+
+    def complete(self, system: str, user: str, *, tag: str = "", json_mode: bool = False, on_delta=None) -> LLMResponse:
         if json_mode:
             system += "\n\n只输出一个合法的 JSON 对象，不要输出任何其他文字。"
         messages: list[dict] = [{"role": "user", "content": user}]
@@ -66,7 +72,7 @@ class AnthropicProvider(LLMProvider):
         input_tokens = output_tokens = 0
         try:
             for _ in range(MAX_CONTINUATIONS + 1):
-                msg = self._request(params)
+                msg = self._request(params, on_delta)
                 input_tokens += msg.usage.input_tokens
                 output_tokens += msg.usage.output_tokens
                 if msg.stop_reason == "refusal":
@@ -76,6 +82,8 @@ class AnthropicProvider(LLMProvider):
                     break
                 # 服务端工具中途暂停：把已有内容作为 assistant 回合续上，再请求一次
                 messages.append({"role": "assistant", "content": msg.content})
+        except Cancelled:
+            raise
         except (anthropic.AuthenticationError, anthropic.PermissionDeniedError) as e:
             raise LLMError(f"Claude API 认证失败，请检查 {self.spec.api_key_env}: {e}") from e
         except (anthropic.BadRequestError, anthropic.NotFoundError) as e:
