@@ -130,6 +130,9 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 @media (max-width:1700px){.gh .gh-text{display:none}.btn.gh{min-width:36px;padding:4px 10px}}
 @media (max-width:1450px){.mode span{display:none}.mode{padding:9px}}
 @media (max-width:1300px){.links a{padding:6px 10px}.nav-bar{gap:12px}}
+#settings-gear{display:none}
+@media (max-width:1250px){.links a[data-nav="settings"]{display:none}#settings-gear{display:inline-flex}.links a{padding:6px 8px}.sched-pill span{display:none}.sched-pill{min-width:36px;justify-content:center}}
+@media (max-width:1100px) and (min-width:701px){.links a{padding:6px 6px;font-size:13.5px}.nav-bar{gap:10px}.brand{font-size:0;gap:0}}
 @media (max-width:1100px){.sched-pill span{display:none}.sched-pill{padding:9px;min-width:0}.links a{padding:6px 8px}}
 .links::-webkit-scrollbar{display:none}
 .links a{padding:6px 14px;border-radius:999px;color:var(--muted);font-size:14px;white-space:nowrap;transition:color .2s,background .2s}
@@ -454,7 +457,7 @@ body.split-mode main.wrap{max-width:none}
 @media (max-width:1000px){.paper-split.on{grid-template-columns:1fr}.split-handle{display:none}.pdf-pane{position:static;height:70vh;margin-top:16px}}
 
 /* ---------- 论文页标签栏（笔记 / 问答 / 批注）与可点的出处 ---------- */
-.ptabs{position:sticky;top:86px;z-index:6;display:flex;align-items:center;gap:4px;margin:22px 0 20px;padding:5px;border-radius:14px;border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.ptabs{position:sticky;top:calc(var(--hdr-h,76px) + 10px);z-index:6;display:flex;align-items:center;gap:4px;margin:22px 0 20px;padding:5px;border-radius:14px;border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 .ptabs .tab{border:0;background:none;color:var(--muted);font:inherit;font-size:14px;padding:7px 16px;border-radius:10px;cursor:pointer;white-space:nowrap}
 .ptabs .tab:hover{color:var(--ink)}.ptabs .tab[aria-selected="true"]{background:var(--glass);color:var(--ink);font-weight:600;box-shadow:inset 0 0 0 1px var(--line)}
 .ptabs .grow{flex:1}
@@ -466,7 +469,7 @@ body.split-mode main.wrap{max-width:none}
 .src.jump{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}.src.jump:hover,.src.jump:focus-visible{background:rgba(169,220,225,.2);outline:none}
 .update-bar{position:fixed;left:16px;right:16px;bottom:22px;margin-inline:auto;width:fit-content;z-index:70;display:flex;align-items:center;gap:12px;max-width:calc(100vw - 32px);padding:10px 12px 10px 18px;border-radius:16px;border:1px solid var(--accent);background:var(--panel);box-shadow:0 18px 50px rgba(0,0,0,.35);font-size:14px;color:var(--ink)}
 .update-bar span{flex:1;min-width:0}.update-bar .x{border:0;background:none;color:var(--muted);font-size:18px;cursor:pointer;padding:0 4px}
-@media (max-width:700px){.ptabs{top:8px}.ptabs .tab{padding:7px 11px}}
+@media (max-width:700px){.ptabs .tab{padding:7px 11px}}
 
 /* ---------- 推荐理由、信号徽章、快速概览 ---------- */
 .why{margin:0;font-size:13px;line-height:1.6;color:var(--muted)}.why b{color:var(--body);font-weight:600}
@@ -491,10 +494,12 @@ body.split-mode main.wrap{max-width:none}
 .bm{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;border:1px dashed var(--accent);color:var(--accent);font-size:13.5px;cursor:grab}
 /* 审查修复：顶栏按钮在手机上也保留主题和运行；关于页列表标签不被挤；Zotero 状态点不变形 */
 .zpill i{flex:none}
-.about-list li>span:first-child{flex:0 0 auto}.about-list li>b{min-width:0;text-align:right}
+.about-list li>span:first-child{flex:0 1 40%;min-width:0}.about-list li>b{min-width:0;text-align:right}
+@media (max-width:520px){.about-list li{flex-direction:column;gap:2px}.about-list li>span:first-child{flex:none}.about-list li>b{text-align:left}}
 :root[data-theme="light"] .go{color:#fff}
 :root[data-theme="light"] .hero .btn:not(.primary),:root[data-theme="light"] .paper-head .btn:not(.primary),:root[data-theme="light"] .paper-head .chip,:root[data-theme="light"] .search-chips .chip{background:rgba(12,35,43,.42);border-color:rgba(238,245,246,.35);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 :root[data-bg="on"] .page-head p,:root[data-bg="on"] .section-head p{color:var(--body)}
+:root[data-theme="light"] .paper-head .status{background:rgba(238,245,246,.9);border-color:transparent}
 :root[data-theme="light"][data-bg="on"] .page-head p,:root[data-theme="light"][data-bg="on"] .section-head p,:root[data-theme="light"][data-bg="on"] .page-head h1{text-shadow:0 1px 10px rgba(255,255,255,.85)}
 
 /* ---------- review ---------- */
@@ -567,7 +572,7 @@ footer a{border-bottom:1px solid var(--line-2)}
 @media (max-width:700px){
   .nav-bar{flex-wrap:wrap;border-radius:24px;gap:8px;padding:8px 10px 8px 14px}
   .links{order:3;width:100%;margin:0}
-  .nav-end .btn{display:none}.nav-end #theme-toggle,.nav-end #run-now{display:inline-flex}
+  .nav-end .btn{display:none}.nav-end #theme-toggle,.nav-end #run-now,.nav-end #settings-gear{display:inline-flex}
   .hero{margin-top:-120px}
   .hero-inner{padding:150px 20px 230px}
   .hero .sub{font-size:15px}
@@ -710,6 +715,7 @@ footer a{border-bottom:1px solid var(--line-2)}
       <a href="#/settings" data-nav="settings">设置</a>
     </nav>
     <div class="nav-end">
+      <a class="btn sm ghost icon" id="settings-gear" href="#/settings" title="设置" aria-label="设置">⚙</a>
       <button class="btn sm ghost icon" id="theme-toggle" type="button" title="切换白天 / 夜间" aria-label="切换主题"><span class="sun">☀</span><span class="moon">☾</span></button>
       <a class="btn sm ghost gh" id="gh-link" href="https://github.com/YuanChangYe/DailyPaper" target="_blank" rel="noopener noreferrer" title="GitHub 仓库"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg><span class="gh-text">GitHub</span></a>
       <span class="mode" id="mode" title=""><i></i><span>连接中</span></span>
@@ -1272,6 +1278,8 @@ const lastRunLabel = () => {
 
 /* 导航链接放不下时，右边缘渐隐，提示还能横向滚动 */
 function fitNav() {
+  // 顶栏是吸顶的，手机上会换行变高：论文页标签栏吸在它下面
+  const nav = $("header.nav"); if (nav) document.documentElement.style.setProperty("--hdr-h", Math.round(nav.getBoundingClientRect().height + 12) + "px");
   const l = $(".links"); if (!l) return;
   l.classList.toggle("clipped", l.scrollWidth > l.clientWidth + 2 && l.scrollLeft + l.clientWidth < l.scrollWidth - 2);
 }
@@ -1592,7 +1600,7 @@ VIEWS.daily = async (date) => {
   return `
   <div class="page-head"><h1>${esc(fmtDate(date))} · ${esc(weekday(date))}</h1><p>当天精读 ${papers.length} 篇${day.notes.venue_fill?.n ? `，其中 ${day.notes.venue_fill.n} 篇来自顶会论文池` : ""}，按价值排序。勾选后可批量加入 Zotero。</p></div>
   <nav class="datebar" aria-label="选择日期">${ds.slice(0, 30).map((d) => `<a href="#/daily/${d}" ${d === date ? 'aria-current="date"' : ""}><b>${esc(fmtDate(d))}</b><small>${esc(weekday(d))} · ${S.index.filter((p) => p.date === d).length} 篇</small></a>`).join("")}</nav>
-  ${day.notes.arxiv_empty ? `<div class="notice info">arXiv 这天没有发布新论文（周末和节假日不公告；工作日美东晚上发布，北京时间次日早上，偶尔延迟），所以没有可筛的内容。${day.notes.venue_fill?.n ? "下面的论文全部来自顶会论文池。" : "流水线本身正常运行。"}${day.notes.arxiv_empty.feed_updated ? ` feed 更新时间 ${esc(String(day.notes.arxiv_empty.feed_updated).slice(0, 16).replace("T", " "))}。` : ""}</div>` : ""}
+  ${day.notes.arxiv_empty ? `<div class="notice info">arXiv 这天没有发布新论文（周末和节假日不公告；工作日美东晚上发布，北京时间次日早上，偶尔延迟），所以没有可筛的内容。${day.notes.venue_fill?.n ? (papers.every((p) => p.source === "venue") ? "下面的论文全部来自顶会论文池。" : `其中 ${papers.filter((p) => p.source === "venue").length} 篇来自顶会论文池，其余是单独精读的。`) : "流水线本身正常运行。"}${day.notes.arxiv_empty.feed_updated ? ` feed 更新时间 ${esc(String(day.notes.arxiv_empty.feed_updated).slice(0, 16).replace("T", " "))}。` : ""}</div>` : ""}
   ${st ? `<div class="funnel"><div><b>${st.fetched}</b><span>抓取</span></div><div><b>${st.prefiltered}</b><span>关键词预筛</span></div><div><b>${st.screened}</b><span>LLM 筛选</span></div><div><b>${st.read}</b><span>精读</span></div></div>` : ""}
   <section class="section" style="padding-top:20px">
     <div class="prows">${papers.map((p, i) => paperRow(p, { rank: i + 1 })).join("") || `<div class="empty">${day.notes.arxiv_empty ? "arXiv 这天没有新论文，所以没有精读。" : "这一天没有精读结果。"}</div>`}</div>
@@ -1676,6 +1684,7 @@ function renderMarkdown(md) {
   return html;
 }
 VIEWS.paper = async (id) => {
+  if (isLocal() && !S.items) await loadItems();  // 直接打开论文页时也要知道它是否已入库
   const p = await loadPaper(id);
   const d = decisionOf(id);
   const pdf = pdfUrl(p);
@@ -1812,7 +1821,6 @@ function setupTabs(id, p) {
   const tocBtn = $("#toc-btn"), pop = $("#toc-pop");
   tocBtn.addEventListener("click", (e) => { e.stopPropagation(); pop.hidden = !pop.hidden; tocBtn.setAttribute("aria-expanded", String(!pop.hidden)); });
   pop.addEventListener("click", (e) => { if (e.target.closest("[data-sec]")) { pop.hidden = true; tocBtn.setAttribute("aria-expanded", "false"); } });
-  document.addEventListener("click", (e) => { if (!pop.hidden && !e.target.closest("#toc-pop, #toc-btn")) pop.hidden = true; });
   let saved = "note"; try { saved = sessionStorage.getItem("dp.ptab") || "note"; } catch { /* 忽略 */ }
   if (saved !== "note") show(saved);
 }
@@ -1822,6 +1830,10 @@ function mountAsk(id, p, quote) {
   if (!window.DPAsk) { panel.innerHTML = `<div class="notice">问答脚本没有加载（assets/ask.js）。</div>`; return; }
   window.DPAsk.mount(panel, { id, paper: p, quote, isLocal: isLocal(), openPdfAt: S.openPdfAt, renderMarkdown, linkSources, toast, send, getJSON, esc, topics: S.topics, waitLibs });
 }
+// 目录弹出层：点外面或按 Esc 关闭（全局只绑一次）
+const closeTocPop = () => { const pop = $("#toc-pop"); if (pop && !pop.hidden) { pop.hidden = true; $("#toc-btn")?.setAttribute("aria-expanded", "false"); } };
+document.addEventListener("click", (e) => { if (!e.target.closest?.("#toc-pop, #toc-btn")) closeTocPop(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeTocPop(); });
 addEventListener("keydown", (e) => {
   if (!e.altKey || e.ctrlKey || e.metaKey || !$("#ptabs")) return;
   const t = { 1: "note", 2: "ask", 3: "anno" }[e.key]; if (!t) return;
@@ -1833,6 +1845,7 @@ function resolveRef(text, anchors) {
   // 明确写了页码（p.7）就用页码；"Prop. 1" 里的 p 不算（要求单词边界）
   const pg = t.match(/(?:^|[^A-Za-z])(?:pp?\.|page)\s*(\d+)/i);
   if (pg) return +pg[1];
+  if (/^\s*(abstract|摘要)\s*$/i.test(t)) return 1;
   const re = /(?:(?:§|\bsec(?:tion)?\.?\s*)([A-H]?\d*(?:\.\d+)*))|(?:\bappendix\s+([A-H](?:\.\d+)*))|(?:\b(?:table|tab\.)\s*(\d+))|(?:\b(?:figure|fig\.?)\s*(\d+))/gi;
   for (const m0 of t.matchAll(re)) {
     const m = [m0[0], 0, m0[1], m0[2], m0[3], m0[4]];  // 与原来的分组编号对齐
@@ -2018,14 +2031,15 @@ VIEWS.venues = async (_, params) => {
   const byDate = {};
   mine.forEach((p) => (byDate[p.date] = byDate[p.date] || []).push(p));
   const dates = Object.keys(byDate).sort().reverse();
-  const fmtSync = (t) => t ? String(t).slice(0, 16).replace("T", " ") : "从未";
+  const fmtSync = (t) => t ? String(t).slice(0, 16).replace("T", " ") : "未同步";
   return `
   <div class="page-head"><h1>顶会论文</h1><p>从 CCF A/B、CORE A*/A 的 AI 顶会近两年录用论文里，每天按你的研究方向挑几篇精读，和 arXiv 的精读混在一起。</p></div>
   ${pool ? `<div class="panel"><div class="section-head" style="margin-bottom:10px"><div><h3>论文池</h3><p style="font-size:13px;color:var(--muted);margin:4px 0 0">本地 ${pool.total.toLocaleString()} 篇 · 已筛选 ${pool.screened} · 已精读 ${pool.read} · 上次同步 ${fmtSync(pool.last_sync)}${st.sync.running ? " · <b style='color:var(--warn)'>正在同步…</b>" : ""}</p></div>
       <div style="display:flex;gap:8px"><button class="btn sm primary" type="button" id="venue-sync" ${st.sync.running ? "disabled" : ""}>同步论文池</button><a class="btn sm ghost" href="#/settings?g=topics">会议设置</a></div></div>
     <div class="table-wrap"><table class="vtable"><thead><tr><th>会议</th><th>等级</th><th>数据源</th>${(pool.years || []).map((y) => `<th class="num">${y}</th>`).join("")}<th class="num">篇数</th><th>上次同步</th></tr></thead><tbody>
-    ${venues.map((v) => { const rows = pool.venues[v.id] || []; const n = rows.reduce((a, r) => a + r.count, 0); const last = rows.map((r) => r.synced_at).filter(Boolean).sort().pop();
+    ${venues.filter((v) => v.enabled || (pool.venues[v.id] || []).length).map((v) => { const rows = pool.venues[v.id] || []; const n = rows.reduce((a, r) => a + r.count, 0); const last = rows.map((r) => r.synced_at).filter(Boolean).sort().pop();
       return `<tr style="${v.enabled ? "" : "opacity:.5"}"><td><a href="#/venues?v=${esc(v.id)}" ${vsel === v.id ? 'style="color:var(--accent)"' : ""}>${esc(v.name)}</a>${v.enabled ? "" : " <small>已停用</small>"}</td><td>${[v.ccf ? "CCF-" + v.ccf : "", v.core ? "CORE " + v.core : ""].filter(Boolean).join(" · ")}</td><td class="mono" style="font-size:12px">${esc(v.adapter || "")}</td>${(pool.years || []).map((y) => `<td class="num">${(rows.find((r) => r.year === y) || {}).count ?? "—"}</td>`).join("")}<td class="num">${n}</td><td style="font-size:12px;color:var(--muted)">${fmtSync(last)}</td></tr>`; }).join("")}
+    ${(() => { const off = venues.filter((v) => !v.enabled && !(pool.venues[v.id] || []).length); return off.length ? `<tr><td colspan="${5 + (pool.years || []).length}" style="font-size:12.5px;color:var(--muted)">还有 ${off.length} 个会议没有打开：${esc(off.map((v) => v.name).join("、"))}。在 <a href="#/settings?g=topics">设置 → 研究方向</a> 勾选后同步。</td></tr>` : ""; })()}
     </tbody></table></div>
     <div class="log" id="venue-sync-log" style="margin-top:10px" ${st.sync.log?.length ? "" : "hidden"}>${esc((st.sync.log || []).slice(-12).join("\n"))}</div>
   </div>` : (isLocal() ? staleNotice("论文池状态") : `<div class="notice info">只读网站不显示论文池状态；下面是来自顶会论文池的精读。</div>`)}
@@ -2042,7 +2056,7 @@ async function paintCalendar() {
   if (!items.length || !$("#venue-cal")) return;
   const days = (d) => d ? Math.round((new Date(d) - new Date(new Date().toISOString().slice(0, 10))) / 864e5) : null;
   el.innerHTML = `<section class="section" style="margin-top:22px"><div class="section-head"><div><h2 style="font-size:20px">即将召开</h2><p>会期和截稿来自 ccfddl（社区维护的 CCF 会议日程）；灰色是还没加入论文池的会议。</p></div></div>
-    <div class="cal">${items.map((x) => `<${x.link ? `a href="${esc(x.link)}" target="_blank" rel="noopener noreferrer"` : 'div class="c"'} style="${x.enabled ? "" : "opacity:.6"}"><b>${esc(x.name)} ${esc(x.year || "")}</b>${esc(x.date_text || x.date || "")}${x.place ? `<br>${esc(x.place)}` : ""}${x.deadline ? `<br><span class="dl">截稿 ${esc(x.deadline)}（还有 ${days(x.deadline)} 天）</span>` : ""}</${x.link ? "a" : "div"}>`).join("")}</div></section>`;
+    <div class="cal">${items.map((x) => `<${x.link ? `a href="${esc(x.link)}" target="_blank" rel="noopener noreferrer"` : 'div class="c"'} style="${x.enabled ? "" : "opacity:.6"}"><b>${esc(x.name)} ${esc(x.year || "")}</b><span title="${esc(x.date_text || "")}">${x.date ? `${esc(x.date.slice(0, 4))}年${esc(fmtDate(x.date))}开幕` : esc(x.date_text || "")}</span>${x.place ? `<br>${esc(x.place)}` : ""}${x.deadline ? `<br><span class="dl">截稿 ${esc(x.deadline)}（还有 ${days(x.deadline)} 天）</span>` : ""}</${x.link ? "a" : "div"}>`).join("")}</div></section>`;
 }
 VIEWS.venues.after = (_, params) => {
   paintCalendar();
@@ -2206,7 +2220,7 @@ VIEWS.review = async (_, params) => {
       <div class="panel"><h3>其他入口</h3>
         <p>在 Obsidian 笔记里勾选 <span class="mono">zotero_approve</span> 也会被收集。</p>
         <button class="btn" type="button" data-tool="sync">从 Obsidian 收集并入库</button>
-        <button class="btn" type="button" data-tool="profile">从 Zotero 导出兴趣画像</button>
+        <button class="btn" type="button" data-tool="profile" ${z?.ok ? "" : 'disabled title="需要先打开 Zotero"'}>从 Zotero 导出兴趣画像</button>
         <p>兴趣画像用于个性化排序，并让已在文库里的论文不再出现。</p>
       </div>
       <div class="panel"><h3>同步审核结果</h3>
@@ -2383,7 +2397,7 @@ SETTINGS.topics = async () => {
         <button class="btn" type="button" id="export-yaml">导出 topics.yaml</button>
       </div>
       ${isLocal() ? `<div class="panel" id="profile-panel"><h3>课题档案</h3>
-        <p style="font-size:13px;color:var(--muted);margin:0 0 10px">写几句你现在在做什么、用什么方法、卡在哪里。精读、问答、检索都会参考它，回答能具体到"对你的课题有什么用"。只存在本机（config/profile.md，不提交）。</p>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 10px">写几句你现在在做什么、用什么方法、卡在哪里。精读、问答、检索都会参考它，回答能具体到"对你的课题有什么用"。文件存在本机（config/profile.md，不提交到仓库），调用模型时会随提示词发给你选的模型服务。</p>
         <textarea id="profile-text" rows="7" placeholder="例如：在做 LLM agent 的选择性预测，想给多步工具调用加上 conformal 风格的覆盖保证；卡在步骤之间不可交换……">读取中…</textarea>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><span id="profile-count" style="font-size:12px;color:var(--muted)"></span><button class="btn sm primary" type="button" id="profile-save">保存课题档案</button></div>
       </div>
@@ -2452,7 +2466,7 @@ function readVenuesForm() {
 }
 
 /* ---------- 运行与费用：模型、预算、每日任务参数、立即运行 ---------- */
-const fmtUSD = (x) => "$" + Number(x || 0).toFixed(2);
+const fmtUSD = (x) => (x > 0 && x < 0.005 ? "<$0.01" : "$" + Number(x || 0).toFixed(2));
 const fmtTok = (n) => n >= 1e6 ? (n / 1e6).toFixed(2) + "M" : n >= 1e3 ? (n / 1e3).toFixed(0) + "k" : String(n);
 SETTINGS.run = async () => {
   await loadConfig();
@@ -2495,7 +2509,8 @@ SETTINGS.run = async () => {
         <div class="usage-big">${fmtUSD(U.usd)}<small>${U.budget ? `/ 预算 ${fmtUSD(U.budget)} · ${(ratio * 100).toFixed(0)}%` : "未设预算"} · ${U.calls} 次调用</small></div>
         ${U.budget ? `<div class="ubar"><i class="${ratio >= 1 ? "bad" : ratio >= U.warn_ratio ? "warn" : ""}" style="width:${Math.min(100, ratio * 100).toFixed(1)}%"></i></div>` : ""}
         <div class="mini-bars">${U.months.map((m) => `<div title="${esc(m.month)} ${fmtUSD(m.usd)} · ${m.calls} 次"><b>${m.usd ? fmtUSD(m.usd) : ""}</b><i style="height:${Math.max(2, m.usd / maxM * 48)}px"></i><span>${esc(m.month.slice(5))}月</span></div>`).join("")}</div>
-        ${(U.features || []).length ? `<table class="ptable feat-table" style="margin-top:14px"><thead><tr><th>用途</th><th>调用次数</th><th>花费</th></tr></thead><tbody>${U.features.map((f) => `<tr><td>${esc(f.label)}</td><td>${f.calls}</td><td>${fmtUSD(f.usd)}</td></tr>`).join("")}</tbody></table>` : ""}
+        ${(U.features || []).length ? (() => { const fs = U.features.reduce((a, f) => a + f.usd, 0), fc = U.features.reduce((a, f) => a + f.calls, 0); const rest = U.usd - fs, restN = U.calls - fc;
+          return `<table class="ptable feat-table" style="margin-top:14px"><thead><tr><th>用途</th><th>调用次数</th><th>花费</th></tr></thead><tbody>${U.features.map((f) => `<tr><td>${esc(f.label)}</td><td>${f.calls}</td><td>${fmtUSD(f.usd)}</td></tr>`).join("")}${restN > 0 ? `<tr><td title="按用途统计上线之前的花费">未分组（更早的记录）</td><td>${restN}</td><td>${fmtUSD(Math.max(0, rest))}</td></tr>` : ""}</tbody></table>`; })() : ""}
         ${Object.keys(U.models).length ? `<table class="ptable" style="margin-top:14px"><thead><tr><th>模型</th><th>输入 token</th><th>输出 token</th><th>花费</th></tr></thead><tbody>${Object.entries(U.models).map(([m, v]) => `<tr><td class="mono">${esc(m)}</td><td>${fmtTok(v.in)}</td><td>${fmtTok(v.out)}</td><td>${fmtUSD(v.usd)}</td></tr>`).join("")}</tbody></table>` : `<p style="font-size:13px;color:var(--muted);margin:12px 0 0">本月还没有调用记录。命中缓存的调用不计费。</p>`}
       </div>` : ""}
       ${L ? `
@@ -2583,7 +2598,7 @@ function scheduleCard(sc) {
     <button class="btn sm primary" type="button" id="sched-save">保存</button>
     <span id="sched-msg" style="font-size:12.5px;color:var(--muted)"></span>
   </div>
-  <p style="font-size:12.5px;color:var(--muted);margin:12px 0 0">也在 GitHub Actions 上定时运行？<button class="btn sm ghost" type="button" id="sched-gh" data-until="${esc(sc.mode === "pause" ? sc.paused_until || "" : "")}">${sc.mode === "pause" ? `把云端也暂停到 ${esc(sc.paused_until)}` : "恢复云端定时任务"}</button>（用本机已登录的 gh 设置仓库变量 DAILYPAPER_PAUSED_UNTIL）</p></div>`;
+  <p style="font-size:12.5px;color:var(--muted);margin:12px 0 0" id="sched-gh-line" data-want="${esc(sc.mode === "pause" ? sc.paused_until || "" : sc.mode === "off" ? "9999-12-31" : "")}" data-label="${esc(sc.mode === "pause" ? `云端也暂停到 ${sc.paused_until}` : sc.mode === "off" ? "云端也停用" : "云端也恢复")}">GitHub Actions 上的定时任务：<span id="sched-gh-state">读取中…</span></p></div>`;
 }
 /* 顶栏的「定时」按钮：一眼看到状态，点开就能开、暂停、关 */
 async function refreshSchedulePill() {
@@ -2634,13 +2649,24 @@ function setupSchedulePill() {
   });
 }
 
-function afterScheduleCard() {
-  $("#sched-gh")?.addEventListener("click", async (e) => {
-    const b = e.currentTarget, until = b.dataset.until;
-    if (!confirm(until ? `修改 GitHub 仓库变量 DAILYPAPER_PAUSED_UNTIL=${until}？云端定时任务会在这之前跳过。` : "删除 GitHub 仓库变量 DAILYPAPER_PAUSED_UNTIL，恢复云端定时任务？")) return;
+async function paintCloudSchedule() {
+  const line = $("#sched-gh-line"), st = $("#sched-gh-state"); if (!line) return;
+  let g; try { g = await getJSON("/api/schedule/github"); } catch { line.remove(); return; }
+  if (!g.available) { st.textContent = "读不到（本机没有登录的 gh 命令行）。不用 GitHub Actions 可以忽略。"; return; }
+  const v = g.value || "";
+  st.textContent = !v ? "正常运行（如果仓库开启了定时）" : v >= "9999" ? "已停用" : `暂停到 ${v}`;
+  const want = line.dataset.want;
+  if (want === v) return;
+  st.insertAdjacentHTML("afterend", ` <button class="btn sm ghost" type="button" id="sched-gh" title="用本机已登录的 gh 设置仓库变量 DAILYPAPER_PAUSED_UNTIL">${esc(line.dataset.label)}</button>`);
+  $("#sched-gh").addEventListener("click", async (e) => {
+    const b = e.currentTarget;
+    if (!confirm(want ? `把 GitHub 上的定时任务${want >= "9999" ? "停用" : `暂停到 ${want}`}？会修改仓库变量 DAILYPAPER_PAUSED_UNTIL。` : "恢复 GitHub 上的定时任务？会删除仓库变量 DAILYPAPER_PAUSED_UNTIL。")) return;
     b.disabled = true;
-    try { (await send("/api/schedule/github", { until })).messages.forEach((m) => toast(m, "ok")); } catch (err) { toast(err.message, "err"); } finally { b.disabled = false; }
+    try { (await send("/api/schedule/github", { until: want })).messages.forEach((m) => toast(m, "ok")); b.remove(); paintCloudSchedule(); } catch (err) { toast(err.message, "err"); b.disabled = false; }
   });
+}
+function afterScheduleCard() {
+  paintCloudSchedule();
   const card = $("#sched-card"); if (!card) return;
   let mode = S.schedule?.mode || "on";
   $("#sched-mode")?.addEventListener("click", (e) => {
@@ -2670,12 +2696,13 @@ async function fillModels(box, { refresh = false, keep = true } = {}) {
   const prov = $('[data-k="provider"]', box).value, sel = $('[data-k="model"]', box), note = $(".model-note", box);
   const cur = keep ? sel.value || sel.dataset.cur : sel.dataset.cur;
   note.className = "model-note"; note.textContent = "正在读取可用模型…"; sel.disabled = true;
-  let r = !refresh && MODEL_LISTS[prov];
-  if (!r) {
-    try { r = await getJSON(`/api/llm/models?provider=${encodeURIComponent(prov)}${refresh ? "&refresh=1" : ""}`); }
-    catch (e) { r = { models: [], error: e.message }; }
-    if (!r.error) MODEL_LISTS[prov] = r;
+  // 同一个服务只请求一次（几个角色框同时加载时共用一个请求）
+  if (refresh || !MODEL_LISTS[prov]) {
+    MODEL_LISTS[prov] = getJSON(`/api/llm/models?provider=${encodeURIComponent(prov)}${refresh ? "&refresh=1" : ""}`)
+      .catch((e) => ({ models: [], error: e.message }));
   }
+  const r = await MODEL_LISTS[prov];
+  if (r.error) delete MODEL_LISTS[prov];
   if ($('[data-k="provider"]', box).value !== prov) return;  // 读取期间又换了服务
   const models = r.models || [];
   // 当前值不在列表里也保留（例如列表读不出来、或用了别名），换服务后默认选列表第一个
@@ -3037,8 +3064,9 @@ SETTINGS.data = async () => {
           <li><span>Hugging Face</span><b>只读取每日论文榜（不发送你的数据）</b></li>
           <li><span>OpenReview、ACL Anthology、PMLR、CVF</span><b>同步论文池、下载 PDF；OpenReview 需要你的账号</b></li>
           <li><span>GitHub</span><b>会议日程（ccfddl 的公开文件）、关于页的版本检查</b></li>
+          <li><span>ntfy、Server 酱</span><b>只在你配置了手机推送时：每日完成提醒的篇数和标题</b></li>
           <li><span>网页本身</span><b>字体（Google Fonts）、天气（经纬度发给 Open-Meteo 和 BigDataCloud，可在外观里关闭）</b></li>
-          <li><span>只在本机</span><b>笔记、审核结果、高亮批注、问答记录、检索历史与综述、课题档案、关注列表、用量记录</b></li>
+          <li><span>存在本机</span><b>笔记、审核结果、高亮批注、问答记录、检索历史与综述、课题档案、关注列表、用量记录（其中课题档案和研究方向会随提示词发给模型服务）</b></li>
           <li><span>API key</span><b>只在 .env / 环境变量里，网页不读取也不显示</b></li>
           <li><span>DailyPaper 作者</span><b>什么都不会收到，没有统计和遥测</b></li>
         </ul>
@@ -3273,6 +3301,9 @@ async function route(force = false) {
   const key = path + "?" + (qs || "");
   if (!["", "daily", "library", "paper", "review", "settings", "zlib", "trends", "venues", "search", "open"].includes(name)) {
     if (name && document.getElementById(name)) return;  // 页内锚点
+    ++routeSeq;  // 让还在加载的页面作废，不会盖掉这里
+    $$("[data-nav]").forEach((a) => a.removeAttribute("aria-current"));
+    document.title = "没有这个页面 · DailyPaper";
     $("#view").innerHTML = `<div class="view"><div class="page-head"><h1>没有这个页面</h1><p>地址 #/${esc(path)} 不存在。</p></div><a class="btn" href="#/">回到首页</a></div>`;
     lastKey = ""; return;
   }

@@ -23,8 +23,8 @@ CACHE_KINDS: dict[str, tuple[str, str]] = {
     "llm": ("模型调用缓存（相同 prompt 不再花钱；清除后重跑会重新计费）", "llm"),
     "fulltext": ("论文全文文本（精读时重新下载）", "fulltext"),
     "pdf": ("论文 PDF（分栏阅读与缩略图用，按需重新下载）", "pdf"),
-    "runs": ("运行检查点（断点续跑用；清除后不能 --from 续跑旧的运行）", "runs"),
-    "prompts": ("--prompt-only 生成的提示词", "prompts"),
+    "runs": ("运行检查点（中断后可以接着跑；清除后旧的运行不能续跑）", "runs"),
+    "prompts": ("只生成提示词时的输出（调试用）", "prompts"),
 }
 
 OPENABLE = {"workspace", "content", "data", "cache", "config", "covers"}

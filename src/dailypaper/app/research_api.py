@@ -352,6 +352,24 @@ def mount(app: FastAPI, cfg: AppConfig, runner=None) -> None:
         return {"messages": [f"已发送：{'、'.join(done)}" if done else "没有可用的提醒渠道"]}
 
     # ------------------------------------------------------------ 暂停云端（GitHub Actions）的定时任务
+    @app.get("/api/schedule/github")
+    def schedule_github_get():
+        """云端定时任务的暂停状态：读仓库变量 DAILYPAPER_PAUSED_UNTIL（需要已登录的 gh）。"""
+        import shutil
+
+        gh = shutil.which("gh")
+        if not gh:
+            return {"available": False, "value": None}
+        try:
+            r = subprocess.run([gh, "variable", "get", "DAILYPAPER_PAUSED_UNTIL"], cwd=cfg.root, capture_output=True, text=True, timeout=20)
+        except (OSError, subprocess.TimeoutExpired):
+            return {"available": False, "value": None}
+        if r.returncode != 0:
+            # 变量不存在也会返回非 0；没登录 / 不是 GitHub 仓库时 stderr 里有说明
+            missing = "not found" in (r.stderr or "").lower() or "could not find" in (r.stderr or "").lower()
+            return {"available": missing, "value": None}
+        return {"available": True, "value": r.stdout.strip() or None}
+
     @app.post("/api/schedule/github")
     def schedule_github(body: dict):
         """把「暂停到某天」同步到仓库变量 DAILYPAPER_PAUSED_UNTIL（daily.yml 第一步检查它）。需要已登录的 gh 命令行。"""

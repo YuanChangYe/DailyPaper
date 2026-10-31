@@ -175,6 +175,8 @@ def recall_openalex(exp: dict, q: str) -> list[dict]:
         if not p:
             continue
         src = ((w.get("primary_location") or {}).get("source") or {}).get("display_name") or ""
+        if src.lower().startswith("arxiv"):  # "arXiv (Cornell University)" → "arXiv"
+            src = "arXiv"
         aid = p.extra.get("arxiv_id") or ""
         out.append({
             "id": aid or p.id, "source": "openalex", "title": p.title, "abstract": p.abstract, "authors": p.authors[:8],

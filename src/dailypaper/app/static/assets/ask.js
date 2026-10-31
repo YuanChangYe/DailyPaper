@@ -8,7 +8,8 @@
 .ask-sugs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
 .ask-sugs button{border:1px solid var(--line);background:var(--glass);color:var(--body);font:inherit;font-size:13px;padding:6px 12px;border-radius:999px;cursor:pointer;text-align:left}
 .ask-sugs button:hover{border-color:var(--accent);color:var(--ink)}
-.ask-list{display:flex;flex-direction:column;gap:14px}
+.ask-list{display:flex;flex-direction:column;gap:14px;padding-bottom:12px}
+.ask-head,.ask-empty{background:var(--panel)}.ask-empty{border-radius:var(--r-md)}
 .ask-item{padding:16px 18px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--glass)}
 .ask-item .q{font-weight:600;color:var(--ink);font-size:15px;line-height:1.5;white-space:pre-wrap}
 .ask-item .quote{margin:8px 0 0;padding:6px 10px;border-left:3px solid var(--accent);color:var(--muted);font-size:13px;white-space:pre-wrap;max-height:7.5em;overflow:auto}

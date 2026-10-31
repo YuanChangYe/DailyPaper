@@ -102,6 +102,8 @@ def resolve(ref: str, anchors: dict[str, int]) -> int | None:
     pg = _PAGE_RE.search(ref)
     if pg:  # 明确写了页码就用页码
         return int(pg.group(1))
+    if ref.strip().lower() in ("abstract", "摘要"):
+        return 1
     m = _REF_RE.search(ref)
     if not m:
         return None

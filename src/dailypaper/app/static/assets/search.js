@@ -35,7 +35,10 @@
 .srch-item input[type=checkbox]{margin-top:4px;accent-color:var(--accent);width:16px;height:16px}
 .srch-report{margin-top:18px;padding:20px 22px;border-radius:var(--r-md);border:1px solid var(--accent);background:var(--glass)}
 .srch-empty{padding:28px 6px;color:var(--muted);font-size:14px;line-height:1.8}
-@media (max-width:900px){.srch{grid-template-columns:1fr}.srch-hist{position:static;max-height:none;order:2}}`;
+.srch-item .badges .chip{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srch-status,.srch-hist,.srch-empty{border-radius:var(--r-md);background:var(--panel);padding:10px 14px}
+.srch-hist{padding:12px 8px}.srch-status:empty{display:none}
+@media (max-width:900px){.srch{grid-template-columns:minmax(0,1fr)}.srch-hist{position:static;max-height:none;order:2}}`;
   let styled = false;
   const style = () => { if (styled) return; styled = true; const el = document.createElement("style"); el.textContent = CSS; document.head.append(el); };
   const SRC = { pool: "顶会池", arxiv: "arXiv", openalex: "OpenAlex" };
@@ -88,16 +91,38 @@
     });
     form.addEventListener("submit", (e) => { e.preventDefault(); run(ctx); });
     ta.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); run(ctx); } });
-    document.getElementById("srch-hist").addEventListener("click", (e) => {
+    document.getElementById("srch-hist").addEventListener("click", async (e) => {
       const b = e.target.closest("[data-hq]"); if (!b) return;
       ta.value = b.dataset.hq;
       form.querySelectorAll("[data-scope] button").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.v === b.dataset.hs)));
+      if (b.dataset.hkey) {  // 24 小时内的结果直接打开，不花钱
+        try {
+          const res = await ctx.getJSON(`/api/search/result?key=${encodeURIComponent(b.dataset.hkey)}`);
+          history.replaceState(null, "", `#/search?q=${encodeURIComponent(res.q)}&scope=${res.scope}&key=${res.key}`);
+          fillForm(res); show(res, ctx); return;
+        } catch { /* 过期：重新检索 */ }
+      }
       run(ctx);
     });
     document.getElementById("srch-results").addEventListener("click", (e) => onResultAction(e, ctx));
     loadVenues(ctx); loadHistory(ctx);
-    if (params.get("key")) { try { show(await ctx.getJSON(`/api/search/result?key=${encodeURIComponent(params.get("key"))}`), ctx); } catch { /* 过期 */ } }
-    else if (params.get("q")) run(ctx);
+    if (params.get("key")) {
+      try { const res = await ctx.getJSON(`/api/search/result?key=${encodeURIComponent(params.get("key"))}`); fillForm(res); show(res, ctx); }
+      catch { if (params.get("q")) run(ctx); }  // 结果过期：按地址里的问题重新检索
+    } else if (params.get("q")) run(ctx);
+  }
+
+  // 用保存的结果回填表单：问题、范围、会议 / 年份 / 等级筛选
+  function fillForm(res) {
+    document.getElementById("srch-q").value = res.q || "";
+    const f = res.filters || {};
+    const lv = [...(f.ccf || []).map((x) => "ccf:" + x), ...(f.core || []).map((x) => "core:" + x)];
+    const mark = (sel, vals) => document.querySelectorAll(`${sel} button`).forEach((b) => b.setAttribute("aria-pressed", String(vals.includes(b.dataset.v))));
+    mark("[data-scope]", [res.scope || "pool"]);
+    mark("[data-levels]", lv);
+    mark("[data-venues]", f.venues || []);
+    mark("[data-years]", (f.years || []).map(String));
+    if (lv.length || (f.venues || []).length || (f.years || []).length) document.getElementById("srch-more").open = true;
   }
 
   async function loadVenues(ctx) {
@@ -116,7 +141,7 @@
     try {
       const { items } = await ctx.getJSON("/api/search/history");
       if (!items.length) return;
-      el.innerHTML = `<h4>检索历史</h4>` + items.slice(0, 30).map((h) => `<button type="button" data-hq="${ctx.esc(h.q)}" data-hs="${ctx.esc(h.scope)}" title="${ctx.esc((h.top || []).join("\n"))}">${ctx.esc(h.q)}<small>${ctx.esc({ pool: "顶会池", web: "全网", all: "两者" }[h.scope] || h.scope)} · ${h.n} 篇 · ${ctx.esc(String(h.at || "").slice(5, 16).replace("T", " "))}</small></button>`).join("");
+      el.innerHTML = `<h4>检索历史</h4>` + items.slice(0, 30).map((h) => `<button type="button" data-hq="${ctx.esc(h.q)}" data-hs="${ctx.esc(h.scope)}" data-hkey="${ctx.esc(h.key || "")}" title="${ctx.esc((h.top || []).join("\n"))}">${ctx.esc(h.q)}<small>${ctx.esc({ pool: "顶会池", web: "全网", all: "两者" }[h.scope] || h.scope)} · ${h.n} 篇 · ${ctx.esc(String(h.at || "").slice(5, 16).replace("T", " "))}</small></button>`).join("");
     } catch { /* 旧版本地助手 */ }
   }
 
