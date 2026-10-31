@@ -620,6 +620,8 @@ footer a{border-bottom:1px solid var(--line-2)}
 .rule .acts{display:flex;gap:4px}
 .skill-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}.skill-row .grow{flex:1 1 240px;min-width:0}.skill-row b{display:block;color:var(--ink)}.skill-row span{font-size:12.5px;color:var(--muted)}
 @media (max-width:1000px){.pe-layout{grid-template-columns:1fr}.rule{grid-template-columns:1fr}}
+.model-refresh{border:0;background:none;padding:0 0 0 6px;font:inherit;font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline dotted}.model-refresh:hover{color:var(--ink)}
+.model-note{display:block;margin-top:5px;font-size:12px;color:var(--muted);min-height:0}.model-note:empty{display:none}.model-note.bad{color:var(--bad)}
 .role-box{padding:16px 18px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--glass);margin-bottom:12px}.role-box h4{margin:0 0 12px;color:var(--ink);font-size:15px}
 .field select{width:100%;min-height:42px;padding:8px 12px;border-radius:var(--r-sm);border:1px solid var(--line-2);background:rgba(9,30,38,.35);outline:0}.field select:focus{border-color:var(--accent)}
 :root[data-theme="light"] .ptable input,:root[data-theme="light"] .field select{background:#fff}
@@ -2169,7 +2171,7 @@ SETTINGS.run = async () => {
     return `<div class="role-box" data-role="${name}"><h4>${label} <span style="font-weight:400;color:var(--muted);font-size:13px">${hint}</span></h4>
       <div class="two">
         <div class="field"><label>模型服务</label><select data-k="provider">${L.providers.map((pv) => `<option value="${esc(pv.name)}" ${pv.name === r.provider ? "selected" : ""}>${esc(pv.name)}（${esc(pv.type)}${pv.key_set === null ? "" : pv.key_set ? "，已配置 key" : "，缺少 " + pv.key_env}）</option>`).join("")}</select></div>
-        <div class="field"><label>模型名</label><input type="text" data-k="model" value="${esc(r.model)}" placeholder="claude-sonnet-5-5"></div>
+        <div class="field"><label>模型 <button class="model-refresh" type="button" data-models-refresh title="重新向模型服务查询可用模型">刷新列表</button></label><select data-k="model" data-cur="${esc(r.model)}"><option value="${esc(r.model)}" selected>${esc(r.model || "（未设置）")}</option></select><small class="model-note"></small></div>
       </div>
       <div class="two" style="margin-top:12px">
         <div class="field"><label>思考深度 effort（仅 Claude）</label><select data-k="effort"><option value="">默认</option>${L.efforts.map((e) => `<option value="${e}" ${e === r.effort ? "selected" : ""}>${e}</option>`).join("")}</select></div>
@@ -2350,8 +2352,40 @@ function afterScheduleCard() {
   });
 }
 
+/* 模型下拉框：向本地助手要该服务当前可用的模型（每个服务缓存一份，「刷新列表」强制重查） */
+const MODEL_LISTS = {};
+async function fillModels(box, { refresh = false, keep = true } = {}) {
+  const prov = $('[data-k="provider"]', box).value, sel = $('[data-k="model"]', box), note = $(".model-note", box);
+  const cur = keep ? sel.value || sel.dataset.cur : sel.dataset.cur;
+  note.className = "model-note"; note.textContent = "正在读取可用模型…"; sel.disabled = true;
+  let r = !refresh && MODEL_LISTS[prov];
+  if (!r) {
+    try { r = await getJSON(`/api/llm/models?provider=${encodeURIComponent(prov)}${refresh ? "&refresh=1" : ""}`); }
+    catch (e) { r = { models: [], error: e.message }; }
+    if (!r.error) MODEL_LISTS[prov] = r;
+  }
+  if ($('[data-k="provider"]', box).value !== prov) return;  // 读取期间又换了服务
+  const models = r.models || [];
+  // 当前值不在列表里也保留（例如列表读不出来、或用了别名），换服务后默认选列表第一个
+  const pick = models.includes(cur) || (!models.length && cur) ? cur : models[0] || cur || "";
+  const opts = [...(pick && !models.includes(pick) ? [pick] : []), ...models];
+  sel.innerHTML = opts.length ? opts.map((m) => `<option value="${esc(m)}" ${m === pick ? "selected" : ""}>${esc(m)}${models.includes(m) ? "" : "（当前设置）"}</option>`).join("") : `<option value="">（没有可选模型）</option>`;
+  sel.disabled = false;
+  if (r.error) { note.className = "model-note bad"; note.textContent = `读不到模型列表：${r.error}`; }
+  else note.textContent = pick && !models.includes(pick) ? "当前设置的模型不在这个服务的列表里，请确认。" : "";
+}
+function setupModelSelects() {
+  $$("[data-role]").forEach((box) => {
+    const sel = $('[data-k="model"]', box); if (!sel) return;
+    $('[data-k="provider"]', box).addEventListener("change", () => { sel.dataset.cur = ""; fillModels(box, { keep: false }); });
+    $("[data-models-refresh]", box).addEventListener("click", () => fillModels(box, { refresh: true }));
+    fillModels(box);
+  });
+}
+
 function afterRunGroup() {
   afterScheduleCard();
+  setupModelSelects();
   $$('input[type="range"]').forEach((r) => r.addEventListener("input", () => (r.nextElementSibling.value = r.id === "b-warn" ? Math.round(r.value * 100) + "%" : Number(r.value).toFixed(1))));
   document.addEventListener("keydown", tagKeys);
   $("#view").addEventListener("click", tagClicks);

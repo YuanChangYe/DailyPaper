@@ -25,6 +25,7 @@ from pydantic import BaseModel
 
 from .. import __version__
 from ..core.config import AppConfig
+from ..core.env import load_dotenv
 from ..core.io import read_markdown
 from ..integrations.review import ReviewStore
 from ..integrations.zotero.service import ZoteroService, collect_obsidian_approvals, import_approved
@@ -92,6 +93,8 @@ def create_app(cfg: AppConfig) -> FastAPI:
             return JSONResponse({"detail": "forbidden host"}, status_code=403)
         if request.method != "GET" and request.headers.get("x-dailypaper") != "1":
             return JSONResponse({"detail": "missing X-DailyPaper header"}, status_code=403)
+        if request.url.path.startswith("/api/"):
+            load_dotenv(cfg.root / ".env", refresh=True)  # .env 改过就重读：新加的 key 不用重启本地助手
         return await call_next(request)
 
     # ------------------------------------------------------------ 页面与静态内容
@@ -254,6 +257,12 @@ def create_app(cfg: AppConfig) -> FastAPI:
             return {"messages": write_llm_config(cfg, body)}
         except ValueError as e:
             raise HTTPException(400, str(e)) from e
+
+    @app.get("/api/llm/models")
+    def llm_models(provider: str, refresh: bool = False):
+        from ..llm.models import list_models
+
+        return list_models(cfg, provider, refresh=refresh)
 
     @app.get("/api/usage")
     def usage(months: int = 6):
