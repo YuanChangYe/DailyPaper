@@ -135,3 +135,36 @@ def test_app_endpoints_and_guard(ran):
     assert ReviewStore(ran).decisions()[pid].status == "rejected"
     evil = TestClient(create_app(ran), base_url="http://evil.example.com")
     assert evil.get("/api/items").status_code == 403
+
+
+def test_connector_collection_tree(cfg, monkeypatch):
+    """「保存到 Zotero」对话框的分类树：按 Zotero 的顺序和层级，标出 Zotero 里当前选中的分类。"""
+    import httpx
+
+    from dailypaper.integrations.zotero.connector import ConnectorWriter
+
+    targets = [{"id": "L1", "name": "我的文库", "level": 0}, {"id": "C1", "name": "Thesis", "level": 1},
+               {"id": "C2", "name": "DailyPaper", "level": 2}, {"id": "C4", "name": "Agent", "level": 1}]
+    w = ConnectorWriter(cfg)
+    monkeypatch.setattr(w, "_post", lambda ep, payload=None, **kw: httpx.Response(
+        200, json={"id": "C2", "name": "DailyPaper", "targets": targets}, request=httpx.Request("POST", "http://x")))
+    tree, selected = w.collection_tree()
+    assert [(t["path"], t["level"]) for t in tree] == [("Thesis", 0), ("Thesis/DailyPaper", 1), ("Agent", 0)]
+    assert selected == "Thesis/DailyPaper"
+    assert w.resolve("DailyPaper/LLM") == "Thesis/DailyPaper" and w.resolve("Nope") == ""
+
+
+def test_save_to_root_and_targets_endpoint(ran):
+    from fastapi.testclient import TestClient
+
+    from dailypaper.app.server import create_app
+
+    store = ReviewStore(ran)
+    first = store.items("pending")[0]
+    store.decide(first.entry.id, "approved", collection="/")  # 对话框里选了「文库根目录」
+    list(import_approved(ran, ZoteroService(ran)))
+    assert ADDED[-1].collection == ""
+    client = TestClient(create_app(ran), base_url="http://127.0.0.1")
+    second = store.items("pending")[0].entry.id
+    r = client.get("/api/zotero/targets", params={"ids": second}).json()
+    assert r["ok"] and r["targets"] == [] and r["auto"][0]["want"].startswith("DailyPaper")

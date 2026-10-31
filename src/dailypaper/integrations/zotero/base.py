@@ -94,3 +94,15 @@ class ZoteroWriter(ABC):
     def collection_paths(self) -> list[str]:
         """可选的目标分类（用于审核页的下拉框）。"""
         return []
+
+    def collection_tree(self) -> tuple[list[dict], str]:
+        """「保存到 Zotero」对话框用：[{path, name, level}]（按树的顺序）和 Zotero 里当前选中的分类路径。"""
+        out = []
+        for path in sorted(self.collection_paths(), key=str.lower):
+            parts = path.split("/")
+            out.append({"path": path, "name": parts[-1], "level": len(parts) - 1})
+        return out, ""
+
+    def resolve(self, path: str) -> str:
+        """配置或选择的分类路径实际会落到哪里（找不到时的去处）；空串 = 文库根目录。"""
+        return path

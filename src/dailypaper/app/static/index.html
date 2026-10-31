@@ -504,6 +504,20 @@ body.split-mode main.wrap{max-width:none}
 
 /* ---------- review ---------- */
 .lib-tabs{margin:-6px 0 18px}
+/* 保存到 Zotero 对话框 */
+.zpick{width:min(520px,calc(100vw - 32px));max-height:min(640px,calc(100vh - 48px));padding:0;border-radius:18px;border:1px solid var(--line-2);background:var(--panel);color:var(--body);box-shadow:0 24px 70px rgba(0,0,0,.45)}
+.zpick::backdrop{background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.zpick-in{display:flex;flex-direction:column;gap:10px;padding:18px 18px 14px;max-height:inherit}
+.zpick h3{margin:0;color:var(--ink);font-size:17px}
+.zwhat{margin:0;font-size:13px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.zmsg{padding:14px;border-radius:12px;background:var(--glass);font-size:14px}.zmsg.bad{color:var(--warn)}
+.zlist{overflow:auto;min-height:120px;max-height:360px;border:1px solid var(--line);border-radius:12px;padding:4px}
+.zrow{display:flex;align-items:center;gap:8px;padding:7px 10px 7px calc(10px + var(--lvl,0) * 18px);border-radius:9px;cursor:pointer;font-size:14px}
+.zrow:hover{background:var(--glass)}.zrow:has(input:checked){background:rgba(169,220,225,.14);color:var(--ink)}
+.zrow input{accent-color:var(--accent);flex:none}.zrow .zname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zrow small{margin-left:auto;padding-left:10px;font-size:11.5px;color:var(--muted);text-align:right;min-width:0}
+.zhint{margin:0;font-size:12px;color:var(--muted)}
+.zacts{display:flex;gap:8px;align-items:center}.zacts .grow{flex:1}
 .review-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
 .ritem{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;padding:18px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--glass);margin-bottom:10px}
@@ -732,8 +746,7 @@ footer a{border-bottom:1px solid var(--line-2)}
 
 <div class="selbar" id="selbar" role="region" aria-label="已选论文">
   <span>已选 <b id="sel-count">0</b> 篇</span>
-  <select class="input" id="sel-collection" aria-label="Zotero 分类"></select>
-  <button class="btn primary sm" type="button" data-bulk="approve">加入 Zotero</button>
+  <button class="btn primary sm" type="button" data-bulk="approve">加入 Zotero…</button>
   <button class="btn sm" type="button" data-bulk="later">稍后</button>
   <button class="btn sm bad" type="button" data-bulk="reject">不要</button>
   <button class="btn sm ghost" type="button" id="sel-clear">清空</button>
@@ -1399,13 +1412,70 @@ function syncSelection() {
     cb.closest("[data-card]")?.classList.toggle("is-picked", cb.checked);
   });
 }
-function fillCollections() {
-  const sel = $("#sel-collection");
-  const cols = S.zotero?.collections || [];
-  sel.innerHTML = `<option value="">默认：${esc(collectionLabel(S.zotero?.default_collection))}</option>` + cols.map((c) => `<option>${esc(c)}</option>`).join("");
+function fillCollections() { /* 分类改在「保存到 Zotero」对话框里选（pickCollection） */ }
+
+/* 「保存到 Zotero」对话框：像 Zotero Connector 一样选分类。
+   返回 ""（按研究方向自动）、"/"（文库根目录）、分类路径；取消返回 null。上次的选择记在这台浏览器里。 */
+async function pickCollection(ids) {
+  let last = ""; try { last = localStorage.getItem("dp.zcoll") ?? ""; } catch { /* 忽略 */ }
+  const dlg = document.createElement("dialog"); dlg.className = "zpick"; document.body.append(dlg);
+  const titles = ids.map((id) => S.index.find((p) => p.id === id)?.title || id);
+  let data = null, chosen = last;
+  const row = (val, label, sub, lvl = 0) => `<label class="zrow" style="--lvl:${lvl}" data-q="${esc((label + " " + (sub || "")).toLowerCase())}"><input type="radio" name="zc" value="${esc(val)}" ${val === chosen ? "checked" : ""}><span class="zname">${label}</span>${sub ? `<small>${sub}</small>` : ""}</label>`;
+  const paint = () => {
+    const auto = data?.auto || [];
+    const autoSub = auto.length === 1 ? (auto[0].actual === auto[0].want ? esc(auto[0].want) : `${esc(auto[0].want)}（Zotero 里没有这个分类，会放进「${esc(auto[0].actual || "文库根目录")}」）`) : esc(data?.template || "DailyPaper/{方向}") + " · 每篇按自己的方向";
+    dlg.innerHTML = `<form method="dialog" class="zpick-in">
+      <h3>保存到 Zotero</h3>
+      <p class="zwhat">${ids.length === 1 ? esc(titles[0]) : `${ids.length} 篇：${esc(titles.slice(0, 2).join("、"))}${ids.length > 2 ? " 等" : ""}`}</p>
+      ${!data ? `<div class="zmsg">正在读取 Zotero 分类…</div>` : !data.ok ? `<div class="zmsg bad">${esc(/10061|refused|拒绝|连不上/i.test(data.message) ? "Zotero 没有打开。请打开 Zotero 桌面端后点「刷新」。" : data.message)}</div>` : `
+      <input class="input zsearch" type="search" placeholder="搜索分类" aria-label="搜索分类">
+      <div class="zlist" role="radiogroup" aria-label="Zotero 分类">
+        ${row("", "按研究方向自动", autoSub)}
+        ${row("/", "我的文库（根目录）", "不放进任何分类")}
+        ${data.targets.map((t) => row(t.path, `📁 ${esc(t.name)}`, t.path === data.selected ? "Zotero 里当前选中" : "", t.level + 1)).join("")}
+      </div>
+      <p class="zhint">要新建分类：在 Zotero 里建好后点「刷新」。</p>`}
+      <div class="zacts"><button class="btn sm ghost" type="button" data-zr>刷新</button><span class="grow"></span><button class="btn sm" value="cancel">取消</button><button class="btn sm primary" value="ok" ${data?.ok ? "" : "disabled"}>保存</button></div>
+    </form>`;
+    dlg.querySelector(".zsearch")?.addEventListener("input", (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      dlg.querySelectorAll(".zrow").forEach((r) => (r.hidden = q && !r.dataset.q.includes(q)));
+    });
+    dlg.querySelector("[data-zr]").addEventListener("click", load);
+    dlg.querySelector(".zlist")?.addEventListener("change", (e) => (chosen = e.target.value));
+    dlg.querySelector(".zlist input:checked")?.scrollIntoView({ block: "nearest" });
+  };
+  async function load() {
+    data = null; paint();
+    try { data = await getJSON(`/api/zotero/targets?ids=${encodeURIComponent(ids.join(","))}`); }
+    catch (e) { data = { ok: false, message: e.status === 404 ? "本地助手是旧版本，请重启本地助手。" : e.message }; }
+    if (data.ok && chosen && chosen !== "/" && !data.targets.some((t) => t.path === chosen)) chosen = "";  // 上次选的分类已经不在了
+    paint();
+  }
+  load();
+  dlg.showModal();
+  // 不依赖 close 事件（有的内嵌浏览器不触发）：按钮和 Esc 直接给出结果
+  const ok = await new Promise((res) => {
+    dlg.addEventListener("click", (e) => {
+      const b = e.target.closest("button[value]"); if (!b) return;
+      e.preventDefault(); if (!b.disabled) res(b.value === "ok");
+    });
+    dlg.addEventListener("cancel", (e) => { e.preventDefault(); res(false); });
+    dlg.addEventListener("submit", (e) => { e.preventDefault(); res(e.submitter?.value === "ok"); });
+  });
+  dlg.close(); dlg.remove();
+  if (!ok) return null;
+  try { localStorage.setItem("dp.zcoll", chosen); } catch { /* 忽略 */ }
+  return chosen;
 }
 async function decide(ids, action, collection = "") {
   if (!ids.length) return;
+  if (action === "approve" && isLocal()) {  // 先选放进 Zotero 的哪个分类
+    const c = await pickCollection(ids);
+    if (c === null) return;
+    collection = c;
+  }
   const verb = { approve: "加入 Zotero", later: "标为稍后", reject: "标为不要", pending: "撤回" }[action];
   if (!isLocal()) {
     const st = { approve: "imported", later: "later", reject: "rejected", pending: "pending" }[action];
@@ -2243,7 +2313,7 @@ VIEWS.review = async (_, params) => {
 };
 VIEWS.review.after = (_, params) => {
   if (params.get("view") === "zotero") return VIEWS.zlib.after(_, params);
-  $$("[data-act]").forEach((b) => b.addEventListener("click", () => decide([b.dataset.id], b.dataset.act, $("#sel-collection").value)));
+  $$("[data-act]").forEach((b) => b.addEventListener("click", () => decide([b.dataset.id], b.dataset.act)));
   $("#pick-all").addEventListener("click", () => { $$("[data-pick]").forEach((cb) => S.selected.add(cb.dataset.pick)); syncSelection(); });
   $("#z-refresh").addEventListener("click", async () => { await refreshZotero(); route(true); });
   $$("[data-tool]").forEach((b) => b.addEventListener("click", async () => {
@@ -3354,7 +3424,7 @@ document.addEventListener("change", (e) => {
   cb.checked ? S.selected.add(cb.dataset.pick) : S.selected.delete(cb.dataset.pick);
   syncSelection();
 });
-$$("[data-bulk]").forEach((b) => b.addEventListener("click", () => decide([...S.selected], b.dataset.bulk, $("#sel-collection").value)));
+$$("[data-bulk]").forEach((b) => b.addEventListener("click", () => decide([...S.selected], b.dataset.bulk)));
 $("#sel-clear").addEventListener("click", () => { S.selected.clear(); syncSelection(); });
 $("#run-now").addEventListener("click", () => startRun("daily"));
 // 顶栏主题按钮：白天 / 夜间快捷切换（与 设置 → 外观 同一个偏好）

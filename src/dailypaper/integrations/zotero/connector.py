@@ -68,6 +68,30 @@ class ConnectorWriter(ZoteroWriter):
         except Exception:  # noqa: BLE001
             return []
 
+    def collection_tree(self) -> tuple[list[dict], str]:
+        """与 Zotero Connector 的「保存到」列表一致：按 Zotero 里的顺序和层级；附带当前选中的分类。"""
+        r = self._post("getSelectedCollection", {})
+        r.raise_for_status()
+        data = r.json()
+        stack: list[str] = []
+        out, selected = [], ""
+        for t in data.get("targets", []):
+            level = int(t.get("level", 0))
+            stack = stack[:level] + [t["name"]]
+            if not str(t.get("id", "")).startswith("C"):
+                continue  # 文库本身由对话框里的「文库根目录」表示
+            path = "/".join(stack[1:])
+            out.append({"path": path, "name": t["name"], "level": level - 1})
+            if t.get("id") == data.get("id"):
+                selected = path
+        return out, selected
+
+    def resolve(self, path: str) -> str:
+        try:
+            return self.resolve_target(self.targets(), path)[1]
+        except Exception:  # noqa: BLE001
+            return path
+
     @staticmethod
     def resolve_target(targets: list[dict], path: str) -> tuple[str, str]:
         """把配置里的分类路径对应到 Zotero 中已有的分类，返回 (target id, 实际路径)。

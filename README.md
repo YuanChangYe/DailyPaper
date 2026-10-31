@@ -418,7 +418,7 @@ dailypaper read <arXiv ID> --prompt-only                           # 只生成 p
 dailypaper zotero-check
 ```
 
-三行都是 ✓（读取、写入、Better BibTeX 可选）即接入成功。之后在网页的「文献管理」里点"加入 Zotero"，条目、方向标签、PDF 和精读子笔记会一起写入；PDF 由 Zotero 下载，再按你在 Zotero 中的设置同步（Zotero 存储或 WebDAV 都可以）。
+三行都是 ✓（读取、写入、Better BibTeX 可选）即接入成功。之后在网页的「文献管理」或论文页里点"加入 Zotero"，会弹出「保存到 Zotero」对话框（和 Zotero Connector 一样）：从你的分类树里选放到哪里（可以搜索，标出 Zotero 里当前选中的分类，记住上次的选择），也可以选「按研究方向自动」（`settings.yaml` 的 `zotero.default_collection`，默认 `DailyPaper/{topic_name}`；Zotero 里没有这个分类时会放进最近的上级分类，对话框里会写明）或文库根目录。Zotero 本地接口不能新建分类，要新分类请先在 Zotero 里建好再点「刷新」。确认后，条目、方向标签、PDF 和精读子笔记会一起写入；PDF 由 Zotero 下载，再按你在 Zotero 中的设置同步（Zotero 存储或 WebDAV 都可以）。
 
 | 功能 | 入口 |
 |---|---|

@@ -95,6 +95,13 @@ class ZoteroService:
         return Paper(id=f"zotero-{key}", source="zotero", url_abs=d.get("url", "") or f"zotero://select/library/items/{key}", **common)
 
     # ------------------------------------------------------------ 写
+    def default_collection(self, item: ReviewItem) -> str:
+        """settings.yaml 的 default_collection（按这篇的第一个研究方向填 {topic_id} / {topic_name}）。"""
+        e = item.entry
+        topic = self.cfg.topic(e.topics[0]) if e.topics else None
+        return self.cfg.settings.zotero.default_collection.format(
+            topic_id=topic.id if topic else "", topic_name=topic.name if topic else "").strip("/")
+
     def import_item(self, item: ReviewItem, collection: str | None = None) -> dict:
         """把一篇审核通过的论文写入 Zotero，回写 citekey 到 Obsidian 笔记。返回要记入 Decision 的字段。"""
         if not self.writer:
@@ -104,10 +111,9 @@ class ZoteroService:
             raise RuntimeError(msg)
         e = item.entry
         z = self.cfg.settings.zotero
-        topic = self.cfg.topic(e.topics[0]) if e.topics else None
-        coll = collection if collection is not None else (item.decision.collection or z.default_collection.format(
-            topic_id=topic.id if topic else "", topic_name=topic.name if topic else ""
-        ).strip("/"))
+        coll = collection if collection is not None else (item.decision.collection or self.default_collection(item))
+        if coll.strip() == "/":  # 「保存到 Zotero」对话框里选了文库根目录
+            coll = ""
         note_html = ""
         if z.add_note and e.note_path:
             path = self.cfg.content_dir / e.note_path

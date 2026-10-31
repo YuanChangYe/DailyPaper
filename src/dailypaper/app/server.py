@@ -190,6 +190,28 @@ def create_app(cfg: AppConfig) -> FastAPI:
             "auto_git": cfg.settings.app.auto_git,
         }
 
+    @app.get("/api/zotero/targets")
+    def zotero_targets(ids: str = ""):
+        """「保存到 Zotero」对话框：分类树、Zotero 里当前选中的分类、这几篇按方向自动时会放到哪里。"""
+        z = zotero()
+        if not z.writer:
+            return {"ok": False, "message": "未配置写入后端（settings.yaml → zotero.writer）", "targets": [], "selected": "", "auto": []}
+        ok, msg = z.writer.available()
+        if not ok:
+            return {"ok": False, "message": msg, "targets": [], "selected": "", "auto": []}
+        try:
+            targets, selected = z.writer.collection_tree()
+        except Exception as e:  # noqa: BLE001
+            return {"ok": False, "message": f"读取 Zotero 分类失败：{e}", "targets": [], "selected": "", "auto": []}
+        auto = []
+        for pid in [x for x in ids.split(",") if x][:20]:
+            it = store.get(pid)
+            if it:
+                want = z.default_collection(it)
+                auto.append({"id": pid, "want": want, "actual": z.writer.resolve(want)})
+        return {"ok": True, "message": msg, "targets": targets, "selected": selected, "auto": auto,
+                "template": cfg.settings.zotero.default_collection}
+
     @app.post("/api/decide")
     def decide(body: DecideBody):
         status = {"approve": "approved", "later": "later", "reject": "rejected", "pending": "pending"}.get(body.action)
