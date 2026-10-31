@@ -41,8 +41,10 @@ roles:
     web_search_max_uses: 8
 
   # 备选示例（取消注释并替换上面的角色即可）：
-  # screen: {provider: deepseek, model: deepseek-chat, max_tokens: 8000, temperature: 0.1, json_mode: true}
-  # read:   {provider: gemini,   model: gemini-2.5-flash, max_tokens: 16000, temperature: 0.3}
+  # 2026-10 实测可用的模型名：DeepSeek 有 deepseek-flash、deepseek-v4-pro；Gemini 新账号用 gemini-3-flash-preview
+  # （gemini-2.5-* 已不对新用户开放）。Gemini 3 会先思考，max_tokens 不要设得太小。
+  # screen: {provider: deepseek, model: deepseek-flash, max_tokens: 8000, json_mode: true}
+  # read:   {provider: gemini,   model: gemini-3-flash-preview, max_tokens: 16000}
 
 cache: true        # 相同 prompt 不重复花钱（缓存在 .cache/llm/）
 max_retries: 3

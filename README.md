@@ -437,7 +437,7 @@ site:
 
 ```yaml
 roles:
-  screen: {provider: deepseek, model: deepseek-chat, max_tokens: 8000, json_mode: true}
+  screen: {provider: deepseek, model: deepseek-flash, max_tokens: 8000, json_mode: true}
   read:   {provider: claude,   model: claude-sonnet-5-5, max_tokens: 16000, effort: high}
 ```
 
