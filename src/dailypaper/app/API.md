@@ -15,10 +15,10 @@
 | 方法 | 路径 | 网页用途 |
 |---|---|---|
 | GET | `/api/meta` | 判断本地模式；研究方向名称；各审核状态数量；`schema`（笔记结构：元信息标签、各节标题，来自 prompts/schema.yaml） |
-| GET | `/api/items?status=` | 审核台列表（`{entry: QueueEntry, decision: Decision}[]`） |
+| GET | `/api/items?status=` | 文献管理（待处理）列表（`{entry: QueueEntry, decision: Decision}[]`） |
 | GET | `/api/note/{id}` | 论文详情的备用来源（`/site/api/papers/{id}.json` 不可用时） |
 | GET | `/api/zotero/status` | Zotero 连接状态、分类列表、默认分类 |
-| POST | `/api/decide` `{ids, action, collection}` | 选中论文 → 入库 / 稍后 / 不要（任何页面的多选栏和审核台） |
+| POST | `/api/decide` `{ids, action, collection}` | 选中论文 → 入库 / 稍后 / 不要（任何页面的多选栏和文献管理（待处理）） |
 | POST | `/api/sync` | 从 Obsidian 收集入库请求并导入 |
 | POST | `/api/profile` | 从 Zotero 导出文库索引与兴趣画像 |
 | POST | `/api/git/pull`、`/api/git/push` | 同步审核结果 |
@@ -109,6 +109,6 @@ GET /api/run/status
 | 任意论文卡片的勾选框 + 底部多选栏 | 加入 Zotero / 稍后 / 不要 | `POST /api/decide` |
 | 首页搜索框粘贴 arXiv ID | 精读这篇 | `POST /api/run {pipeline:"read", ids}` |
 | 顶栏"立即运行" | 跑今日任务 | `POST /api/run {pipeline:"daily"}` |
-| 审核台 | 状态筛选、单篇/批量决定、Obsidian 同步、兴趣画像、git 同步 | 第 1 节全部 |
+| 文献管理（待处理） | 状态筛选、单篇/批量决定、Obsidian 同步、兴趣画像、git 同步 | 第 1 节全部 |
 | 搜索设置 | 编辑方向、关键词、语境词、排除词、镜头问题、arXiv 分类、Top K、阈值 | `GET/PUT /api/config` |
 | 论文详情 | 精读笔记（Markdown + KaTeX）、目录、入库按钮 | `/site/api/papers/<id>.json`、`/api/decide` |

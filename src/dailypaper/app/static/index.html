@@ -503,6 +503,7 @@ body.split-mode main.wrap{max-width:none}
 :root[data-theme="light"][data-bg="on"] .page-head p,:root[data-theme="light"][data-bg="on"] .section-head p,:root[data-theme="light"][data-bg="on"] .page-head h1{text-shadow:0 1px 10px rgba(255,255,255,.85)}
 
 /* ---------- review ---------- */
+.lib-tabs{margin:-6px 0 18px}
 .review-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
 .ritem{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;padding:18px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--glass);margin-bottom:10px}
@@ -709,8 +710,7 @@ footer a{border-bottom:1px solid var(--line-2)}
       <a href="#/venues" data-nav="venues">顶会</a>
       <a href="#/search" data-nav="search">检索</a>
       <a href="#/library" data-nav="library">文库</a>
-      <a href="#/review" data-nav="review">审核台<span class="badge" id="pending-badge" hidden></span></a>
-      <a href="#/zlib" data-nav="zlib" title="本机 Zotero 文献库">Zotero</a>
+      <a href="#/review" data-nav="review" title="决定哪些论文进 Zotero，浏览 Zotero 文献库">文献管理<span class="badge" id="pending-badge" hidden></span></a>
       <a href="#/trends" data-nav="trends">趋势</a>
       <a href="#/settings" data-nav="settings">设置</a>
     </nav>
@@ -1498,7 +1498,7 @@ VIEWS.home = async () => {
         <a class="wx-chip" id="wx-chip" href="#/settings?g=appearance" title="天气效果设置" hidden></a><span class="eyebrow">arXiv 每日论文雷达 · LLM / Agent 可信性</span>
         <h1>少一点筛选，<br>多一点洞见。</h1>
         <blockquote class="quote"><p>${esc(quote[0])}</p><cite>—— ${esc(quote[1])}</cite></blockquote>
-        <div class="hero-actions"><a class="btn primary" href="#/daily">查看今日精选 →</a><a class="btn" href="#/review">去审核入库</a></div>
+        <div class="hero-actions"><a class="btn primary" href="#/daily">查看今日精选 →</a><a class="btn" href="#/review">去文献管理</a></div>
       </div>
       ${top ? `<aside class="float-card glass tilt" id="float-card" aria-label="今日首选">
         <div class="thumb">今日首选 · ${esc(fmtDate(top.date))}</div>
@@ -1532,7 +1532,7 @@ VIEWS.home = async () => {
     ${isLocal() ? `<ol>
       <li>在 <a href="#/settings?g=topics">设置 → 研究方向</a> 里确认研究方向和关键词（也可以先用默认的试试）。</li>
       <li>点右上角的 <b>立即运行</b>，或者在终端运行 <code>dailypaper run</code>；首次精读 5 篇大约 5 分钟。</li>
-      <li>跑完后回到这里，或者去 <a href="#/review">审核台</a> 决定哪些进 Zotero。</li>
+      <li>跑完后回到这里，或者去 <a href="#/review">文献管理</a> 决定哪些进 Zotero。</li>
     </ol>
     <p class="muted">想先不花钱看看效果：终端运行 <code>dailypaper run --provider fake --dry-run</code>。</p>` : ""}
   </div></section>` : ""}
@@ -2019,7 +2019,7 @@ VIEWS.open.after = async (_, params) => {
   $$("[data-open-read]").forEach((b) => b.addEventListener("click", () => startRun("read", [r.id], { quick: b.dataset.openRead === "quick" })));
 };
 
-/* ---------- 我的文献库（Zotero 分类与条目） ---------- */
+/* ---------- Zotero 文献库（文献管理的第二个页签：分类与条目） ---------- */
 /* ---------- 顶会：论文池状态 + 来自论文池的精读 ---------- */
 VIEWS.venues = async (_, params) => {
   const vsel = params.get("v") || "";
@@ -2073,7 +2073,8 @@ VIEWS.venues.after = (_, params) => {
 };
 
 VIEWS.zlib = async (_, params) => {
-  const head = `<div class="page-head"><h1>我的文献库</h1><p>直接浏览 Zotero 的分类和条目。已有精读笔记的显示评分并可直接打开；其余可以一键精读。</p></div>`;
+  if (isLocal() && !S.items) await loadItems();  // 页签上的待处理数
+  const head = libHead("zotero");
   if (!isLocal()) return head + `<div class="notice">需要本地助手并打开 Zotero 桌面端：在电脑上运行 <code>dailypaper app</code>。</div>`;
   let lib;
   try { lib = await getJSON("/api/zotero/library"); }
@@ -2082,9 +2083,9 @@ VIEWS.zlib = async (_, params) => {
   lib.collections.forEach((c) => (byParent[c.parent || ""] ||= []).push(c));
   Object.values(byParent).forEach((a) => a.sort((x, y) => x.name.localeCompare(y.name, "zh")));
   const cur = params.get("c") || "";
-  const tree = (parent, lvl) => (byParent[parent] || []).map((c) => `<a href="#/zlib?c=${esc(c.key)}" class="lvl${Math.min(lvl, 3)}" aria-current="${cur === c.key}">${lvl ? "└ " : "📁 "}${esc(c.name)}</a>${tree(c.key, lvl + 1)}`).join("");
+  const tree = (parent, lvl) => (byParent[parent] || []).map((c) => `<a href="#/review?view=zotero&c=${esc(c.key)}" class="lvl${Math.min(lvl, 3)}" aria-current="${cur === c.key}">${lvl ? "└ " : "📁 "}${esc(c.name)}</a>${tree(c.key, lvl + 1)}`).join("");
   return head + `<div class="zlib">
-    <nav class="ztree" aria-label="Zotero 分类"><a href="#/zlib" aria-current="${!cur}">🗂 未分类的条目</a>${tree("", 0)}</nav>
+    <nav class="ztree" aria-label="Zotero 分类"><a href="#/review?view=zotero" aria-current="${!cur}">🗂 未分类的条目</a>${tree("", 0)}</nav>
     <div id="zitems"><div class="empty">加载中…</div></div>
   </div>`;
 };
@@ -2177,8 +2178,17 @@ VIEWS.trends.after = async (_, params) => {
   });
 };
 
-/* ---------- 审核台 ---------- */
+/* ---------- 文献管理：待处理（审核入库）+ Zotero 文献库 ---------- */
+function libHead(view) {
+  const n = (S.items || []).filter((i) => i.decision.status === "pending").length;
+  return `<div class="page-head"><h1>文献管理</h1><p>${view === "zotero" ? "直接浏览 Zotero 的分类和条目。已有精读笔记的显示评分并可直接打开；其余可以一键精读。" : "精读完的论文在这里等你决定。只有你选「加入 Zotero」的才会写入文库。"}</p></div>
+  <div class="tabs lib-tabs" role="tablist" aria-label="文献管理">
+    <a class="chip filter" role="tab" href="#/review" aria-pressed="${view !== "zotero"}" aria-selected="${view !== "zotero"}">待处理${n ? ` <span class="mono">${n}</span>` : ""}</a>
+    <a class="chip filter" role="tab" href="#/review?view=zotero" aria-pressed="${view === "zotero"}" aria-selected="${view === "zotero"}">Zotero 文献库</a>
+  </div>`;
+}
 VIEWS.review = async (_, params) => {
+  if (params.get("view") === "zotero") return VIEWS.zlib(_, params);
   if (isLocal()) { await loadItems(); await refreshZotero(); }
   const items = S.items || S.index.map((p) => ({ entry: p, decision: S.demoDecisions[p.id] || { status: "pending" } }));
   const filter = params.get("s") || "pending";
@@ -2187,7 +2197,7 @@ VIEWS.review = async (_, params) => {
   const count = (k) => items.filter((i) => !groups[k] || groups[k].includes(i.decision.status)).length;
   const z = S.zotero;
   return `
-  <div class="page-head"><h1>审核台</h1><p>精读完的论文在这里等你决定。只有你勾选"加入 Zotero"的才会写入文库。</p></div>
+  ${libHead("queue")}
   ${S.mode !== "local" ? `<div class="notice">${S.mode === "static" ? "这是只读网站，按钮不会写入 Zotero。" : "当前是示例数据。"}在电脑上运行 <code>dailypaper app</code>，打开 http://127.0.0.1:8765 后，这里的按钮会真正写入 Zotero。</div>` : ""}
   <div class="review-layout">
     <div>
@@ -2232,6 +2242,7 @@ VIEWS.review = async (_, params) => {
   </div>`;
 };
 VIEWS.review.after = (_, params) => {
+  if (params.get("view") === "zotero") return VIEWS.zlib.after(_, params);
   $$("[data-act]").forEach((b) => b.addEventListener("click", () => decide([b.dataset.id], b.dataset.act, $("#sel-collection").value)));
   $("#pick-all").addEventListener("click", () => { $$("[data-pick]").forEach((cb) => S.selected.add(cb.dataset.pick)); syncSelection(); });
   $("#z-refresh").addEventListener("click", async () => { await refreshZotero(); route(true); });
@@ -3299,7 +3310,8 @@ async function route(force = false) {
   const [path, qs] = raw.split("?");
   const [name = "", arg = ""] = path.split("/").map(decodeURIComponent);
   const key = path + "?" + (qs || "");
-  if (!["", "daily", "library", "paper", "review", "settings", "zlib", "trends", "venues", "search", "open"].includes(name)) {
+  if (name === "zlib") { location.replace("#/review?view=zotero" + (qs ? "&" + qs : "")); return; }  // 旧地址
+  if (!["", "daily", "library", "paper", "review", "settings", "trends", "venues", "search", "open"].includes(name)) {
     if (name && document.getElementById(name)) return;  // 页内锚点
     ++routeSeq;  // 让还在加载的页面作废，不会盖掉这里
     $$("[data-nav]").forEach((a) => a.removeAttribute("aria-current"));
@@ -3328,7 +3340,7 @@ async function route(force = false) {
     await VIEWS[view].after?.(arg, params);
     if (token !== routeSeq) return;
     revealAll(root); syncSelection();
-    document.title = { home: "DailyPaper", daily: "今日 · DailyPaper", library: "文库 · DailyPaper", paper: "论文 · DailyPaper", review: "审核台 · DailyPaper", settings: "设置 · DailyPaper", zlib: "文献库 · DailyPaper", trends: "趋势 · DailyPaper", venues: "顶会 · DailyPaper", search: "检索 · DailyPaper", open: "打开论文 · DailyPaper" }[view];
+    document.title = { home: "DailyPaper", daily: "今日 · DailyPaper", library: "文库 · DailyPaper", paper: "论文 · DailyPaper", review: params.get("view") === "zotero" ? "Zotero 文献库 · DailyPaper" : "文献管理 · DailyPaper", settings: "设置 · DailyPaper", zlib: "文献库 · DailyPaper", trends: "趋势 · DailyPaper", venues: "顶会 · DailyPaper", search: "检索 · DailyPaper", open: "打开论文 · DailyPaper" }[view];
   } catch (e) {
     clearTimeout(slow);
     if (token !== routeSeq) return;
