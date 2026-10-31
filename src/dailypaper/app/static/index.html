@@ -62,10 +62,11 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{scroll-behavior:smooth;scroll-padding-top:96px}
-.page-bg{position:fixed;inset:-24px;z-index:-5;background:var(--bg-img) center/cover no-repeat;opacity:var(--bg-opacity,0);filter:blur(var(--bg-blur,0px)) saturate(1.05);pointer-events:none;transition:opacity .6s}
+.page-bg{position:fixed;inset:0;z-index:-5;background:var(--bg-img) center/cover no-repeat;opacity:var(--bg-opacity,0);filter:blur(var(--bg-blur,0px)) saturate(1.05);pointer-events:none;transition:opacity .6s}
 .page-bg:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,26,33,calc(var(--bg-veil,.3) * .55)),rgba(8,26,33,var(--bg-veil,.3)))}
 :root[data-theme="light"] .page-bg:after{background:linear-gradient(180deg,rgba(238,243,244,calc(var(--bg-veil,.3) * .7)),rgba(238,243,244,calc(var(--bg-veil,.3) + .1)))}
 /* 朦胧玻璃：有页面背景时，卡片、列表、正文区域变成半透明磨砂，背景从后面透出来 */
+.page-bg.blurred{inset:-24px}
 :root[data-bg="on"]{--surface:rgba(14,38,47,var(--frost-a,.42));--glass-edge:rgba(214,232,237,.16);--frost:blur(var(--frost-blur,16px)) saturate(150%)}
 :root[data-bg="on"][data-theme="light"]{--surface:rgba(255,255,255,var(--frost-a-l,.62));--glass-edge:rgba(255,255,255,.75)}
 :root[data-bg="on"] :is(.stat,.onboard,.pcard,.step,.topic,.datebar a,.funnel div,.table-wrap,.side-panel,.ztree,.zitem,.chart,.summary-box,.prow,.ritem,.panel,.tcard,.pe-status,.role-box,.empty,.row,.sgroups,.toc){background:var(--surface);-webkit-backdrop-filter:var(--frost);backdrop-filter:var(--frost);border-color:var(--glass-edge);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 8px 30px rgba(0,0,0,.10)}
@@ -122,7 +123,14 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .nav-bar{display:flex;align-items:center;gap:18px;padding:8px 10px 8px 18px;border-radius:999px;border:1px solid var(--line-2);background:rgba(12,35,43,.55);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);box-shadow:0 10px 40px rgba(0,0,0,.18)}
 .brand{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--ink);font-size:18px;letter-spacing:-.01em}
 .brand svg{width:30px;height:30px}
-.links{display:flex;gap:4px;margin:0 auto;overflow-x:auto;scrollbar-width:none}
+.links{display:flex;gap:4px;margin:0 auto;overflow-x:auto;scrollbar-width:none;min-width:0;flex:0 1 auto}
+.links.clipped{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 36px),transparent)}
+.nav-end{flex:none}
+/* 顶栏放不下时逐步收紧右侧：先把 GitHub 变成图标，再把连接状态变成一个圆点，最后收窄导航间距 */
+@media (max-width:1700px){.gh .gh-text{display:none}.btn.gh{min-width:36px;padding:4px 10px}}
+@media (max-width:1450px){.mode span{display:none}.mode{padding:9px}}
+@media (max-width:1300px){.links a{padding:6px 10px}.nav-bar{gap:12px}}
+@media (max-width:1100px){.sched-pill span{display:none}.sched-pill{padding:9px;min-width:0}.links a{padding:6px 8px}}
 .links::-webkit-scrollbar{display:none}
 .links a{padding:6px 14px;border-radius:999px;color:var(--muted);font-size:14px;white-space:nowrap;transition:color .2s,background .2s}
 .links a:hover{color:var(--ink)}.links a[aria-current="page"]{color:var(--ink);background:var(--glass-2)}
@@ -131,6 +139,14 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .mode i{width:7px;height:7px;border-radius:50%;background:var(--muted)}
 .mode.local i{background:var(--ok);box-shadow:0 0 8px var(--ok)}.mode.static i{background:var(--accent)}.mode.demo i{background:var(--warn)}
 .nav-end{display:flex;align-items:center;gap:8px}
+.sched-pill-wrap{position:relative}
+.sched-pill{gap:7px}.sched-pill i{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.sched-pill.on i{background:var(--ok);box-shadow:0 0 8px var(--ok)}.sched-pill.pause i{background:var(--warn)}.sched-pill.off i,.sched-pill.unregistered i{background:var(--bad)}
+.sched-pop{position:absolute;right:0;top:calc(100% + 12px);width:300px;padding:16px;border-radius:18px;border:1px solid var(--line-2);background:var(--panel);box-shadow:0 18px 50px rgba(0,0,0,.35);z-index:40;text-align:left}
+.sched-pop h4{margin:0 0 6px;color:var(--ink);font-size:15px}.sched-pop p{margin:0 0 12px;font-size:12.5px;line-height:1.6;color:var(--muted)}
+.sched-pop .acts{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}.sched-pop .acts .btn[aria-pressed="true"]{background:var(--mist);color:#0C232B;border-color:transparent}
+:root[data-theme="light"] .sched-pop .acts .btn[aria-pressed="true"]{background:#10272E;color:#fff}
+.sched-pop a.more{font-size:12.5px;border-bottom:1px solid var(--line-2)}
 
 /* ---------- views ---------- */
 main{min-height:60vh}
@@ -646,8 +662,12 @@ footer a{border-bottom:1px solid var(--line-2)}
     </nav>
     <div class="nav-end">
       <button class="btn sm ghost icon" id="theme-toggle" type="button" title="切换白天 / 夜间" aria-label="切换主题"><span class="sun">☀</span><span class="moon">☾</span></button>
-      <a class="btn sm ghost gh" id="gh-link" href="https://github.com/YuanChangYe/DailyPaper" target="_blank" rel="noopener noreferrer" title="GitHub 仓库"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
+      <a class="btn sm ghost gh" id="gh-link" href="https://github.com/YuanChangYe/DailyPaper" target="_blank" rel="noopener noreferrer" title="GitHub 仓库"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg><span class="gh-text">GitHub</span></a>
       <span class="mode" id="mode" title=""><i></i><span>连接中</span></span>
+      <div class="sched-pill-wrap" id="sched-pill-wrap" hidden>
+        <button class="btn sm ghost sched-pill" id="sched-pill" type="button" aria-haspopup="true" aria-expanded="false" title="定时查找论文"><i></i><span>定时</span></button>
+        <div class="sched-pop" id="sched-pop" role="dialog" aria-label="定时查找论文" hidden></div>
+      </div>
       <button class="btn primary sm" id="run-now" type="button">立即运行</button>
     </div>
   </div>
@@ -959,9 +979,13 @@ function applyBackground() {
   const on = !!b && (P.bgOpacity || 0) > 0;
   root.dataset.bg = on ? "on" : "off";
   if (!on) { h.removeProperty("--bg-img"); h.setProperty("--bg-opacity", "0"); return; }
-  h.setProperty("--bg-img", `url("${b.url || coverUrl(b, 1200)}")`);
+  // 按屏幕实际像素选图：大屏用 2000 宽，避免把 1200 宽的图放大到整屏发糊
+  const big = Math.max(innerWidth, innerHeight * 1.6) * Math.min(devicePixelRatio || 1, 2) > 1200;  // 竖长窗口按高度算
+  const url = b.url ? (big ? b.url.replace("-1200.jpg", ".jpg") : b.url) : coverUrl(b, big ? 2000 : 1200);
+  h.setProperty("--bg-img", `url("${url}")`);
   h.setProperty("--bg-opacity", String(P.bgOpacity / 100));
   h.setProperty("--bg-blur", (P.bgBlur || 0) + "px");
+  $("#page-bg")?.classList.toggle("blurred", (P.bgBlur || 0) > 0);
   h.setProperty("--bg-veil", String((P.bgVeil ?? 30) / 100));
   // 关闭动态效果时磨砂退化成纯半透明（backdrop-filter 在弱机器上较耗性能）
   const level = reducedMotion() && P.frost !== "off" ? "off" : (P.frost || "mid");
@@ -998,7 +1022,7 @@ const heroImgTag = () => { const c = S.cover; return c
 
 /* ---------- 偏好：外观与阅读设置，存在浏览器里（localStorage dp.prefs） ---------- */
 const PREF_DEFAULTS = { theme: "system", font: "default", customFont: "", fontSize: 15, proseSize: 16, lineHeight: "normal", motion: "system", density: "comfy",
-  paperDefault: "note", splitPct: 50, proseWidth: "full", hlColor: "yellow", srcMarks: "normal", confirmRun: false, cover: "daily", bg: "auto", bgOpacity: 75, bgBlur: 2, bgVeil: 30, frost: "mid", v: 2, wx: "on", wxCover: true, wxPreview: "live" };
+  paperDefault: "note", splitPct: 50, proseWidth: "full", hlColor: "yellow", srcMarks: "normal", confirmRun: false, cover: "daily", bg: "auto", bgOpacity: 75, bgBlur: 0, bgVeil: 30, frost: "mid", v: 3, wx: "on", wxCover: true, wxPreview: "live" };
 let PREFS = null;
 function prefs() {
   if (PREFS) return PREFS;
@@ -1006,6 +1030,7 @@ function prefs() {
   try { saved = JSON.parse(localStorage.getItem("dp.prefs") || "{}") || {}; } catch { saved = {}; }
   if (saved.theme === undefined) { try { const t = localStorage.getItem("dp.theme"); if (t) saved.theme = t; } catch { /* 忽略 */ } }  // 旧版主题设置
   if ((saved.v || 1) < 2) { delete saved.bgOpacity; delete saved.bgBlur; saved.v = 2; }
+  if ((saved.v || 1) < 3) { if (saved.bgBlur === 2) saved.bgBlur = 0; saved.v = 3; }  // v3：背景默认不再模糊
   saved.wxPreview = "live";  // 天气预览只在这次打开时有效  // v2：背景从 22% 改为朦胧玻璃，旧的过淡数值作废
   PREFS = { ...PREF_DEFAULTS, ...saved };
   return PREFS;
@@ -1042,6 +1067,8 @@ function applyPrefs() {
   h.dataset.srcMarks = P.srcMarks;
 }
 applyPrefs();
+let bgResizeTimer = 0;
+addEventListener("resize", () => { clearTimeout(bgResizeTimer); bgResizeTimer = setTimeout(() => { if (S.covers) applyBackground(); }, 300); });
 sysDark.addEventListener("change", applyPrefs); sysReduced.addEventListener("change", applyPrefs);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const tname = (id) => (S.topics.find((t) => t.id === id)?.name) || TOPIC_LABELS[id] || id;
@@ -1122,7 +1149,8 @@ async function boot() {
   if (prefs().wx !== "off") loadWeather().then(() => { applyCover(); if ($(".hero-stage")) startWeather(); });
   S.topics = S.meta?.topics?.length ? S.meta.topics : DEMO_CONFIG.topics.map(({ id, name }) => ({ id, name }));
   paintMode();
-  if (isLocal()) { refreshZotero(); refreshBadge(); await pollRun(true); }
+  setupSchedulePill();
+  if (isLocal()) { refreshZotero(); refreshBadge(); refreshSchedulePill(); await pollRun(true); }
   fillCollections();
   route();
 }
@@ -1150,6 +1178,14 @@ const lastRunLabel = () => {
   return `${t} ${r.ok ? "✓" : "✗"}`;
 };
 
+/* 导航链接放不下时，右边缘渐隐，提示还能横向滚动 */
+function fitNav() {
+  const l = $(".links"); if (!l) return;
+  l.classList.toggle("clipped", l.scrollWidth > l.clientWidth + 2 && l.scrollLeft + l.clientWidth < l.scrollWidth - 2);
+}
+addEventListener("resize", () => fitNav());
+document.addEventListener("DOMContentLoaded", () => $(".links")?.addEventListener("scroll", fitNav, { passive: true }));
+
 function paintMode() {
   const m = $("#mode");
   const label = { local: "本地助手 · 已连接", static: "只读网站", demo: "示例数据" }[S.mode];
@@ -1158,7 +1194,8 @@ function paintMode() {
     static: "这是公开的只读网站。审核入库、修改设置请在电脑上运行 dailypaper app",
     demo: "没有连接到后端，正在显示示例数据。写操作只做演示",
   }[S.mode];
-  m.className = "mode " + S.mode; m.title = tip; m.lastElementChild.textContent = label;
+  m.className = "mode " + S.mode; m.title = `${label}：${tip}`; m.lastElementChild.textContent = label;
+  fitNav();
   $("#foot-source").textContent = { local: "本地助手（127.0.0.1）", static: "api/index.json", demo: "内置示例" }[S.mode];
   $("#run-now").hidden = !isLocal() && S.mode !== "demo";
   const repo = S.meta?.repo_url || S.siteInfo?.repo_url || DEFAULT_REPO;
@@ -2240,6 +2277,55 @@ function scheduleCard(sc) {
     <span id="sched-msg" style="font-size:12.5px;color:var(--muted)"></span>
   </div></div>`;
 }
+/* 顶栏的「定时」按钮：一眼看到状态，点开就能开、暂停、关 */
+async function refreshSchedulePill() {
+  const wrap = $("#sched-pill-wrap"); if (!wrap) return;
+  if (!isLocal()) { wrap.hidden = true; return; }
+  let sc; try { sc = await getJSON("/api/schedule"); } catch { wrap.hidden = true; return; }
+  S.schedule = sc;
+  if (!sc.supported) { wrap.hidden = true; return; }
+  wrap.hidden = false;
+  const pill = $("#sched-pill");
+  pill.className = `btn sm ghost sched-pill ${sc.mode}`;
+  $("span", pill).textContent = { on: `定时 ${sc.time || ""}`, pause: `暂停至 ${String(sc.paused_until || "").slice(5).replace("-", "/")}`, off: "定时已关", unregistered: "定时未设" }[sc.mode] || "定时";
+  pill.title = `定时查找论文：${schedLabel(sc)}（点击开关）`;
+  fitNav();
+  const pop = $("#sched-pop");
+  const plus14 = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
+  pop.innerHTML = sc.mode === "unregistered"
+    ? `<h4>定时查找论文</h4><p>还没有设置。设置后每天自动抓取、筛选、精读（电脑没开机时，开机后补跑）。</p>
+       <div class="acts"><button class="btn sm primary" type="button" data-sched="register">每天 14:00 运行</button></div>
+       <a class="more" href="#/settings?g=run">改时间等更多设置 →</a>`
+    : `<h4>定时查找论文</h4>
+       <p>${esc(schedLabel(sc))}。${sc.mode === "on" ? `下次 ${esc(fmtWhen(sc.next_run))}。` : sc.mode === "pause" ? `${esc(sc.paused_until)} 起自动恢复。` : "不会自动运行。"}<br>上次 ${esc(fmtWhen(sc.last_run))}。「立即运行」不受影响。</p>
+       <div class="acts">
+         <button class="btn sm" type="button" data-sched="on" aria-pressed="${sc.mode === "on"}">开启</button>
+         <button class="btn sm" type="button" data-sched="pause" data-until="${plus14}" aria-pressed="${sc.mode === "pause"}">暂停两周</button>
+         <button class="btn sm" type="button" data-sched="off" aria-pressed="${sc.mode === "off"}">关闭</button>
+       </div>
+       <a class="more" href="#/settings?g=run">改时间、暂停到指定日期 →</a>`;
+}
+function setupSchedulePill() {
+  const pill = $("#sched-pill"), pop = $("#sched-pop"); if (!pill) return;
+  const close = () => { pop.hidden = true; pill.setAttribute("aria-expanded", "false"); };
+  pill.addEventListener("click", (e) => { e.stopPropagation(); const open = pop.hidden; pop.hidden = !open; pill.setAttribute("aria-expanded", String(open)); if (open) refreshSchedulePill(); });
+  document.addEventListener("click", (e) => { if (!pop.hidden && !e.target.closest("#sched-pill-wrap")) close(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !pop.hidden) close(); });
+  pop.addEventListener("click", async (e) => {
+    if (e.target.closest("a.more")) { close(); return; }
+    const b = e.target.closest("[data-sched]"); if (!b) return;
+    b.disabled = true;
+    try {
+      const r = b.dataset.sched === "register"
+        ? await send("/api/schedule/register", { time: "14:00" })
+        : await send("/api/schedule", { mode: b.dataset.sched, until: b.dataset.until }, "PUT");
+      (r.messages || []).forEach((m) => toast(m, "ok"));
+      await refreshSchedulePill();
+      if (location.hash.startsWith("#/settings?g=run") || location.hash === "#/" || location.hash === "") route(true);
+    } catch (err) { toast(err.message, "err"); b.disabled = false; }
+  });
+}
+
 function afterScheduleCard() {
   const card = $("#sched-card"); if (!card) return;
   let mode = S.schedule?.mode || "on";
@@ -2254,12 +2340,12 @@ function afterScheduleCard() {
     const btn = e.currentTarget; btn.disabled = true;
     try {
       const r = await send("/api/schedule", { mode, until: $("#sched-until")?.value, time: $("#sched-time")?.value }, "PUT");
-      r.messages.forEach((m) => toast(m, "ok")); S.schedule = r; route(true);
+      r.messages.forEach((m) => toast(m, "ok")); S.schedule = r; refreshSchedulePill(); route(true);
     } catch (err) { toast(err.message, "err"); } finally { btn.disabled = false; }
   });
   $("#sched-register")?.addEventListener("click", async (e) => {
     const btn = e.currentTarget; btn.disabled = true;
-    try { const r = await send("/api/schedule/register", { time: $("#sched-time").value }); r.messages.forEach((m) => toast(m, "ok")); route(true); }
+    try { const r = await send("/api/schedule/register", { time: $("#sched-time").value }); r.messages.forEach((m) => toast(m, "ok")); refreshSchedulePill(); route(true); }
     catch (err) { toast(err.message, "err"); btn.disabled = false; }
   });
 }
